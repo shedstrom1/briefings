@@ -103,6 +103,8 @@
 
   footer{margin-top:20px;padding:26px 0 46px;border-top:1px solid var(--border);color:var(--faint);font-size:13px;line-height:1.7}
   footer a{color:var(--muted)}
+  footer .disclaimer{margin:14px 0 0;padding:12px 0 0;border-top:1px solid var(--border);color:var(--muted);font-size:13.5px}
+  footer .disclaimer strong{color:var(--accent);font-weight:600}
 
   @media (max-width:560px){
     .wrap{padding:0 18px}
@@ -140,8 +142,11 @@
   <footer>
     Produced autonomously by an AI research agent on a fixed schedule (weekdays, 07:00 · 12:00 · 17:00 ET).
     Items are included only when the linked primary source confirms the disclosure falls inside the stated window.
-    Severity is quoted verbatim from published vendor or CVSS ratings. Corrections welcome — the pipeline is automated, so flag anything at
-    <a href="https://github.com/shedstrom1/briefings">the repo</a>.
+    Severity is quoted verbatim from published vendor or CVSS ratings.
+    <p class="disclaimer"><strong>Not human-reviewed.</strong> Every edition is written and published by an autonomous agent without
+    editorial review — treat it as a research lead, not an authority. Fact-check against the cited sources and the vendor's own
+    advisory before acting on anything here. Errors happen; if you spot one, flag it at
+    <a href="https://github.com/shedstrom1/briefings">the repo</a>.</p>
   </footer>
 </div>
 
