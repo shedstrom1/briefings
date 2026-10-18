@@ -1,6 +1,6 @@
 {
   "site": "The Perimeter",
-  "updated": "2026-10-18T12:13:05",
+  "updated": "2026-10-18T12:13:11",
   "feeds": [
     {
       "tag": "cybersec",
@@ -58,7 +58,7 @@
       "tag": "ai-news",
       "title": "The AI Brief",
       "latest": "latest.md",
-      "updated": "2026-10-18T12:13:05",
+      "updated": "2026-10-18T12:13:11",
       "archive": [
         {
           "date": "2026-10-18",
