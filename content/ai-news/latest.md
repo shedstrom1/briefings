@@ -1,3 +1,5 @@
+# The AI Brief — Sunday, October 18, 2026
+
 
 **Window:** Saturday, October 17, 2026 12:01 PM → Sunday, October 18, 2026 12:01 PM (America/New_York). A busy Friday pushed most major announcements just outside this window — see "Just missed the window."
 
