@@ -210,10 +210,12 @@ function renderArchive(feed){
   let html = '<p class="kicker">Archive</p><ul class="editions-list">';
   for (const e of entries){
     const nice = (() => { try { return new Date(e.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); } catch(err){ return e.date; } })();
+    const tm = (e.file || '').match(/-(\d{4})\.md$/);
+    const label = nice + (tm ? ' · ' + tm[1].slice(0,2) + ':' + tm[1].slice(2) : '');
     let tags = '';
     if (e.audio) tags += '<span class="ed-tag">Audio</span>';
     if (e.image) tags += '<span class="ed-tag">Banner</span>';
-    html += '<li><a href="#edition/' + e.file + '"><span class="ed-date">' + nice + '</span><span class="ed-title">Full briefing' + tags + ' →</span></a></li>';
+    html += '<li><a href="#edition/' + e.file + '"><span class="ed-date">' + label + '</span><span class="ed-title">Full briefing' + tags + ' →</span></a></li>';
   }
   html += '</ul>';
   main().innerHTML = html;
