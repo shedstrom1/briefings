@@ -67,6 +67,12 @@
   .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font:600 13px/1 var(--sans);letter-spacing:.02em;padding:14px 22px;border-radius:3px}
   .btn:hover{filter:brightness(1.1)}
 
+  /* ── edition media ────────────────────── */
+  .edition-hero{width:100%;height:auto;border:1px solid var(--border);border-radius:4px;margin:0 0 22px;display:block}
+  .listen{border-top:1px solid var(--border);margin:0 0 26px;padding:18px 0 2px}
+  .listen .kicker{margin-bottom:10px;color:var(--faint)}
+  .listen audio{width:100%;height:40px;filter:invert(1) hue-rotate(180deg)}
+
   /* ── article ──────────────────────────── */
   article{padding:44px 0 8px}
   article .sec-div{border:0;border-top:1px solid var(--border);margin:0 0 44px}
@@ -221,12 +227,14 @@ function renderLatest(feed){
     const win = extractWindow(md);
     const tldr = extractTldr(md);
     let html = '<section>';
+    if (feed.image) html += '<img class="edition-hero" src="' + BASE + 'content/' + TAG + '/' + feed.image + '" alt="Banner illustrating today\'s lead story" loading="eager">';
     html += '<p class="kicker">Latest edition</p>';
     html += '<h1 class="headline">' + esc(title) + '</h1>';
     if (win) html += '<p class="meta">' + esc(win) + '</p>';
     if (tldr.length){
       html += '<div class="tldr"><p class="kicker">Top lines</p><ul>' + tldr.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>';
     }
+    if (feed.audio) html += '<div class="listen"><p class="kicker">Listen to today\'s brief</p><audio controls preload="metadata" src="' + BASE + 'content/' + TAG + '/' + feed.audio + '"></audio></div>';
     html += '<a class="btn" href="#full">Read the full brief ↓</a>';
     html += '</section>';
     html += '<hr class="sec-div" id="full"><article>' + mdToHtml(stripFirstH1(stripTldr(md))) + '</article>';

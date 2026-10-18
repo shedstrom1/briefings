@@ -1,20 +1,23 @@
 {
   "site": "The Perimeter",
-  "updated": "2026-10-17T23:36:16",
+  "updated": "2026-10-18T00:42:07",
   "feeds": [
     {
       "tag": "cybersec",
       "title": "The Cybersecurity Brief",
       "latest": "latest.md",
-      "updated": "2026-10-17T23:36:16",
+      "updated": "2026-10-18T00:42:07",
       "archive": [
         "2026-10-12.md",
         "2026-10-13.md",
         "2026-10-14.md",
         "2026-10-15.md",
         "2026-10-16.md",
-        "2026-10-17.md"
-      ]
+        "2026-10-17.md",
+        "2026-10-18.md"
+      ],
+      "image": "media/2026-10-18.jpg",
+      "audio": "media/2026-10-18.mp3"
     }
   ]
 }
