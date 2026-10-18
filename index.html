@@ -171,6 +171,15 @@ function extractTldr(md){
   return items;
 }
 function stripFirstH1(md){ return md.replace(/^\s*#\s+.+$/m, ''); }
+function stripTldr(md){
+  const lines = md.split(/\r?\n/);
+  const i = lines.findIndex(l => /^#{1,4}\s*TL\s*;?\s*DR/i.test(l));
+  if (i === -1) return md;
+  let j = i + 1;
+  while (j < lines.length && !/^#{1,4}\s/.test(lines[j])) j++;
+  lines.splice(i, j - i);
+  return lines.join("\n");
+}
 
 function mdToHtml(md){
   let html = marked.parse(md);
@@ -215,7 +224,7 @@ function renderLatest(feed){
     }
     html += '<a class="btn" href="#full">Read the full brief ↓</a>';
     html += '</section>';
-    html += '<hr class="sec-div" id="full"><article>' + mdToHtml(stripFirstH1(md)) + '</article>';
+    html += '<hr class="sec-div" id="full"><article>' + mdToHtml(stripFirstH1(stripTldr(md))) + '</article>';
     main().innerHTML = html;
   }).catch(() => { main().innerHTML = '<div class="status">The latest edition could not be loaded.</div>'; });
 }
