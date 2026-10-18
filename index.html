@@ -106,6 +106,7 @@
   .editions-list a:hover .ed-date{color:var(--accent)}
   .ed-date{font:500 13px var(--mono);color:var(--muted);white-space:nowrap}
   .ed-title{font:600 17px/1.35 var(--serif);text-align:right}
+  .ed-tag{display:inline-block;font:500 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px solid var(--border);border-radius:2px;padding:3px 6px;margin-left:8px;vertical-align:2px}
 
   footer{margin-top:20px;padding:26px 0 46px;border-top:1px solid var(--border);color:var(--faint);font-size:13px;line-height:1.7}
   footer a{color:var(--muted)}
@@ -242,30 +243,41 @@ function renderLatest(feed){
   }).catch(() => { main().innerHTML = '<div class="status">The latest edition could not be loaded.</div>'; });
 }
 
+function archiveEntries(feed){
+  return [...(feed.archive || [])]
+    .map(e => typeof e === 'string' ? {date: e.replace(/\.md$/,''), file: e, image: null, audio: null} : e)
+    .reverse();
+}
+
 function renderArchive(feed){
   setDateline(feed.updated);
-  const dates = [...(feed.archive||[])].reverse();
-  if (!dates.length){ main().innerHTML = '<div class="status">No archived editions yet.</div>'; return; }
+  const entries = archiveEntries(feed);
+  if (!entries.length){ main().innerHTML = '<div class="status">No archived editions yet.</div>'; return; }
   let html = '<p class="kicker">Archive</p><ul class="editions-list">';
-  for (const d of dates){
-    const label = d.replace(/\.md$/,'');
-    const nice = (() => { try { return new Date(label+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); } catch(e){ return label; } })();
-    html += '<li><a href="#edition/' + d + '"><span class="ed-date">' + nice + '</span><span class="ed-title">Full briefing →</span></a></li>';
+  for (const e of entries){
+    const nice = (() => { try { return new Date(e.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); } catch(err){ return e.date; } })();
+    let tags = '';
+    if (e.audio) tags += '<span class="ed-tag">Audio</span>';
+    if (e.image) tags += '<span class="ed-tag">Banner</span>';
+    html += '<li><a href="#edition/' + e.file + '"><span class="ed-date">' + nice + '</span><span class="ed-title">Full briefing' + tags + ' →</span></a></li>';
   }
   html += '</ul>';
   main().innerHTML = html;
 }
 
 function renderEdition(feed, file){
+  const entry = archiveEntries(feed).find(e => e.file === file) || {};
   fetch(BASE + 'content/' + TAG + '/archive/' + file, {cache:'no-store'}).then(r => {
     if (!r.ok) throw new Error(r.status);
     return r.text();
   }).then(md => {
     const title = extractTitle(md) || file;
     const win = extractWindow(md);
-    let html = '<p class="kicker">Archive edition</p>';
+    let html = entry.image ? '<img class="edition-hero" src="' + BASE + 'content/' + TAG + '/' + entry.image + '" alt="Banner for this edition">' : '';
+    html += '<p class="kicker">Archive edition</p>';
     html += '<h1 class="headline">' + esc(title) + '</h1>';
     if (win) html += '<p class="meta">' + esc(win) + '</p>';
+    if (entry.audio) html += '<div class="listen"><p class="kicker">Listen to this brief</p><audio controls preload="metadata" src="' + BASE + 'content/' + TAG + '/' + entry.audio + '"></audio></div>';
     html += '<hr class="sec-div"><article>' + mdToHtml(stripFirstH1(md)) + '</article>';
     html += '<p><a href="#archive" style="color:var(--faint);font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase">← All editions</a></p>';
     main().innerHTML = html;
