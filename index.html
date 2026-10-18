@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Perimeter — Daily Cybersecurity Brief</title>
+<meta name="description" content="Autonomous cybersecurity intelligence brief. Every item verified against primary sources and cited.">
+<meta property="og:title" content="The Perimeter — Daily Cybersecurity Brief">
+<meta property="og:description" content="Autonomous cybersecurity intelligence brief. Every item verified against primary sources and cited.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230b0e13'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23e5484d'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0e13;
+    --surface:#10151d;
+    --surface-2:#141a24;
+    --border:#1e2530;
+    --ink:#e9e7e1;
+    --muted:#8b95a3;
+    --faint:#5b6573;
+    --accent:#e5484d;
+    --accent-dim:rgba(229,72,77,.14);
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --col:720px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--accent-dim)}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:50;transition:width .1s linear}
+
+  .wrap{max-width:var(--col);margin:0 auto;padding:0 24px}
+
+  /* ── masthead ─────────────────────────── */
+  header.masthead{padding:36px 0 0;text-align:left}
+  .dateline{display:flex;justify-content:space-between;align-items:baseline;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding-bottom:14px}
+  .dateline .live{color:var(--accent)}
+  .dateline .live::before{content:"";display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:7px;vertical-align:1px;animation:pulse 2.4s ease infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .wordmark{font:700 clamp(34px,6.5vw,52px)/1.02 var(--serif);letter-spacing:-.015em;margin:0}
+  .wordmark .dot{color:var(--accent)}
+  .tagline{margin:10px 0 0;color:var(--muted);font-size:15px;max-width:52ch}
+  .rule{border:0;border-top:1px solid var(--border);margin:26px 0 0}
+  .rule-thick{border:0;border-top:3px solid var(--accent);height:1px;background:none;margin:2px 0 34px}
+
+  nav.editions{display:flex;gap:22px;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;margin-bottom:34px}
+  nav.editions a{color:var(--faint);text-decoration:none;padding-bottom:3px;border-bottom:1px solid transparent}
+  nav.editions a:hover,nav.editions a.on{color:var(--ink);border-bottom-color:var(--accent)}
+
+  /* ── featured edition ─────────────────── */
+  .kicker{font:500 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1.headline{font:600 clamp(26px,4.6vw,38px)/1.14 var(--serif);letter-spacing:-.01em;margin:0 0 12px;text-wrap:balance}
+  .meta{font:400 12px/1.7 var(--mono);color:var(--muted);margin:0 0 22px}
+  .tldr{border-top:1px solid var(--border);margin:0 0 26px;padding:20px 0 4px}
+  .tldr .kicker{margin-bottom:10px;color:var(--faint)}
+  .tldr ul{list-style:none;margin:0;padding:0}
+  .tldr li{position:relative;padding:8px 0 8px 22px;font-size:16.5px;color:var(--ink);border-bottom:1px solid rgba(30,37,48,.55)}
+  .tldr li:last-child{border-bottom:none}
+  .tldr li::before{content:"";position:absolute;left:2px;top:16px;width:7px;height:7px;background:var(--accent)}
+  .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font:600 13px/1 var(--sans);letter-spacing:.02em;padding:14px 22px;border-radius:3px}
+  .btn:hover{filter:brightness(1.1)}
+
+  /* ── article ──────────────────────────── */
+  article{padding:44px 0 8px}
+  article .sec-div{border:0;border-top:1px solid var(--border);margin:0 0 44px}
+  article h1{font:600 clamp(24px,4vw,32px)/1.2 var(--serif);margin:0 0 18px}
+  article h2{font:600 22px/1.25 var(--serif);margin:44px 0 14px;padding-top:20px;border-top:1px solid var(--border)}
+  article h2:first-child,article h1+h2{border-top:none;padding-top:0}
+  article h3{font:600 17px/1.3 var(--sans);margin:26px 0 8px}
+  article p{margin:0 0 16px}
+  article a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(229,72,77,.35)}
+  article a:hover{border-bottom-color:var(--accent)}
+  article ul,article ol{margin:0 0 16px;padding-left:22px}
+  article li{margin:6px 0}
+  article li::marker{color:var(--faint)}
+  article strong{color:#fff;font-weight:600}
+  article blockquote{margin:18px 0;padding:2px 0 2px 18px;border-left:2px solid var(--accent);color:var(--muted)}
+  article code{font:13px var(--mono);background:var(--surface-2);padding:2px 6px;border-radius:3px}
+  article pre{background:var(--surface);border:1px solid var(--border);padding:14px;border-radius:4px;overflow-x:auto}
+  article table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  article th{font:500 11px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left}
+  article th,article td{padding:9px 12px;border-bottom:1px solid var(--border)}
+  article hr{border:0;border-top:1px solid var(--border);margin:32px 0}
+  .src-line{font-size:13.5px;color:var(--muted)}
+
+  /* ── empty / loading ──────────────────── */
+  .status{padding:70px 0;text-align:center;color:var(--faint);font:400 13px var(--mono);letter-spacing:.06em}
+
+  /* ── editions index ───────────────────── */
+  .editions-list{list-style:none;margin:6px 0 40px;padding:0;border-top:1px solid var(--border)}
+  .editions-list li{border-bottom:1px solid var(--border)}
+  .editions-list a{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px 4px;text-decoration:none;color:var(--ink)}
+  .editions-list a:hover .ed-date{color:var(--accent)}
+  .ed-date{font:500 13px var(--mono);color:var(--muted);white-space:nowrap}
+  .ed-title{font:600 17px/1.35 var(--serif);text-align:right}
+
+  footer{margin-top:20px;padding:26px 0 46px;border-top:1px solid var(--border);color:var(--faint);font-size:13px;line-height:1.7}
+  footer a{color:var(--muted)}
+
+  @media (max-width:560px){
+    .wrap{padding:0 18px}
+    .dateline{flex-direction:column;gap:8px}
+    .ed-title{font-size:15px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .dateline .live::before{animation:none}
+    #progress{transition:none}
+  }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="dateline">
+      <span id="dateline">Cybersecurity intelligence brief</span>
+      <span class="live" id="livelabel">Autonomous · Verified · Cited</span>
+    </div>
+    <h1 class="wordmark">The Perimeter<span class="dot">.</span></h1>
+    <p class="tagline">A machine-read briefing on what is being exploited, patched and disclosed — every item checked against primary sources, every claim linked.</p>
+    <hr class="rule"><hr class="rule-thick">
+  </header>
+
+  <nav class="editions">
+    <a href="#" id="nav-latest" class="on">Latest edition</a>
+    <a href="#archive" id="nav-archive">Archive</a>
+  </nav>
+
+  <main id="main"><div class="status">Loading the front page…</div></main>
+
+  <footer>
+    Produced autonomously by an AI research agent on a fixed schedule (weekdays, 07:00 · 12:00 · 17:00 ET).
+    Items are included only when the linked primary source confirms the disclosure falls inside the stated window.
+    Severity is quoted verbatim from published vendor or CVSS ratings. Corrections welcome — the pipeline is automated, so flag anything at
+    <a href="https://github.com/shedstrom1/briefings">the repo</a>.
+  </footer>
+</div>
+
+<script>
+const BASE = location.pathname.replace(/\/[^\/]*$/, '/');
+const TAG = "cybersec";
+
+/* ---------- markdown helpers ---------- */
+function extractTitle(md){ const m = md.match(/^#\s+(.+)$/m); return m ? m[1].trim() : null; }
+function extractWindow(md){
+  const lines = md.split(/\r?\n/).slice(0, 14);
+  for (const l of lines){ if (/window/i.test(l)) return l.replace(/^[>*\s-]+/,'').replace(/\*\*/g,'').trim(); }
+  return null;
+}
+function extractTldr(md){
+  const lines = md.split(/\r?\n/);
+  let i = lines.findIndex(l => /^#{1,4}\s*TL\s*;?\s*DR/i.test(l));
+  if (i === -1) return [];
+  const items = [];
+  for (i++; i < lines.length; i++){
+    const l = lines[i];
+    if (/^#{1,4}\s/.test(l)) break;
+    const m = l.match(/^\s*[-*]\s+(.+)/);
+    if (m) items.push(m[1].replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\*\*/g,'').replace(/`([^`]+)`/g,'$1').trim());
+    if (items.length >= 5) break;
+  }
+  return items;
+}
+function stripFirstH1(md){ return md.replace(/^\s*#\s+.+$/m, ''); }
+
+function mdToHtml(md){
+  let html = marked.parse(md);
+  html = html.replace(/<p>(Source:|Sources:)/gi, '<p class="src-line">$1');
+  return html;
+}
+
+/* ---------- view state ---------- */
+async function loadManifest(){
+  const r = await fetch(BASE + 'feed/manifest.json', {cache:'no-store'});
+  if (!r.ok) throw new Error('manifest ' + r.status);
+  return r.json();
+}
+
+function setDateline(updatedIso){
+  const el = document.getElementById('dateline');
+  if (!updatedIso) return;
+  const d = new Date(updatedIso + (updatedIso.endsWith('Z') ? '' : 'Z'));
+  if (isNaN(d)) return;
+  el.textContent = d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric', year:'numeric'}) + ' · ' +
+                   d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) + ' ET';
+}
+
+const main = () => document.getElementById('main');
+
+function renderLatest(feed){
+  setDateline(feed.updated);
+  if (!feed.latest){ main().innerHTML = '<div class="status">No edition published yet — the next run fires on schedule.</div>'; return; }
+  fetch(BASE + 'content/' + TAG + '/' + feed.latest, {cache:'no-store'}).then(r => {
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }).then(md => {
+    const title = extractTitle(md) || 'Latest edition';
+    const win = extractWindow(md);
+    const tldr = extractTldr(md);
+    let html = '<section>';
+    html += '<p class="kicker">Latest edition</p>';
+    html += '<h1 class="headline">' + esc(title) + '</h1>';
+    if (win) html += '<p class="meta">' + esc(win) + '</p>';
+    if (tldr.length){
+      html += '<div class="tldr"><p class="kicker">Top lines</p><ul>' + tldr.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>';
+    }
+    html += '<a class="btn" href="#full">Read the full brief ↓</a>';
+    html += '</section>';
+    html += '<hr class="sec-div" id="full"><article>' + mdToHtml(stripFirstH1(md)) + '</article>';
+    main().innerHTML = html;
+  }).catch(() => { main().innerHTML = '<div class="status">The latest edition could not be loaded.</div>'; });
+}
+
+function renderArchive(feed){
+  setDateline(feed.updated);
+  const dates = [...(feed.archive||[])].reverse();
+  if (!dates.length){ main().innerHTML = '<div class="status">No archived editions yet.</div>'; return; }
+  let html = '<p class="kicker">Archive</p><ul class="editions-list">';
+  for (const d of dates){
+    const label = d.replace(/\.md$/,'');
+    const nice = (() => { try { return new Date(label+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); } catch(e){ return label; } })();
+    html += '<li><a href="#edition/' + d + '"><span class="ed-date">' + nice + '</span><span class="ed-title">Full briefing →</span></a></li>';
+  }
+  html += '</ul>';
+  main().innerHTML = html;
+}
+
+function renderEdition(feed, file){
+  fetch(BASE + 'content/' + TAG + '/archive/' + file, {cache:'no-store'}).then(r => {
+    if (!r.ok) throw new Error(r.status);
+    return r.text();
+  }).then(md => {
+    const title = extractTitle(md) || file;
+    const win = extractWindow(md);
+    let html = '<p class="kicker">Archive edition</p>';
+    html += '<h1 class="headline">' + esc(title) + '</h1>';
+    if (win) html += '<p class="meta">' + esc(win) + '</p>';
+    html += '<hr class="sec-div"><article>' + mdToHtml(stripFirstH1(md)) + '</article>';
+    html += '<p><a href="#archive" style="color:var(--faint);font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase">← All editions</a></p>';
+    main().innerHTML = html;
+  }).catch(() => { main().innerHTML = '<div class="status">Edition not found.</div>'; });
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function route(){
+  const h = location.hash || '#latest';
+  let feed;
+  try { feed = (await loadManifest()).feeds.find(f => f.tag === TAG); }
+  catch(e){ main().innerHTML = '<div class="status">Feed unavailable — manifest not reachable.</div>'; return; }
+  if (!feed){ main().innerHTML = '<div class="status">This brief is not configured in the feed.</div>'; return; }
+  const navL = document.getElementById('nav-latest'), navA = document.getElementById('nav-archive');
+  const isArchive = h.startsWith('#archive') || h.startsWith('#edition/');
+  navL.classList.toggle('on', !isArchive); navA.classList.toggle('on', isArchive);
+  if (h.startsWith('#edition/')) renderEdition(feed, h.slice(9));
+  else if (h.startsWith('#archive')) renderArchive(feed);
+  else renderLatest(feed);
+}
+
+window.addEventListener('hashchange', route);
+
+/* reading progress */
+addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const p = h.scrollTop / (h.scrollHeight - h.clientHeight || 1);
+  document.getElementById('progress').style.width = (p*100).toFixed(1) + '%';
+}, {passive:true});
+
+route();
+</script>
+</body>
+</html>
