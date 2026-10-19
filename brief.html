@@ -50,6 +50,8 @@
   .tldr li{position:relative;padding:8px 0 8px 22px;font-size:16.5px;color:var(--ink);border-bottom:1px solid rgba(30,37,48,.55)}
   .tldr li:last-child{border-bottom:none}
   .tldr li::before{content:"";position:absolute;left:2px;top:16px;width:7px;height:7px;background:var(--accent)}
+  .tldr li a{color:inherit;text-decoration:none;cursor:pointer;border-bottom:1px solid rgba(229,72,77,.35)}
+  .tldr li a:hover{color:var(--accent);border-bottom-color:var(--accent)}
   .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font:600 13px/1 var(--sans);letter-spacing:.02em;padding:14px 22px;border-radius:3px}
   .btn:hover{filter:brightness(1.1)}
 
@@ -137,7 +139,8 @@ function extractWindow(md){
 }
 function extractTldr(md){
   const lines = md.split(/\r?\n/);
-  let i = lines.findIndex(l => /^#{1,4}\s*TL\s*;?\s*DR/i.test(l));
+  // Lead list may open with a real heading ("## TL;DR") or a bold marker line ("**TL;DR**") — accept both.
+  let i = lines.findIndex(l => /^(?:#{1,4}\s*|\*{1,3}\s*)TL\s*;?\s*DR/i.test(l));
   if (i === -1) return [];
   const items = [];
   for (i++; i < lines.length; i++){
@@ -152,7 +155,7 @@ function extractTldr(md){
 function stripFirstH1(md){ return md.replace(/^\s*#\s+.+$/m, ''); }
 function stripTldr(md){
   const lines = md.split(/\r?\n/);
-  const i = lines.findIndex(l => /^#{1,4}\s*TL\s*;?\s*DR/i.test(l));
+  const i = lines.findIndex(l => /^(?:#{1,4}\s*|\*{1,3}\s*)TL\s*;?\s*DR/i.test(l));
   if (i === -1) return md;
   let j = i + 1;
   while (j < lines.length && !/^#{1,4}\s/.test(lines[j])) j++;
@@ -165,6 +168,94 @@ function mdToHtml(md){
   return html;
 }
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ---- story anchors: match TL;DR lines to article sections — shared functions kept identical to the copy in index.html ----
+const STOP = new Set(['the','a','an','and','or','of','to','in','on','for','with','from','by','at','as','is','are','was','were','be','been','being','it','its','this','that','these','those','their','they','them','there','here','we','our','us','you','your','he','his','her','she','i','not','no','nor','so','if','but','also','just','now','all','any','each','every','other','others','same','both','between','among','within','without','into','onto','over','under','out','up','down','via','per','versus','like','against','toward','towards','than','then','when','where','who','whom','which','what','how','why','says','said','say','after','before','during','while','since','until','upon','whether','though','although','because','new','today','yesterday','morning','afternoon','event','date','published','update','updated','edition','report','reported','reporting','sources','source','items','item','week','monday','tuesday','wednesday','thursday','friday','saturday','sunday','january','february','march','april','may','june','july','august','september','october','november','december']);
+function stemTok(w){
+  if (w.length <= 3) return w;
+  return w.replace(/(ings|ing|ies|ied|es|ed|ly|s)$/, '');
+}
+function tokenize(s){
+  const out = new Set();
+  const raw = String(s).toLowerCase().replace(/\[[^\]]*\]\([^)]*\)/g, ' ').replace(/https?:\/\/\S+/g, ' ').match(/[a-z0-9]+/g) || [];
+  for (let w of raw){
+    if (w.length <= 2 || /^\d{4}$/.test(w) || STOP.has(w)) continue;
+    const st = stemTok(w);
+    if (st.length > 1 && !STOP.has(st)) out.add(st);
+  }
+  return out;
+}
+function sharedCount(a, b){
+  let n = 0;
+  for (const x of a) for (const y of b){
+    if (x === y || (x.length >= 5 && y.length >= 5 && x.slice(0,5) === y.slice(0,5))){ n++; break; }
+  }
+  return n;
+}
+function bestMatch(text, targets){
+  const a = tokenize(text);
+  if (!a.size) return null;
+  let best = null, bestScore = 0;
+  for (const t of targets){
+    if (!t.toks.size) continue;
+    const inter = sharedCount(a, t.toks);
+    if (!inter) continue;
+    let score = inter / Math.sqrt(a.size * t.toks.size);
+    score *= (t.kind === 'story' ? 1.15 : 0.8);
+    if (score > bestScore){ bestScore = score; best = t; }
+  }
+  return bestScore >= 0.27 ? best : null;
+}
+function slugify(s){
+  return String(s).toLowerCase().replace(/['‘’›`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64).replace(/-+$/, '');
+}
+function collectTargets(md){
+  const lines = md.split(/\r?\n/);
+  const targets = [], seen = Object.create(null);
+  let fence = false;
+  for (let i = 0; i < lines.length; i++){
+    const l = lines[i];
+    if (/^\s*(```|~~~)/.test(l)){ fence = !fence; continue; }
+    if (fence) continue;
+    let m, kind = null, core = null, prefix = '';
+    if ((m = l.match(/^(#{2,4})\s+(.+?)\s*$/))){ kind = 'section'; core = m[2]; prefix = m[1] + ' '; }
+    else if ((m = l.match(/^\*\*(.{20,}?)\*\*/))){ kind = 'story'; core = m[1]; prefix = ''; }
+    else if ((m = l.match(/^(\s*[-*]\s+)\*\*(.{20,}?)\*\*/))){ kind = 'story'; core = m[2]; prefix = m[1]; }
+    if (!kind) continue;
+    if (/^(window|updated|last updated)\b/i.test(core)) continue;
+    let slug = slugify(core);
+    if (!slug) continue;
+    if (seen[slug]){ let n = 2; while (seen[slug + '-' + n]) n++; slug = slug + '-' + n; }
+    seen[slug] = true;
+    targets.push({slug, kind, i, prefix, toks: tokenize(core)});
+  }
+  return targets;
+}
+function anchorize(md, targets){
+  const lines = md.split(/\r?\n/);
+  for (const t of targets) lines[t.i] = t.prefix + '<a id="story-' + t.slug + '"></a>' + lines[t.i].slice(t.prefix.length);
+  return lines.join('\n');
+}
+let currentView = null;
+function scrollTop(){ const el = document.querySelector('header.masthead') || document.body; el.scrollIntoView({behavior:'instant', block:'start'}); }
+function storySlug(h){ const m = String(h).match(/^#story\/([^\s?]+)$/); return m ? decodeURIComponent(m[1]) : null; }
+function scrollToId(id){
+  const run = () => {
+    let el = document.getElementById(id);
+    if (!el && String(id).indexOf('story-') === 0) el = document.getElementById('full');
+    if (el) el.scrollIntoView({behavior:'instant', block:'start'});
+  };
+  // Issue while the document is still loading can be dropped — wait for load, then scroll.
+  if (document.readyState === 'complete') run();
+  else window.addEventListener('load', () => setTimeout(run, 60), {once:true});
+}
+function postRenderFocus(){
+  const h = location.hash || '';
+  const slug = storySlug(h);
+  if (slug){ scrollToId('story-' + slug); return true; }
+  const m = h.match(/^#([\w-]+)$/);
+  if (m && document.getElementById(m[1])){ scrollToId(m[1]); return true; }
+  return false;
+}
 
 async function loadManifest(){
   const r = await fetch(BASE + 'feed/manifest.json', {cache:'no-store'});
@@ -174,7 +265,7 @@ async function loadManifest(){
 const main = () => document.getElementById('main');
 
 function renderLatest(feed){
-  if (!feed.latest){ main().innerHTML = '<div class="status">No edition published yet — the next run fires on schedule.</div>'; return; }
+  if (!feed.latest){ currentView = 'latest'; main().innerHTML = '<div class="status">No edition published yet — the next run fires on schedule.</div>'; return; }
   fetch(BASE + 'content/' + TAG + '/' + feed.latest, {cache:'no-store'}).then(r => {
     if (!r.ok) throw new Error(r.status);
     return r.text();
@@ -182,19 +273,26 @@ function renderLatest(feed){
     const title = extractTitle(md) || 'Latest edition';
     const win = extractWindow(md);
     const tldr = extractTldr(md);
+    const basis = stripFirstH1(stripTldr(md));
+    const targets = collectTargets(basis);
     let html = '<section>';
     if (feed.image) html += '<img class="edition-hero" src="' + BASE + 'content/' + TAG + '/' + feed.image + '" alt="Banner illustrating today\'s lead story" loading="eager">';
     html += '<p class="kicker">Latest edition</p>';
     html += '<h1 class="headline">' + esc(title) + '</h1>';
     if (win) html += '<p class="meta">' + esc(win) + '</p>';
     if (tldr.length){
-      html += '<div class="tldr"><p class="kicker">Top lines</p><ul>' + tldr.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>';
+      html += '<div class="tldr"><p class="kicker">Top lines</p><ul>' + tldr.map(t => {
+        const hit = bestMatch(t, targets);
+        return '<li><a href="' + (hit ? '#story/' + hit.slug : '#full') + '">' + esc(t) + '</a></li>';
+      }).join('') + '</ul></div>';
     }
     if (feed.audio) html += '<div class="listen"><p class="kicker">Listen to today\'s brief</p><audio controls preload="metadata" src="' + BASE + 'content/' + TAG + '/' + feed.audio + '"></audio></div>';
     html += '<a class="btn" href="#full">Read the full brief ↓</a>';
     html += '</section>';
-    html += '<hr class="sec-div" id="full"><article>' + mdToHtml(stripFirstH1(stripTldr(md))) + '</article>';
+    html += '<hr class="sec-div" id="full"><article>' + mdToHtml(anchorize(basis, targets)) + '</article>';
     main().innerHTML = html;
+    currentView = 'latest';
+    if (!postRenderFocus()) scrollTop();
   }).catch(() => { main().innerHTML = '<div class="status">The latest edition could not be loaded.</div>'; });
 }
 
@@ -206,7 +304,7 @@ function archiveEntries(feed){
 
 function renderArchive(feed){
   const entries = archiveEntries(feed);
-  if (!entries.length){ main().innerHTML = '<div class="status">No archived editions yet.</div>'; return; }
+  if (!entries.length){ currentView = 'archive'; main().innerHTML = '<div class="status">No archived editions yet.</div>'; return; }
   let html = '<p class="kicker">Archive</p><ul class="editions-list">';
   for (const e of entries){
     const nice = (() => { try { return new Date(e.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); } catch(err){ return e.date; } })();
@@ -219,6 +317,7 @@ function renderArchive(feed){
   }
   html += '</ul>';
   main().innerHTML = html;
+  currentView = 'archive';
 }
 
 function renderEdition(feed, file){
@@ -237,11 +336,13 @@ function renderEdition(feed, file){
     html += '<hr class="sec-div"><article>' + mdToHtml(stripFirstH1(md)) + '</article>';
     html += '<p><a href="#archive" style="color:var(--faint);font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase">← All editions</a></p>';
     main().innerHTML = html;
+    currentView = 'edition:' + file;
   }).catch(() => { main().innerHTML = '<div class="status">Edition not found.</div>'; });
 }
 
 async function route(){
   const h = location.hash || '#latest';
+  const slug = storySlug(h);
   let feed;
   try { feed = (await loadManifest()).feeds.find(f => f.tag === TAG); }
   catch(e){ main().innerHTML = '<div class="status">Feed unavailable — manifest not reachable.</div>'; return; }
@@ -251,7 +352,12 @@ async function route(){
   const navL = document.getElementById('nav-latest'), navA = document.getElementById('nav-archive');
   const isArchive = h.startsWith('#archive') || h.startsWith('#edition/');
   navL.classList.toggle('on', !isArchive); navA.classList.toggle('on', isArchive);
-  if (h.startsWith('#edition/')) renderEdition(feed, h.slice(9));
+  if (slug){
+    if (currentView === 'latest'){ scrollToId('story-' + slug); return; }
+    renderLatest(feed);
+  }
+  else if (h === '#full' && currentView === 'latest'){ scrollToId('full'); }
+  else if (h.startsWith('#edition/')) renderEdition(feed, h.slice(9));
   else if (h.startsWith('#archive')) renderArchive(feed);
   else renderLatest(feed);
 }
