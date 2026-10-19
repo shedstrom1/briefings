@@ -1,89 +1,84 @@
-# AI News Briefing — Monday, October 19, 2026 (24 hours to 7:00 AM ET)
+# AI News Briefing — Monday, October 19, 2026 · 12:00 ET
 
-**Window:** Sun Oct 18, 07:01 ET → Mon Oct 19, 07:01 ET, 2026 · 8 items verified · 8 "just missed the window"
+**Window:** 2026-10-19 07:00 → 12:01 EDT (previous fire 07:00) · New-items-only, ledger-deduped.
 
-**TL;DR**
-- **Anthropic is committing 5% of its shares to a new Public Benefit Fund** — with escalators that could push the company's total public-good stake to roughly 20% or more, on the eve of a possible November IPO.
-- **Nvidia has reportedly asked Samsung, SK hynix and Micron to build NVHBM base dies on TSMC's 3nm process** — the first time Samsung and TSMC meet at the HBM manufacturing stage.
-- **Sam Altman-backed World launched a World ID suite for banks** at Money20/20, as its Zoom deepfake-detection tool went generally available — human-vs-agent verification arriving as an enterprise product.
-- **OpenClaw v2026.10.5** shipped self-recovering updates and restart-safe conversations; **llama.cpp** cut seven builds inside the window, including a fix for silent GGUF corruption.
-- **CyberSN:** US cybersecurity postings fell 26.4% to a four-year low — while AI Security Engineer demand rose 268%.
+## TL;DR
+
+- **DHS ordered all federal civilian agencies to strip DeepSeek out of their IT systems** and barred future procurement, citing "multiple threat vectors" and data transfer to the PRC — the most aggressive US action yet against a Chinese open-weight model family.
+- **MiniMax released M3.1 Flash**, a 428B-A23B MoE agent/coding model at $0.15/$0.60 per million tokens, with open weights promised October 23 — a direct price-per-agent-task shot at Opus 5 and GPT-5.6 Sol territory.
+- **A single Chinese-speaking hacker breached 100+ companies (Deere, SharkNinja, Cummins) using AI agents for about $5,000 in tokens** (~$50 per break-in), per a NorForge report obtained by Reuters — real-world proof of end-to-end autonomous intrusion.
+- **Tenstorrent closed a $1.5B Series E at a $6.2B valuation** to scale Galaxy servers that run open-weight models locally on an open-source software stack.
+- **doubleAI launched Maxwell**, a commercial "code execution model" that rewrites GPU/CPU code for performance; the WSJ reports $220M raised with roughly half spent on 1,000 Nvidia B300s.
 
 ---
 
 ## Models and local inference
 
-**Nvidia pushes all three memory rivals onto TSMC 3nm for its custom NVHBM** — event date: Sunday, October 18 (Reuters, citing the Seoul Economic Daily)
-Nvidia has asked Samsung, SK hynix and Micron to manufacture the base dies for its custom HBM (NVHBM, unveiled in August) on TSMC's 3-nanometre process, and to use sixth-generation DRAM for the core dies; Samsung's Device Solutions division accepted after an internal review. It would be the first collaboration between Samsung and TSMC at the HBM manufacturing stage. TrendForce adds the economics: TSMC 3nm yields are estimated above 90% versus roughly 60% at Samsung's 2nm, and Nvidia claims NVHBM delivers up to 30% more memory bandwidth, 15% lower HBM power and 25% more XPU die area than standard HBM4E. Samsung is still validating its own 2nm node as a fallback if TSMC 3nm capacity — already 33% of TSMC's Q3 wafer sales — runs short.
+**MiniMax M3.1 Flash ships at Flash-tier pricing with open weights due October 23** — *Event date: Monday, October 19, 2026*
+MiniMax officially rolled out M3.1 Flash, a 428B-parameter MoE (~23B active) with a 1M-token context, live on its API, M Plan and MiniMax Code at a flat $0.15 input / $0.60 output / $0.015 cached per million tokens. The company claims a "generational leap" in agentic tasks, coding, computer use and cybersecurity — Automation-Bench v1.0.6 at 62.2 (vs Opus 5's 50.3 and GPT-5.6 Sol's 45.8), BankerToolBench 76.2, OSWorld V2 61.7, CyberGym 82% — all vendor-reported, no independent replication yet; Terminal Bench 4.0 (38.1 vs Opus 5's 51.8) is the weak spot. Reasoning is always-on across five effort levels and `thinking.type=disabled` now errors, so integrations must migrate. The stealth "Space Bunny" model on OpenRouter was an early M3.1 Flash build that processed 200T+ tokens. Weights are promised October 23 (license not yet disclosed).
+*Why it matters:* flat half-of-M3 pricing plus claimed 3x speed pushes the cost floor for frontier-adjacent agent work below anything US labs offer, and the Oct 23 weights drop makes this a live open-weights story (DeepSeek V4.1-Flash-1017 territory).
+Source: MiniMax — "MiniMax M3.1 Flash: Redefining Agent Performance and Cost," Oct 19, 2026 — https://www.minimax.io/blog/minimax-m31f
+Source: MarkTechPost (Asif Razzaq), Oct 19, 2026 — https://www.marktechpost.com/2026-10-19/minimax-m3-1-flash-release/
 
-*Why it matters:* NVHBM moves the memory controller out of the GPU and onto a logic base die, making memory a co-designed, foundry-supplied component of AI compute. A single 3nm base-die spec across all three suppliers standardizes validation and deepens Nvidia's control of the AI memory stack — and locks more of the local-inference roadmap to TSMC's capacity, which is already tight into 2028.
-- Source: Reuters, "Samsung to use TSMC technology for Nvidia's next-generation memory chips, Seoul newspaper reports," Oct 18, 2026 — https://www.reuters.com/world/asia-pacific/samsung-use-tsmc-technology-nvidias-next-generation-memory-chips-seoul-newspaper-2026-10-18/
-- Source: TrendForce, "NVIDIA Reportedly Pushes TSMC 3nm NVHBM Base Dies for Samsung, SK hynix, Micron," Oct 19, 2026 — https://www.trendforce.com/news/2026-10-19/news-nvidia-reportedly-pushes-tsmc-3nm-nvhbm-base-dies-for-samsung-sk-hynix-micron-in-unlikely-foundry-tie-up/
+**Tenstorrent closes $1.5B Series E at $6.2B to scale open-weight local inference** — *Event date: Monday, October 19, 2026*
+Jim Keller's AI chip company announced Monday it closed $1.5B in Series E at a $6.2B post-money valuation — more than double its $2.6B post-Series-D mark — led by Trace Capital and Innovation X with ARK, Fidelity, Morgan Stanley, SanDisk, T. Rowe Price, Tether Investments and others. Capital goes to deploying Galaxy servers at scale for open-weight LLM and video-generation workloads and to licensing its TT-Ascalon RISC-V CPU and Tensix AI cores (customers include Samsung and LG). TNW adds that Tenstorrent chose to raise rather than sell after takeover talks with Intel and Qualcomm, and that Keller called a DeepSeek run on Galaxy servers the turning point.
+*Why it matters:* the most credible non-Nvidia rack story is funding specifically around running frontier open-weight models locally with an open-source stack — directly widening the addressable base for self-hosted inference.
+*Local inference:* Tenstorrent markets exactly this — "developers can run frontier models locally and enterprises can deploy models on-prem"; its stack (compiler/runtime) is open source, so home-lab-relevant tooling could mature off this raise.
+Source: Tenstorrent newsroom, Oct 19, 2026 — https://tenstorrent.com/en/newsroom/tenstorrent-announces-series-e
+Source: The Next Web, Oct 19, 2026 — https://thenextweb.com/news/tenstorrent-1-5bn-series-e-6-2bn-valuation
 
-**llama.cpp ships seven builds in-window; headline fix stops silent GGUF corruption** — event date: Oct 18, 18:04 UTC → Oct 19, 10:23 UTC (GitHub releases b11721–b11727)
-The llama.cpp release cadence stayed heavy across the window with builds b11721 through b11727. The flagship change in b11727: `gguf-split` and the LoRA export tool now reject truncated GGUF tensor data instead of quietly producing corrupted output, via new tensor-data bounds checks, short-read checks and a regression test.
+**doubleAI debuts Maxwell, a commercial "code execution model" for GPU performance** — *Event date: Monday, October 19, 2026*
+The Tel Aviv startup co-founded by Mobileye's Amnon Shashua released Maxwell, which rewrites and verifies performance-critical code for GPUs/CPUs; the WSJ reports $220M raised (Lightspeed, Bessemer, Nvidia, Dell) with about half spent on 1,000 Nvidia B300 chips, and pricing as a share of the compute savings it delivers. Company claims: 67% compute-cost reduction for an unnamed early customer, and (March research, company-published) a drop-in cuGraph replacement at a 3.6x mean speedup; a same-day doubleAI post claims LTX-2.5 4K video generation 1.87x faster. No independent benchmarks exist yet — treat every number as vendor-asserted.
+*Why it matters:* if agent-written kernels keep beating expert-tuned code, the compute-cost curve bends without new silicon — and Nvidia funding a startup that optimizes (and resells against) its own hardware is a signal.
+*Local inference:* the payoff class (faster kernels, cheaper inference on the same GPU) applies at home-lab scale too, though all reported results are on datacenter cards.
+Source: WSJ (Belle Lin), Oct 19, 2026 — https://www.wsj.com/cio-journal/nvidia-backed-startup-doubleai-launches-model-to-pare-cost-of-compute-b780f215
+Source: explainX claimed-vs-verified check, Oct 19, 2026 — https://explainx.ai/blog/doubleai-maxwell-code-execution-model-220-million-b300-claimed-vs-verified-2026
+Source: doubleAI research (Mar 5, 2026 background) — https://www.doubleai.com/research/doubleais-warpspeed-surpassing-expert-written-kernels-at-scale
 
-*Why it matters:* For anyone quantizing, splitting or exporting GGUFs locally, silent tensor corruption is the class of bug that wastes days of debugging a "bad model" that was really a bad split — a hard failure mode is a real quality win for the local toolchain.
-- Source: GitHub, ggml-org/llama.cpp releases b11721 (Oct 18, 18:04 UTC) through b11727 (Oct 19, 10:23 UTC) — https://github.com/ggml-org/llama.cpp/releases
+**Also noted (ecosystem):** llama.cpp shipped four more builds inside this window (b11729 07:24 → b11734 10:08 ET; GitHub timestamps) — routine cadence on top of this morning's already-reported GGUF-corruption fix; changelogs not yet reviewed.
 
 ---
 
 ## Agent tools
 
-**World launches a World ID suite for banks as its Zoom deepfake check goes GA** — event date: Sunday, October 18 (Money20/20, Las Vegas)
-Sam Altman-co-founded World unveiled an industry-specific World ID bundle for banks and financial firms, announced by co-founder Alex Blania at Money20/20. The suite packages the World ID identity wallet, World ID for Zoom (now generally available after an April beta, designed to flag deepfaked participants on calls) and World ID for Agents/AgentKit, which lets a person delegate verified "Proofs" to an AI agent that presents them to third parties. Design partners include OpenExchange, Bain Capital and VanEck Funds — but no bank was named as a live user; World cites 18M+ Proof-of-Human holders and a Deloitte forecast of $40B US AI-enabled fraud losses by 2027.
+**Modal becomes the first agent-hosting customer for Nvidia's Vera CPU** — *Event date: Monday, October 19, 2026*
+Reuters reports (10:11 AM EDT) that Modal will start using Nvidia's Vera CPUs for agent hosting — a workload it has run exclusively on Intel and AMD until now — after internal tests showed the Vera chip "doubled the amount of work that AI agents can get done." CEO Erik Bernhardsson stressed a mixed fleet, not a switch. Context from the same piece: Modal raised $750M at a $15.75B valuation last week (out-of-window) and Nvidia is forecasting $20B+ in Vera sales this fiscal year.
+*Why it matters:* a purpose-built agentic CPU getting a marquee conversion is Nvidia's first real traction against Intel/AMD in the CPU tier — agent hosting is where CPU demand is shifting.
+Source: Reuters (Stephen Nellis), Oct 19, 2026, 10:11 AM EDT — https://www.reuters.com/business/nvidia-wins-fast-growing-ai-startup-modal-new-central-processors-2026-10-19/
 
-*Why it matters:* This is the verification layer for the agent era arriving as a finance product: institutions need to prove a counterparty is human, and agents need delegated, provable identity to transact. It lands in the same fortnight Schwab and JPMorgan publicly moved to block money-moving third-party agents — identity plumbing is becoming the precondition for agentic finance.
-- Source: The Block, "World launches World ID suite for banks, makes Zoom deepfake check generally available," Oct 18, 2026 9:10 PM EDT — https://www.theblock.co/news/ecosystems/2026-10-18-world-launches-world-id-suite-banks-418869
-- Source: Unchained, "World Pitches Banks a Bundle of Human-Verification Tools to Counter Deepfakes," Oct 19, 2026 — https://unchainedcrypto.com/world-pitches-banks-a-bundle-of-human-verification-tools-to-counter-deepfakes/
-
-**OpenClaw v2026.10.5 makes updates self-recovering and conversations restart-safe** — event date: Saturday, October 18, 21:47 UTC (GitHub release)
-The agent framework's newest stable release reworks its update path so `openclaw update` completes across devices, filesystems, pnpm 12, Windows elevation and macOS login shells, settles stale handoff leases and package-activation journals instead of stranding an install, and stops busy or unhealthy Gateways from blocking updates. It also makes interrupted turns, subagent work and deferred tasks resume after a Gateway restart, with user input and committed session data surviving concurrent writes and failed publications.
-
-*Why it matters:* For fleets of long-lived personal agents, the failure mode that kills trust is a half-applied update or a restart that loses a running task. OpenClaw attacking update recovery and turn resumption as first-class features signals the framework maturing into run-it-for-weeks infrastructure rather than a session toy.
-- Source: GitHub, openclaw/openclaw release v2026.10.5, published Oct 18, 2026 21:47 UTC — https://github.com/openclaw/openclaw/releases/tag/v2026.10.5
-
-**Stripe's Link agentic-commerce deep dive: 38x more agent transactions in September** — event date: reporting published Sunday, October 18–19 (Upstarts Media, data provided by Stripe)
-Alex Konrad's Upstarts Media published "How AI Assistants Are Spending Real Money" using Stripe Link data shared first with the newsletter: agentic transactions — purchases initiated and executed by AI systems without real-time human approval — rose 38x in September, payment volume rose 20x, retail led both, and the average spend was about $100. Stripe's Link team said the wallet now powers roughly 200 agents, up from about 70 signed on during the September data window.
-
-*Why it matters:* This is the first substantive public dataset on what agents actually buy — and the answer so far is low-ticket, retail, replenishment-type commerce. Average order value around $100 maps today's trust ceiling: agents handle the trivial while humans still gate big-ticket purchases. (Stripe's own September 29 blog first claimed the 38x monthly figure; this is the first reporting with structure behind it.)
-- Source: Gokhshtein News, "Stripe's AI Agents Drive 38x Jump in Automated Transactions," Oct 19, 2026 — https://gokhshtein.com/news/2026-10-19-stripes-ai-agents-drive-38x-jump-in-automated-transactions
-- Source: Techmeme river item, "Stripe Link data shows agentic transactions increased by 38x…," Oct 19, 2026 1:20 AM — https://www.techmeme.com/261019/p3
-
-*Also noted:* Anthropic shipped Claude Code v2.1.303 on Oct 18 (22:26 UTC) — routine but fast-moving coding-agent tooling — https://github.com/anthropics/claude-code/releases
+**Also noted (reported, paywalled):** The Information's AI Agenda newsletter says Anthropic is preparing a model with sharper "intuition" and reasoning that can discern unstated user intentions and think outside the box — a preview, not a release.
+Source: The Information, Oct 19, 2026 — https://www.theinformation.com/newsletters/ai-agenda/anthropic-readies-model-reads-users-intentions-better
 
 ---
 
 ## AI security and governance
 
-**Anthropic commits 5% of its shares to a new Public Benefit Fund ahead of an IPO** — event date: Sunday, October 18
-Anthropic announced it is committing 5% of its shares — subject to stockholder approval — to the Anthropic Public Benefit Fund, a wholly-owned LLC (deliberately not a 501(c)(3)), with the board able to add 2 percentage points for every 50% increase in company value above a set baseline. Equity in the LLC cannot be used for lobbying or political giving in the US or abroad. Combined with the co-founders' original 80%-of-equity pledge and an employee equity-match program (~half of staff participate), Anthropic says roughly 20% of shares will be dedicated to the public good. Named use cases include large donations to traditional nonprofits, direct distributions to specific populations, and bolder work beyond the $200M already committed to studying AI labor-market impacts. AP notes the move comes as Anthropic eyes an IPO as soon as November.
+**DHS orders DeepSeek removed from all federal civilian IT systems** — *Event date: Monday, October 19, 2026*
+Homeland Security ordered federal civilian agencies to remove DeepSeek products — and third-party services built on DeepSeek — from their IT systems, and banned future acquisition, per a notice published Monday (Reuters, 10:55 AM ET pickup). DHS cited "multiple threat vectors," possible transfer of sensitive data to the PRC, intelligence production on US persons, and possible malware in the models; a July DHS memo ordering traffic monitoring surfaced with it. Reuters notes Commerce and the Navy had already banned DeepSeek, as have New York, Tennessee and Virginia. WSJ confirmed the removal-plus-procurement-ban framing independently.
+*Why it matters:* this is the first US action of its kind against an open-weight model family at government-wide scale — it constrains not just DeepSeek but any third-party tool that embeds it, and lands one day after DeepSeek shipped V4.1-Flash-1017 open weights, sharpening the open-weights-versus-trust debate.
+Source: Reuters (David Shepardson), Oct 19, 2026 — https://www.reuters.com/technology/us-banning-chinese-ai-deepseek-government-agency-it-systems-2026-10-19/
+Source: WSJ, Oct 19, 2026 — https://www.wsj.com/tech/ai/dhs-orders-deepseek-technology-removed-from-federal-civilian-it-systems-060b6d3d
 
-*Why it matters:* A public benefit corporation pointing escalating equity — not just cash — at its mission is a structural answer to "who owns the safety dividend," and it reframes the pre-IPO story for a lab that has been criticized for governance opacity. The valuation-linked escalator also creates a board-governance question the fund's promised structure/governance disclosure must answer: who, exactly, decides how tens of billions in equity get deployed, and on what timeline.
-- Source: Anthropic, "Investing in the public benefit," Oct 18, 2026 — https://www.anthropic.com/news/public-benefit-fund
-- Source: Associated Press, "Anthropic commits 5% of its stock to a new 'public benefit' fund," Oct 18–19, 2026 — https://apnews.com/article/anthropic-shares-public-benefit-8181332fbbc48f2ef9447cef096f14de
-
-**CyberSN: US cybersecurity job postings at a four-year low — AI security roles up 268%** — event date: report published over the weekend (CyberSN Cybersecurity Jobs Report; covered Oct 18–19)
-CyberSN counted 235,786 US cybersecurity job postings January–September 2026, down 26.4% from 320,210 in the same period of 2025 and a four-year low. The mix shifted hard: AI Security Engineer postings rose 268.3% and Cyber Data Scientist postings 203.5%, while Insider Threat Analyst (−55.6%), Penetration Tester (−45.9%) and CISO postings (−38.9%, back to roughly 2024 levels) fell. About 15% of all postings now reference AI, peaking at 20.0% in September.
-
-*Why it matters:* The AI-security engineer is becoming the security job that survives the downturn — consistent with AI agents absorbing routine analyst and pentest work while demand concentrates on supervising and securing AI systems themselves.
-- Source: SecurityWeek, Kevin Townsend, "US Cybersecurity Job Postings Fall 26% as AI Security Engineer Demand Soars," Oct 18, 2026 — https://www.securityweek.com/us-cybersecurity-job-postings-fall-26-as-ai-security-engineer-demand-soars/
-- Source: Infosecurity Magazine, "US Cybersecurity Job Postings Fall 26%, Hitting Four Year Low," Oct 19, 2026 — https://www.infosecurity-magazine.com/news/cybersecurity-job-postings-fall/
+**Autonomous AI agents pulled off 100+ corporate breaches for ~$5,000 in tokens** — *Event date: Monday, October 19, 2026*
+Reuters (exclusive, 8:30 AM ET) obtained a NorForge report in which threat researcher Snorre Fagerland tracked a Chinese-speaking hacker who let AI agents do essentially all the work: probing and breaching 1,200+ attempted sites since ~October 2, succeeding at 100+ companies including Deere, SharkNinja and Cummins, for roughly $5,000 in tokens (~$50 per intrusion). The tooling is Cairn, an open-source AI problem-solving platform whose inadvertently exposed instances Fagerland scanned. Reuters independently verified victims by reviewing the hacker's Cairn activity; TNW corroborated the token economics. Data-extraction impact is unknown.
+*Why it matters:* the economics are the story — at ~$50 a breach, defensive economics break long before capability debates settle; expect this to anchor every agent-autonomy risk argument this quarter (and to be followed by patch-your-agent-stack headlines).
+Source: Reuters (Raphael Satter), Oct 19, 2026 — https://www.reuters.com/legal/government/how-one-hacker-used-ai-agents-few-thousand-dollars-break-into-scores-sites-2026-10-19/
+Source: The Next Web, Oct 19, 2026 — https://thenextweb.com/news/ai-agents-hacker-cairn-100-sites-deere-norforge
 
 ---
 
-## Just missed the window (out-of-window events, noted for context)
+## Just missed the window (announced before the 07:00 boundary; never reported by an earlier run)
 
-- **vLLM v0.32.0** (released Oct 18, 06:50 UTC — four hours before the window opened): 814 commits, new `/v1/systemone` structured-decision endpoint, a generic `hf` tool/reasoning parser that reads a checkpoint's `response_template`, and out-of-the-box support for Cloudflare clef-omni, LiquidAI d1-3B and DiffusionGemma — a meaningful local-serving release that just missed the cut. https://github.com/vllm-project/vllm/releases/tag/v0.32.0
-- **DeepSeek V4.1-Flash-1017** (Oct 17): MIT-licensed weights on Hugging Face day one, unchanged token prices, Terminal-Bench 4.0 up 31.2→42.3, plus new Search & Fetch APIs at $0.75/1,000 calls. https://www.reuters.com/world/asia-pacific/ (via Bloomberg/Techmeme, Oct 17) — see also https://local-ai-zone.github.io/blog/October_2026_AI_Model_Updates.html
-- **StepFun's Step 5 Preview open weights** (Oct 14–16): 600B MoE / 27B active, 1M context, BF16 and FP8 on Hugging Face/ModelScope — server-class rigs, not laptops. https://www.marktechpost.com/2026-10-16/stepfun-releases-step-5-preview-open-weights-600b-moe-27b-active-1m-context/
-- **OpenCode Console breach** (disclosed Oct 17): a "large scale distillation attack" exposed stored OpenAI/Anthropic/Google API keys for ~1.4% of Console users; key rotation urged. https://startupfortune.com/opencode-breach-exposes-stored-openai-and-anthropic-keys-prompts-urgent-key-rotation/
-- **Google DeepMind's four Gemini 4 Argon agents beating Minecraft autonomously** (paper posted Oct 15; recirculated on the Techmeme river at 6:30 AM today): 27h14m, 2,783 programs, 605 deaths, $1,620. https://arxiv.org/abs/2610.22319
-- **MOSS-Image**, OpenMOSS's 5B open-weights text-to-image model with layout control and 4K-token prompts (~Oct 16), gained ComfyUI support Oct 18. https://openmoss.ai/MOSS-Image/
-- **EU Commission AI Office formal AI Act probes into OpenAI and Anthropic** over AI-agent hacks (Oct 16, per the Techmeme river). https://www.euronews.com/next/
+- **Microsoft treats AI agents as insider threats (365 E7 + Project Perception "Guardian Agents").** Announced Monday — GeekWire 6:05 AM ET, Microsoft blog Oct 19: continuous per-agent risk scoring with auto-containment (strip write access, require human approval, or shut down), agent detection up from 25 to 60 types (Claude Code, Codex, Copilot), private preview GA planned at Ignite (Nov 17–19), E7 at $99/user/month.
+  Source: GeekWire (Todd Bishop), Oct 19, 2026, 6:05 AM — https://www.geekwire.com/2026/microsoft-unveils-tools-to-monitor-and-corral-rogue-ai-agents/
+  Source: Microsoft (Hayete Gallot), Oct 19, 2026 — https://blogs.microsoft.com/blog/2026-10-19/securing-the-agentic-insider/
+- **Amazon opened TorchNeuron as a public beta** (PyTorch-native backend for Trainium — "if you know PyTorch, then you know Trainium"; open-sourced Tuesday at PyTorch Conference; nightly tests against 100k+ HF models; Deepgram +60% audio/$ on Trainium).
+  Source: GeekWire (Todd Bishop), Oct 19, 2026, 6:25 AM — https://www.geekwire.com/2026/amazon-challenges-nvidias-software-advantage-with-new-tool-for-its-ai-chips/
+- **sglang v0.5.22** published 02:55 UTC (previous fire's window) — https://github.com/sgl-project/sglang/releases/tag/v0.5.22
 
 ## Coverage notes
-- **Verified:** 8 in-window items with fetched, dated sources (5 lead stories read in full); 8 just-missed footnotes attributed to fetched or search-returned dated pages.
-- **Indexes used:** Techmeme river, Hacker News Algolia (window-filtered), Hugging Face trending models + Daily Papers, GitHub releases API (llama.cpp, vLLM, Ollama, OpenClaw, LangGraph, Agent Framework, Codex, Claude Code, Unsloth, ADK, smolagents), ~20 multi-angle web searches across models/hardware/agents/security/policy.
-- **Dead ends:** CNBC's Anthropic article blocked by reCAPTCHA (2-strike dropped; AP used as the independent second source); Hugging Face `api/models?sort=created` returned an invalid-sort error (trending list substituted); llm-stats.com returned an SEO shell. Reuters fetched cleanly on first try this run.
-- **Quiet day honestly noted:** no new closed-weight frontier release inside the window — the latest remain Meta Muse Wonder (Oct 12), GPT-6.1 Sol (DevDay, Sep 29) and Claude Haiku 5.5 (Oct 7).
+
+- **Verified this run:** 6 full items + 1 also-noted release stream + 1 reported one-liner, all fetched-and-read except WSJ/The Information (paywalled; cited from search-returned URLs, corroborated by fetched second outlets or the Techmeme river). Outlets used: Reuters (3), GeekWire (2), MiniMax, MarkTechPost, Tenstorrent, TNW (2), explainX, doubleAI, TechCrunch, HN Algolia river, GitHub releases API (4 repos), HuggingFace models API.
+- **Ledger dedupe:** 6 candidates suppressed as already reported — vLLM v0.32.0 re-coverage (10/18), llama.cpp build stream (reported today 07:00; new builds listed as also-noted), DeepSeek V4.1-Flash-1017 (comparison tables), Nvidia NVHBM/TSMC (10/19 07:00 run), CyberSN job-postings (river 4:00 AM re-coverage), Anthropic Public Benefit Fund (river mentions 5:40/6:50 AM re-coverage). Zero repeat 'Just missed' footnotes (all three are first-time `missed:` entries).
+- **Excluded as out-of-window (not ledger events):** TechCrunch's Nvidia Nemotron 3.5 Super VL/Bolt coverage (body: launched "Thursday" Oct 15 — stale; model already in production use), Laminar's Launch HN for flow-1 (model blog-dated Oct 2), The Decoder's Gemini 4 Argon Minecraft piece (6:30 AM river entry; underlying arXiv paper circulated from Oct 16).
+- **Dead ends:** none two-struck. WSJ and The Information paywalls prevented full-text reads (noted per-item). HN Algolia window pull and HF latest-models API produced no other qualifying stories.
