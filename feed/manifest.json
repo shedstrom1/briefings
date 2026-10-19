@@ -189,34 +189,6 @@
       ],
       "audio": "media/2026-10-19-1244.mp3",
       "image": "media/2026-10-19.jpg"
-    },
-    {
-      "tag": "ai-hardware",
-      "title": "AI Hardware & Local Models Brief",
-      "latest": "latest.md",
-      "updated": "2026-10-19T13:45:32",
-      "archive": [
-        {
-          "date": "2026-10-19",
-          "file": "2026-10-19.md",
-          "image": null,
-          "audio": null
-        }
-      ]
-    },
-    {
-      "tag": "teststrip",
-      "title": "teststrip",
-      "latest": "latest.md",
-      "updated": "2026-10-19T13:45:35",
-      "archive": [
-        {
-          "date": "2026-10-19",
-          "file": "2026-10-19.md",
-          "image": null,
-          "audio": null
-        }
-      ]
     }
   ]
 }
