@@ -1,59 +1,69 @@
-# AI Hardware & Local Models Brief — Oct 19, 2026: MiniMax M3.1 Flash ships, AMD HX 455 APU leak
+# AI Hardware & Local Models Brief — RTX Spark Runs Linux, doubleAI Maxwell Optimizes Code at Runtime
 
-**Window:** 2026-10-19 07:45 → 13:57 EDT (previous fire → now; America/New_York)
+**Window: 2026-10-19 12:45 → 17:45 EDT (previous fire → this fire)** — Monday, October 19, 2026.
 
-**TL;DR**
-- MiniMax released **MiniMax M3.1 Flash** today: a 428B-total / ~23B-active MoE with a 1M-token context, API priced at $0.15/$0.60 per million tokens, and open weights promised **October 23** — the next big model for the local community to pre-size.
-- **AMD Ryzen AI 7 HX 455** leaked today: an 8-core mobile APU with the full 16-CU Radeon 890M-class iGPU and 24 MB L3 — cheaper AI-laptop silicon.
-- **SGLang v0.5.22** shipped ~5 hours before the window (Sunday night): DeepSeek-V4.1 gains up to 2.3x more throughput per GPU on H200 and lands on AMD MI350X/MI355X — footnoted below.
-- Verified items in window: 2. Ledger suppressions this run: 0 (ledger was empty at fire time).
+## TL;DR
 
----
+- **NVIDIA's RTX Spark N1 laptops run Arch Linux ARM — with a bigger CUDA memory pool than Windows.** A deep first-person write-up on the ASUS ProArt P16 (N1X, 128 GB unified memory) reports 116.0 GiB exposed to CUDA under Linux vs ~109.7 GiB on Windows, on par with Windows in CPU benchmarks, and ~31 tokens/s generating on Qwen3.8-Flash-Next FP4 via vLLM.
+- **doubleAI launched Maxwell**, a "code execution model" that rewrites running binaries for the exact hardware they land on — claiming >4.5x on AI inference kernels and ~2x on the LTX-2.5 4K video world model, with at most 2% tracing overhead.
+- **llama.cpp merged cooperative-kernel dp4a GEMMs for OpenCL** (q4_0/q4_k/q6_k) across three same-day builds — a meaningful speed path for iGPU and non-NVIDIA cards.
+- **AYN confirmed the Dragonwing Q8** (Snapdragon 8 Elite-class) in the Odin 3 Portal handheld — more 8-Elite-class silicon shipping in local-LLM-friendly devices.
+- Quiet on the open-weight front this window: no verified new weight drops between the last two fires; Mistral's "Le Chonk" (1T) is still gated on Hugging Face.
 
 ## AI hardware and silicon
 
-**AMD readies Ryzen AI 7 HX 455 mobile APU with a full 16-CU iGPU** — *leaked Monday, October 19, 2026 (TechPowerUp 13:33 EDT; VideoCardz ~09:45 EDT)*
-
-Per a Weibo leak from leaker 金猪升级包 ("Golden Pig Upgrade"), picked up by TechPowerUp, VideoCardz, Guru3D and Wccftech today, the Ryzen AI 7 HX 455 pairs eight cores / 16 threads (reportedly a Ryzen Z2 Extreme-style 3x Zen 5 + 5x Zen 5c layout across two CCDs) with a 16 compute-unit Radeon 890M-class RDNA 3.5 iGPU and 24 MB of L3 cache — a significantly larger cache than the Z2 Extreme's 16 MB, and the full-size iGPU of the 10-core Ryzen AI HX 470 at a lower core count. CPU clocks, NPU performance and launch timing are all still unknown, and this is a single-leaker story.
-
-**Why it matters:** moving the full 16 CU graphics engine down to an 8-core SKU means AMD is repricing the "capable iGPU" tier of its Ryzen AI mobile line — the same iGPU-plus-XDNA2-NPU combo that drives on-device inference workloads. A cheaper 16-CU APU strengthens the laptop-class option for small-model local inference and upscaling tasks against NVIDIA's newly launched RTX Spark N1X laptops and Apple's M-series.
-
-**Local inference:** targets mainstream AI laptops (consumer thin-and-light class, no discrete VRAM); the 16 CU Radeon 890M-class iGPU + 50 TOPS-class NPU is the sub-$1,500 segment's local workhorse for 7B–14B quantized models and image generation — well below the 16GB discrete-VRAM class, where shared system memory and bandwidth are the limit.
-
-Sources:
-- TechPowerUp — "AMD Ryzen AI 7 HX 455 Surfaces with 16 CU Radeon Graphics," Monday Oct 19, 2026, 13:33 ET — https://www.techpowerup.com/ (front-page news index; article link)
-- VideoCardz — "AMD Ryzen AI 7 HX 455 leaked with 8-core CPU and 16-CU GPU," Oct 19, 2026 15:45 CET — https://videocardz.com/newz/amd-ryzen-ai-7-hx-455-leaked-with-8-core-cpu-and-16-cu-gpu
-- Guru3D — "AMD Ryzen AI 7 HX 455 Leak Points to Eight Cores and 16-CU GPU," Oct 19, 2026 (citing IT Home / Weibo @金猪升级包) — https://www.guru3d.com/story/amd-ryzen-ai-7-hx-455-leak-points-to-eight-cores-and-16cu-gpu/
-- Wccftech — "AMD Is Reportedly Preparing Ryzen AI 7 HX 455 With 16 CU" — https://wccftech.com/amd-is-reportedly-preparing-ryzen-ai-7-hx-455/
-
-## Model releases
-
-**MiniMax launches M3.1 Flash: 428B MoE, 1M context — open weights due October 23** — *released Monday, October 19, 2026*
-
-MiniMax shipped M3.1 Flash on its API today at $0.15 per million input / $0.60 per million output tokens (cache reads $0.015), with weights confirmed for **October 23** (license not yet disclosed). The model is a 428B-total, ~23B-active sparse MoE with a 1,000,000-token context, native visual encoder (text/image/video in, text out), always-on reasoning with five effort levels, and roughly 150 tokens/second on MiniMax's serving stack. Vendor-reported benchmarks put it atop Automation-Bench v1.0.6 at 62.2 (vs Opus 5's 50.3) and 73.7 on DeepSWE v1.1, while trailing badly on Terminal Bench 4.0 (38.1 vs 51.8). MiniMax also confirmed its "Space Bunny" stealth model that churned through 200T+ tokens was an early M3.1 Flash build.
-
-**Why it matters:** this is the agentic-MoE-at-flash-price play against DeepSeek-V4.1-Flash, and the October 23 weights drop is the real event for this readership — a 23B-active MoE is exactly the profile the community turns into fast local builds (the gpt-oss playbook). Caveat: every benchmark is vendor-reported with no independent replication yet, and self-hosting hardware guidance doesn't exist until the weights land.
-
-**Local inference:** 428B total / ~23B active. For sizing: the M3 sibling's MXFP8 build is ~440 GB, so expect multi-GPU or cluster class at honest precisions; only aggressive low-bit quants (Q2-ish territory) would squeeze it into 128 GB unified-memory boxes like DGX Spark or Ryzen AI Halo (two clustered 64 GB Sparks pool to 128 GB), and it will not fit the RTX 5060 Ti 16GB class. The 23B active footprint is what makes those quants still quick if they work. Watch for GGUF/quant tiers within days of Oct 23.
-
-Sources:
-- MarkTechPost — "MiniMax Just Launched M3.1 Flash: 428B MoE Agentic Model at $0.15/M Input," Oct 19, 2026 (read in full) — https://www.marktechpost.com/2026/10/19/minimax-m3-1-flash-release/
-- Artificial Analysis — "MiniMax-M3.1-Flash — Intelligence, Performance & Price Analysis" (release date Oct 19, 2026) — https://artificialanalysis.ai/models/minimax-m3-1-flash
-- r/LocalLLaMA — "MiniMax M3.1 Flash released, Model weights Oct 23," Oct 19, 2026 — https://www.reddit.com/r/LocalLLaMA/comments/1x9uzv9/minimax_m31_flash_released_model_weights_oct_23/
+**AYN Odin 3 Portal confirmed with Qualcomm Dragonwing Q8, 9,000 mAh battery** — Event date: Oct 19, 2026 (published 17:32 GMT / 13:32 EDT).
+AYN's new video confirmed the Odin 3 Portal's internals: the Qualcomm Dragonwing Q8 (3 nm, eight Oryon CPU cores up to 4.32 GHz, Adreno 830 GPU — essentially a Snapdragon 8 Elite with the cellular modem removed), a 9,000 mAh battery (12.5% over the Odin 3's 8,000 mAh), ~450 g weight, active cooling, Hall-effect sticks and analog triggers. The 7-inch display, memory configurations and price are still unconfirmed; the standard Odin 3 with the same Q8 chip ships today from $369 in up to 24 GB RAM.
+*Why it matters:* the Odin 3 is already a popular box for on-device llama.cpp/MLC inference because it's the cheapest broadly-available 8-Elite-class device with up to 24 GB RAM; the Portal extends that platform into a large-screen, big-battery class without waiting for a Qualcomm launch cadence.
+*Local inference:* Dragonwing Q8 / Adreno 830 with up to 24 GB LPDDR5X — 1B–8B GGUF/MLC quants run comfortably on the current Odin 3 configuration; Portal memory options are still unknown.
+Source: "AYN Odin 3 Portal handheld confirmed with Dragonwing Q8 chip and 9,000mAh battery," VideoCardz, Oct 19, 2026 17:32 GMT — https://videocardz.com/newz/ayn-odin-3-portal-handheld-confirmed-with-dragonwing-q8-chip-and-9000mah-battery
+Second source (chip definition): "AYN announces the Odin 3 Portal handheld console," MobiDevices — https://mobidevices.com/en/ayn-odin-3-portal
 
 ## Inference software and benchmarks
 
-No verified in-window developments this cycle. llama.cpp shipped builds b11734 / b11738 / b11739 inside the window (Oct 19, 10:08 / 12:59 / 13:57 EDT) but the release notes are internal fixes only (jinja `unique` filter, a sliding-window-attention checkpoint invalidation fix, Ascend NPU code cleanup) — nothing that changes what runs where. vLLM v0.32.0 (Oct 18) and Ollama v0.40.6/v0.40.7-rc0 (Oct 16–18) predate the window.
+**First-person Linux bring-up of an NVIDIA RTX Spark N1X laptop: 116 GiB CUDA pool and ~31 tok/s local inference** — Event date: Oct 19, 2026 (blog post published Oct 19; hit Hacker News ~17:08 EDT).
+Arch Linux package maintainer Josephine Pfeiffer published a full bring-up of the ASUS ProArt P16 H7607BA (NVIDIA N1X: 20-core Grace CPU, 6,144 CUDA-core Blackwell GPU, 128 GB unified memory) running Arch Linux ARM — published installer, hardware packages signed with her maintainer key, ACPI overrides dumped from the laptop itself. Key numbers, all measured natively on Oct 19: the OS and CUDA both see a single 116.0 GiB pool (vs Frandroid's Windows ProArt reaching 109.7 GiB CUDA total with a 91 GiB dedicated reservation); 7-Zip is within ~5% of published Windows results (up to +5% at 20 threads); and NVIDIA's Qwen3.8-Flash-Next-FP4-Local checkpoint via vLLM with B12X CUDA kernels generated at 30.9 tok/s median — matching Frandroid's Windows llama.cpp UD-IQ4_XS run (29.4–31.4 tok/s) — with 86.6 tok/s aggregate across four concurrent code-review requests and 150/150 correct responses in a 10-minute soak.
+*Why it matters:* RTX Spark ships officially Windows-only, so the first reproducible Linux image is a real unlock for local-AI users: no Microsoft account, no dedicated-RAM slider reboots, and Linux exposes the whole unified pool to CUDA. It also independently corroborates that N1X hardware is roughly DGX-Spark-class for inference — while the Register's OmniBook Ultra benchmark (Oct 16, background) showed 94 tok/s on a 35B-A3B MTP quant at ~$3,200–6,229.
+*Local inference:* targets exactly the class this brief watches — the 128 GB RTX Spark N1X laptops (~$3–6k) and GB10/DGX Spark boxes; large MoE quants that previously needed desktop-class 128 GB Strix Halo boxes now fit in a laptop bag under Linux.
+Source: "putting linux on my rtx spark laptop because i don't have a microsoft account," josie.lol, Oct 19, 2026 — https://josie.lol/blog/linux-rtx-spark
+Second sources: Hacker News discussion (story id 50158100) — https://news.ycombinator.com/item?id=50158100 ; platform background: "NVIDIA RTX Spark PCs Available Today," NVIDIA investor release, Oct 16, 2026 — https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-RTX-Spark-PCs-Available-Today--A-New-Beginning-for-Windows-PCs/default.aspx
+
+**doubleAI launches Maxwell, a "code execution model" that rewrites binaries at runtime — 4.5x on AI inference kernels claimed** — Event date: Oct 19, 2026 (announced Monday; Register 20:57 UTC / 16:57 EDT; first reported by WSJ).
+Tel Aviv startup doubleAI (co-founded by Mobileye's Amnon Shashua, reportedly with $220M raised) introduced Maxwell, an AI "code execution model" that profiles, optimizes and rewrites binary code *while the program runs*, with formal proofs of equivalence for every rewrite. Unlike a JIT, it can swap algorithms wholesale; it sees the actual hardware, data shapes and live bottlenecks. doubleAI's claims: >38x on data pipelines, >4.5x on AI inference kernels, and LTX-2.5 (an open 4K video world model) rendering "almost twice as fast" via reduced GPU-to-GPU data exchange and better kernel selection — with a claimed ceiling of 2% tracing overhead and "never slower" net effect. The Maxwell model itself is hosted by doubleAI, which requires trust.
+*Why it matters:* if the numbers hold outside vendor demos, an agent that specializes kernels per-device is a multiplier on every local GPU and homelab box — including the RTX Spark/DGX Spark fleet above — without touching source code. It's an "AI makes hardware effectively faster" thesis with the same pitch texture early JIT-LLM compiler claims had.
+*Local inference:* the demonstrated wins are on inference kernels and PyTorch graphs — the exact workload class llama.cpp/vLLM users run; expect it to be benchmarked against torch.compile and llama.cpp's hand-tuned kernels within days.
+Source: "Maxwell gives sub-optimal code a runtime glow-up," The Register (Thomas Claburn), Oct 19, 2026 20:57 UTC — https://www.theregister.com/ai-and-ml/2026/10/19/maxwell-gives-sub-optimal-code-a-runtime-glow-up/5303961
+Second source: "doubleAI Maxwell: 67% Compute Savings Claim," explainX (relay of WSJ's Oct 19 report), Oct 19, 2026 — https://explainx.ai/blog/doubleai-maxwell-code-execution-model-220-million-b300-claimed-vs-verified-2026
+
+**llama.cpp ships five builds in five hours, headlined by OpenCL cooperative-kernel dp4a GEMMs** — Event date: Oct 19, 2026 (releases b11738–b11742, 16:59–21:30 UTC; the b11740–b11742 merges land inside the window).
+Five llama.cpp releases crossed today. The notable merges: b11741 adds cooperative-kernel dp4a GEMM paths for q4_0, q4_k and q6_k on OpenCL (with alignment fixes in b11740 alongside i32 GET_ROWS and i32/f32 copy conversions) — accelerating the quant formats that iGPU, Adreno, Mali and older AMD users actually run; b11742 adds HybridDNA tokenizer support for the Carbon-14B family (plus conversion fixes for Carbon-500M/3B/8B); b11738 fixed SWA checkpoint invalidation in the server.
+*Why it matters:* OpenCL is the lowest-common-denominator backend that covers virtually every GPU that isn't NVIDIA or AMD, and dp4a cooperative GEMMs are the standard trick for big int4 throughput gains on that path — this is tokens/sec for the "GPU poor" half of the local community.
+*Local inference:* directly benefits Adreno (including the Dragonwing Q8 handheld above), Intel/AMD iGPUs and older discrete cards running 4-bit GGUF quants; NVIDIA/ROCm users are unaffected.
+Sources: llama.cpp releases b11741 (20:13 UTC) — https://github.com/ggml-org/llama.cpp/releases/tag/b11741 ; b11740 — https://github.com/ggml-org/llama.cpp/releases/tag/b11740 ; b11742 (21:30 UTC) — https://github.com/ggml-org/llama.cpp/releases/tag/b11742
+
+## Model releases
+
+No verified in-window open-weight releases. (Checked: Hugging Face newest-models and trending APIs, quant-author orgs, vendor newsrooms. Inception Labs' Mercury 3 diffusion LLM launched today but is API-only — no weights — so it's out of scope for this brief by design.)
+
+## Community spins and quantizations
+
+**Early GGUF/APEX quants appear on today's trending MoE models** — Event date: Oct 19, 2026 (uploads at 16:55–17:52 EDT).
+Within the window, community uploads included White-Wolf13's APEX-quantized GGUF of OpenBMB's on-device MiniCPM-V-4.7-35B-A3B (the day's hottest vision-MoE base), IsValorum's APEX "I-NanoPlus" quants of Thomson-1.0-Small and T-Search (qwen35moe-based, made via the Unsloth Studio toolchain), and a Qwen3.8-27B-antislop GGUF fine-tune. None have traction yet — the signal is the new "apex/apex-quant" custom-quantization format showing up across unrelated uploaders on the same day.
+*Local inference:* MiniCPM-V-4.7-35B-A3B is a ~3B-active on-device vision MoE — a 4-bit build fits a 16 GB card (RTX 5060 Ti class) with modest context.
+Sources: https://huggingface.co/White-Wolf13/MiniCPM-V-4.7-35B-A3B-APEX-GGUF ; https://huggingface.co/IsValorum/Thomson-1.0-Small-APEX-I-NanoPlus-GGUF ; https://huggingface.co/Uninformed/Qwen3.8-27B-antislop-GGUF
+
+## Also noted
+
+- (minor, verified) RTX Spark N1X Linux story also front-paged on Hacker News with 60+ points in its first hour (link above).
 
 ## Just missed the window
 
-- **SGLang v0.5.22** — released 2026-10-19 at 02:55 UTC (Sunday 22:55 EDT), roughly 5 hours before this window opened. Big release (950 PRs, 245 contributors): DeepSeek-V4.1 gets up to 2.3x more throughput per GPU on H200, AMD MI350X/MI355X support arrives with up to 1.9x throughput via DSpark, and new model cookbooks land for Cloudflare Clef, Perplexity PPLX-Decider v1/v1.1, EmbeddingGemma 2, LLaDA2.2, HunyuanImage-3.0-Instruct and Kandinsky 6. It will not be footnoted again. — https://github.com/sgl-project/sglang/releases/tag/v0.5.22
+- None permitted (footnote quota exhausted per ledger; items from before 12:45 EDT today are excluded outright).
 
 ## Coverage notes
 
-- **Verified items in window: 2** (1 lead, read in full; 1 multi-outlet leak), plus 1 first-time "just missed" footnote (SGLang v0.5.22).
-- **Ledger dedupe count: 0** — reported.md was empty (header only) at fire time; no candidate was suppressed as already-reported. This run's items (including the missed footnote) are appended to the ledger.
-- Dead ends (two-strike rule, logged not chased): r/LocalLLaMA JSON and RSS both returned 403 (worked around via search-result mirrors); TechPowerUp's front-page review "AMD Ryzen AI Halo Review — Local-AI Powerhouse with 128 GB of Memory" could not be pinned to a confirmed publish timestamp, so it is excluded; The Neuron's "I Tested NVIDIA Nemotron Bolt and Super VL" local-benchmark piece (65.5 tok/s on a Surface Laptop Ultra) failed two URL-resolution attempts and is excluded; TechPowerUp's review index returned 403.
-- Indexes swept: Tom's Hardware news, ServeTheHome, The Register AI, TechPowerUp front page, VideoCardz, Hugging Face trending, The Open Weights, LLM Releases, HN Algolia (in-window), GitHub releases for llama.cpp / vLLM / SGLang / Ollama / llamafile (llamafile repo: no releases, 404).
-- Items seen and correctly excluded as out-of-window by event date: Microsoft Maia 300 (Oct 12), MiniCPM-V 4.7 (Oct 12–15), NVIDIA DGX Spark 64GB blog + $4,999 Oct 23 availability (Oct 2), STH RTX Spark N1X launch overview (Oct 17), Tom's Surface Laptop Ultra RTX Spark test (Oct 15), OpenMOSS MOSS-Image refresh (~05:00 EDT), datalab-to/indra-ocr update (created Oct 10), vLLM v0.32.0, Ollama v0.40.x, ComfyUI v0.42.x (Sunday).
-- MiniMax benchmark numbers are vendor-reported and flagged as such; HX 455 is a single-leaker report, corroborated across outlets but unconfirmed by AMD.
+- **Verified items this run: 5** (1 hardware minor, 2 software leads + 1 software minor, 1 community roundup) — all with fetched, timestamped pages inside the 12:45–17:45 EDT window; three leads read in full.
+- **Ledger dedupe:** 1 candidate suppressed as already reported (AMD Ryzen AI 7 HX 455 leak, VideoCardz — reported in the 12:45 fire); SGLang v0.5.22 not re-footnoted (ledger `missed:` tag honored).
+- **Out-of-window kills (event-date rule):** Arm AGI CPU vs EPYC 9755 rack claim (Tom's ~06:48 EDT today; event at OCP last week); Register RTX Spark OmniBook benchmark (Oct 16); Maia 300 multi-GW plan (Oct 12); Apple Mac Minions GPU pooling (Oct 13); Vercel open-weight index (Oct 15/17); DeepSeek-V4.1-Flash-1017 community GGUFs (12:06–12:36 EDT — minutes early); vLLM v0.32.0 (Oct 18); KTransformers v0.7.2 (Oct 15).
+- **Out of scope by rule:** Inception Mercury 3 (cloud API-only), Inception/Mercury policy items, US DeepSeek rip-out order (policy), Mercury/DeepSeek HN items.
+- **Dead ends / limitations:** r/LocalLLaMA both .json and old.reddit blocked (captcha/403 — two strikes, dropped); TechPowerUp Ryzen AI Halo review (local-AI 128 GB mini-PC) published today but its publish timestamp could not be verified (403 on review page), so it is excluded rather than guessed; Mistral Large-4 HF repo still gated ("Invalid username or password" = not public); HF `sort=trending` API param invalid (used trendingScore instead); HF newest-models API is 90% test-repo noise.
