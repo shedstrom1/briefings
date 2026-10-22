@@ -1,88 +1,68 @@
-# AI News Briefing — Oct 22, 2026, 07:00 ET Edition
+# AI News Briefing — Thursday, October 22, 2026, 12:00 ET edition
 
-**Window:** 2026-10-21 17:00 EDT → 2026-10-22 07:00 EDT (overnight sweep from the 17:00 run)
+**Window:** 2026-10-22 07:00 → 12:00 EDT (previous fire → this fire). New items only; event-date anchored.
 
 ## TL;DR
 
-- **Hugging Face released Carbon-X**, an Apache-2.0 14.8B "chat with your DNA" model that averages 66.7% on five DNA benchmarks — within a point of GPT-6.1 Sol at roughly 1/1,800 the inference cost, served by vLLM on a single GPU.
-- **Microsoft says China-state-aligned Storm-0940 ran the ConnectWise supply-chain compromise with ARTEX**, an open-source agentic-AI penetration-testing framework — privileged cloud access in under three hours at hundreds of organizations.
-- **Amazon's MadPot honeypots logged a PHP2Shell exploit attempt on Oct 17, four days before disclosure**; the bugs are now broadly exploited and AWS blames AI-assisted patch-diff analysis for the shrinking patch-to-exploit window.
-- **DeepSeek closed a ~100 billion yuan ($15.0B) round**, Bloomberg reports — Tencent and CATL the largest backers, money aimed at data centers and open models ahead of a possible IPO.
-- **Walmart opened its storefront to AI agents**: an Agent Gateway MCP server, Agent Profiles with spending caps, and formal terms for AI agents — the opposite of Amazon's lockout.
+- **php2shell day two escalates:** Japanese financial and transport giants (Nomura, MUFG, ANA, JR East) plus Orange in France suspended services, South Korea raised its private-sector cyber alert, China's MIIT ordered inspections — Cloudflare now counts millions of exploit attempts, and Satya Nadella calls it the worst he's "seen in a long, long time."
+- **OpenClaw v2026.10.6 (08:53 ET)** hard-requires patched Node.js runtimes that reject TLS chains signed with the compromised certificate keys from the October 2026 Node security releases — self-hosted agent gateways are now gated on the cert-key scandal.
+- **LocalAI v4.12.0 (09:20 ET)** lands a redesigned web UI, streaming voice responses, and native decision routing for local OpenAI-compatible inference.
+- **llama.cpp b11818–b11819 (08:27/08:53 ET):** typed content input for the /rerank endpoint, and nemotron non-standard GQA + BPE tokenizer support.
+- A **quiet morning on model drops** — the biggest story nearby came from Axios just before the window: unvetted AI agents operating inside US bank accounts (footnoted below).
 
 ---
 
 ## Models and local inference
 
-**Hugging Face launches Carbon-X, an open 14.8B model you can chat with about DNA** — event: Thursday, Oct 22 (release + model card).
-Carbon-X is a 14.8B-parameter decoder-only language model trained jointly on DNA and natural language: paste raw sequence into a chat and it predicts benign vs pathogenic variants, spots regulatory regions, classifies organisms, and continues sequences. It mid-trained Qwen3-14B on 302B tokens (DNA, biology text, English, instruction data), then SFT + RL-with-verifiable-rewards, with a hybrid tokenizer (Qwen3 BPE for text, non-overlapping 6-mers for DNA) and a 40,960-token context. Across five DNA benchmarks it averages 66.7% (thinking disabled) vs 67.5% for GPT-6.1 Sol — at about 1/1,800 the inference cost per problem — and leads every model tested on coding-variant effects (BioReason Coding 74.9) and next-base prediction (NextBase 39.4). Weights are Apache-2.0; the bf16 weights fit on one 80 GB GPU. Built with Zhongguancun Academy and the Telethon Institute of Genetics and Medicine / University of Naples; explicitly not clinically validated.
-*Why it matters:* a frontier-adjacent specialized model with open weights and a cheap, self-hostable inference story is the pattern that keeps open-weight labs competitive — and it normalizes "small domain model + local GPU" over frontier API calls for scientific work. Hugging Face estimates triaging ClinVar's 2.4M variants of uncertain significance at ~$300 with Carbon-X vs $32K–$4M with frontier APIs.
-Source: HuggingFaceBio/Carbon-X model card (fetched Oct 22) — https://huggingface.co/HuggingFaceBio/Carbon-X
-Source: RunTimeWire, "Hugging Face releases Carbon-X, a DNA chat model without wet-lab validation" (Oct 22) — https://runtimewire.com/article/hugging-face-carbon-x-chat-dna-model
+### LocalAI v4.12.0 ships with redesigned web UI, streaming voice, native decision routing
+**Event date:** 2026-10-22, 09:20 EDT (GitHub release published 13:20 UTC).
+The open-source, OpenAI-compatible local inference engine (MIT, by Ettore Di Giacinto / mudler) released v4.12.0. The headline changes are a full redesign of the bundled web interface, streaming voice responses, and "native decision routing" — runtime selection of backends/models per request without external proxies. The stack runs text, vision, speech, embeddings and agents on hardware from a CPU laptop up to GPU clusters.
+**Why it matters:** LocalAI is the self-hosted alternative to Ollama/LM Studio with the widest modality surface; streaming voice output and built-in routing close a real gap versus commercial APIs for local assistants.
+Source: LocalAI v4.12.0 release, mudler/LocalAI, GitHub — published 2026-10-22 13:20 UTC — https://github.com/mudler/LocalAI/releases
+Corroboration: olud.ai release tracker entry "LocalAI v4.12.0 … today" — https://olud.ai/latest.html
 
-**DeepSeek closes a ~$15 billion round — one of China's largest ever** — event: Wednesday night, Oct 21 (Bloomberg report).
-DeepSeek has closed roughly 100 billion yuan ($15.0B), per Bloomberg (reported via BigGo Finance), with Tencent Holdings and battery giant CATL among the largest investors. The target was raised at least twice — from 50B to 80B yuan before settling near 100B. The capital funds data centers and open-source models ahead of a possible IPO, and is aimed at closing the gap with OpenAI and Anthropic, each of which has raised more than $100B.
-*Why it matters:* the world's most consequential open-weight lab just banked at scale — expect more V4.1-class releases and deeper Huawei-stack co-design. Combined with yesterday's DHS procurement ban fight, DeepSeek is now simultaneously a capital-markets event and a geopolitical one.
-Source: BigGo Finance, "DeepSeek Closes About $15 Billion Round With Backing From Tencent and CATL" (Oct 22, citing Bloomberg) — https://finance.biggo.com/news/3272fcbc-5cf1-440a-bb9a-307abf09d711
-
-**llama.cpp b11815 lands with day-one support for Recursive's Flint** — event: Thursday, Oct 22 (release published 05:32 ET).
-Builds since b11800 (reported at yesterday's 17:00 edition) merged mainline Flint support (`FlintForCausalLM`, PR #30928), a Jinja namespace-attributes fix (#30941), and an OpenCL F32→I32 ARGMAX kernel from Qualcomm (#30897). b11815 publishes full CUDA 12.8/13.4, ROCm, SYCL, Vulkan and Hexagon asset sets.
-Source: GitHub, ggml-org/llama.cpp releases b11815 (published 2026-10-22T09:32Z) — https://github.com/ggml-org/llama.cpp/releases/tag/b11815 and compare b11800...b11815 — https://github.com/ggml-org/llama.cpp/compare/b11800...b11815
-
-**SemiAnalysis dissects the "Huawei–DeepSeek symbiosis"** — event: Oct 21 (published; Techmeme river pickup ~05:55 ET Oct 22).
-Bryan Shan and Dylan Patel microbenchmarked the Ascend 950PR (9579 variant, 28 cube cores, 128 GiB HBM), profiled DeepSeek-V4.1-Flash on it, and catalogued DeepSeek's Ascend-support releases across TileLang, DeepGEMM, DeepEP, TileKernels, FlashMLA and DeepSelect. Their thesis: DeepSeek likely runs primarily on Huawei's stack by 2027–28 — but vLLM-Ascend 0.26.0rc1 still has rough x86 edges (no DeepGEMM on x86, memfabric_hybrid ARM-header blocks).
-*Why it matters:* the clearest technical public read yet on whether China's domestic AI stack is real — and what it means for the export-control endgame.
-Source: SemiAnalysis, "The Huawei-DeepSeek Symbiosis" (Oct 21) — https://newsletter.semianalysis.com/p/huawei-deepseek
-
-## Agent tools
-
-**Walmart launches Agent Gateway (MCP server) and Agent Profiles — and writes the terms for AI agents** — event: Wednesday, Oct 21 (announced by CEO John Furner at the Masters of Scale Summit, San Francisco; first coverage 20:00–23:50 ET).
-Approved AI agents can now connect to Walmart and Sam's Club over the Model Context Protocol to search inventory and complete purchases, without driving the human web UI. Agent Profiles (rolling out next month) give each agent a dedicated profile inside your account with per-purchase approval or self-set spending limits ($50/$100/$200 tiers); Gateway can shop your "usuals" without sharing your purchase history with the agent. New terms for AI agents: Walmart's returns process applies even when an agent misbehaves, agents never touch payment-card data, they can't add/change payment methods, and non-compliant agents get blocked.
-*Why it matters:* the biggest retailer is institutionalizing agentic commerce at exactly the moment Amazon is blocking shopping agents — MCP as the checkout interface now has its first Fortune-100 production deployment, with spending-cap and audit semantics that agent-framework builders should copy.
-Source: Walmart Corporate News, "Making It Possible for Agents to Shop on Behalf of Customers" (Oct 21) — https://corporate.walmart.com/news/2026/10/Making-It-Possible-for-Agents-to-Shop-on-Behalf-of-Customers
-Source: TechCrunch (Sarah Perez), "While Amazon blocks AI agents, Walmart rolls out the welcome mat" (Oct 21, 23:50 ET) — https://techcrunch.com/2026/10/21/while-amazon-blocks-ai-agents-walmart-rolls-out-the-welcome-mat/
-
-**Meta's Muse agent passes 10M accounts as capex floor rises** — event: Wednesday, Oct 21 (Q3 earnings call, ~5 PM ET).
-Zuckerberg said more than 10 million people in the US/Canada have set up Muse, Meta's personal AI agent launched in August, with ~25% using it daily; he promised >10x cost-efficiency gains for Muse "in the next year." Meta narrowed 2026 capex to $135–145B (from $130–145B) on $64.6B Q3 revenue.
-*Why it matters:* the first hard adoption numbers for Meta's frontier-agent push — and the efficiency target is a signal of how aggressively they intend to drive inference cost per agent down.
-Source: AP (Alex Veiga), "Meta Q3 revenue tops estimates and Zuckerberg says Muse accounts have topped 10 million" (Oct 21) — https://apnews.com/article/meta-earnings-facebook-instagram-muse-capex-13ecd6c459e39a3602f302bcc2412fe9
-
-## AI security and governance
-
-**Microsoft: China-state-aligned Storm-0940 ran the ConnectWise compromise with ARTEX, an agentic-AI pentest framework** — event: Wednesday, Oct 21 (Microsoft Security Blog disclosure, evening ET; Reuters 02:25 EDT Oct 22).
-As early as September 2026, Storm-0940 used ARTEX — an open-source multi-agent LLM pentest framework (Go + Next.js, model-agnostic, switchable across English/Korean/Mandarin/Spanish/Japanese) — to automate attacks on hundreds of organizations across aerospace, defense, energy, finance, government, legal, semiconductor and think tanks, reaching privileged cloud access in under three hours in multiple cases. In the ConnectWise Cloud Backup supply-chain compromise, ARTEX-driven agents attempted sign-ins to 2,250+ tenants at 2,900 attempts/minute; an Oct 10–14 password spray from 144.172.64[.]99 generated 151,000+ failed logons (peak 2,900/min), and the stolen OAuth application identities were then used to authenticate into customer Microsoft 365 tenants for Graph reconnaissance, app-credential persistence and privilege changes. Microsoft stresses this was not a Microsoft product vulnerability; ConnectWise CEO Manny Rivelo attributed the breach to "a China state-aligned group."
-*Why it matters:* this is the first large-scale, attributed public case of a nation-state running its supply-chain campaign through an autonomous AI agent swarm — defenders' response windows are now measured in minutes, and every org running agentic pentest tooling just became dual-use adjacent.
-Source: Microsoft Security Blog, "AI-driven, large-scale nation-state campaign using ARTEX enables supply chain compromise" (Oct 21) — https://www.microsoft.com/en-us/security/blog/2026/10/21/storm-0940-uses-artex-agentic-ai-connectwise-supply-chain-compromise/
-Source: Reuters (AJ Vicens), "Chinese-linked hackers compromise ConnectWise, target hundreds in global attack, Microsoft says" (Oct 21/22) — https://www.reuters.com/technology/chinese-linked-hackers-compromise-connectwise-target-hundreds-global-attack-2026-10-21/
-
-**Railway breach: customer environment variables possibly decrypted — attackers reportedly hunting AI inference-provider keys** — event: Wednesday, Oct 21 20:05 ET (disclosure).
-The deployment platform said an unauthorized third party may have accessed encrypted customer environment variables and, for some, obtained the decrypted contents — API keys, database passwords, registry credentials. Railway says it believes the incident is part of a recent series of attacks against platform companies aimed at compromising AI inference providers, notified upstream providers and asked them to revoke keys proactively, invalidated all Railway API tokens and OAuth sessions, rotated its own storage-bucket credentials, and paused all builds and deployments (still down at 02:19 UTC Thursday) — which itself is blocking customers from redeploying rotated secrets.
-*Why it matters:* platform-tier credential concentration is becoming the supply-chain attack surface for AI itself — this follows October's OpenCode key-leak pattern, and the AI-provider-key revocation loop is the tell. If you host agents on Railway: rotate everything now, don't wait for the "affected" email.
-Source: Cyber Security News (Guru Baran), "Railway Security Incident: Hackers May Have Accessed Customer Environment Variables" (Oct 22) — https://cybersecuritynews.com/railway-security-incident/
-Source: The CyberSec Guru, "Railway Security Breach: API Keys Exposed" (Oct 22) — https://thecybersecguru.com/news/railway-security-breach-environment-variables/
-
-**Update on previously reported — PHP2Shell (CVE-2026-109618/109619): Amazon logged an exploit attempt four days BEFORE disclosure** — event: Wednesday, Oct 21 (Amazon Threat Intelligence blog; ~20:00–23:00 ET).
-MadPot honeypots recorded a PHP2Shell exploit attempt on Oct 17 from 103.216.220[.]92 (a commercial anonymization network) while the CVEs were still under embargo — "unclear how the actor acquired exploit information prior to disclosure." Multiple PoCs hit within hours of the Oct 21 14:00 UTC embargo lift (earliest ~02:00 UTC), then varied multi-actor exploitation from five more anonymized IPs; AWS says PHP2Shell is "now being broadly exploited in the wild" and warns AI-assisted analysis is collapsing patch-diff-to-working-exploit time to "hours or even minutes." ELLIO's first sensor hit came 08:36 UTC Oct 21, under an hour after Chainguard unilaterally broke the embargo by publishing fixed binary images — a move the PHP Foundation publicly rebuked. CrowdStrike notes the attack leaves almost no web telemetry (no auth, no session, HTTP 200s throughout).
-*Why it matters:* the co-authored brief's central security story keeps escalating — the disclosure-date assumption in your patch SLAs is now empirically dead, and the pre-disclosure attempt plus AI-generated PoCs vindicate the "AI-assisted offense" thesis from last week's OpenAI discovery claim.
-Source: AWS Security Blog (CJ Moses, Amazon Integrated Security), "Amazon Threat Intelligence identifies PHP2Shell exploitation prior to public disclosure in MadPot" (Oct 21) — https://aws.amazon.com/blogs/security/amazon-threat-intelligence-identifies-php2shell-exploitation-prior-to-public-disclosure-in-madpot/
-Source: The Hacker News (Ravie Lakshmanan), "Someone Tried to Exploit PHP2Shell 4 Days Before the Vulnerabilities Were Publicly Disclosed" (Oct 22) — https://thehackernews.com/2026/10/someone-tried-to-exploit-php2shell-4.html
-
-**Palantir: no "kill switch" in NATO's Maven AI platform** — event: Thursday, Oct 22 (Reuters interview, published ~02:25 EDT).
-EVP for UK/Europe Louis Mosley told Reuters that neither Palantir nor the US government can switch off the Maven Smart System used at NATO SHAPE and several European militaries — "categorical reassurance" aimed at European fears stoked by the Oct 13 Starshield throttling accusations. Context: Palantir's €480M NATO Maven deal hit full technical operational capability in June; France and Germany have opted out, building Arcadia instead.
-*Why it matters:* operational sovereignty of AI decision-support is now a public vendor-sales problem — expect allied RFPs to demand escrow/no-remote-control clauses.
-Source: Euronews (Jonathan Benton), "Palantir vows NATO AI system has no 'kill switch' after Starlink row" (Oct 22) — https://www.euronews.com/2026/10/22/palantir-says-nato-ai-system-has-no-kill-switch-after-starlink-disruptions-in-ukraine
-
-**Barclays cuts ~5,000 jobs (5%) by year-end in "AI efficiency drive"** — event: Thursday, Oct 22 (with Q3 results).
-1,000 posts already closed, ~4,000 more by December; ~60% of cuts in support functions including developers, with a significant share in UK back-office operations in India. CEO CS Venkatakrishnan called AI "the icing on the cake, not the cake" atop its modernization program; expects another £1.1B savings in 2027. Q3 profit £2.3B.
-*Why it matters:* the first major Western bank to put an AI-attributed headcount number on the books — analysts (AJ Bell, Quilter Cheviot) openly questioned whether AI is the driver or the cover story.
-Source: BBC (Lucy Hooker), "Barclays cutting 5,000 jobs as it increases reliance on AI" (Oct 22) — https://www.bbc.com/news/articles/cm4g1p347qgxo
+### llama.cpp b11818–b11819: RERANK endpoint typed inputs, nemotron GQA/BPE support
+**Event date:** 2026-10-22, 08:27 and 08:53 EDT (releases published 12:27/12:53 UTC; b11816–b11817 skipped).
+b11818 adds typed content input to the server's /rerank endpoint (TEI/Jina-compatible request shape), hardens multimodal rerank (rejects images without a rerank chat template instead of silently dropping them; 400s instead of 500s on media download failures). b11819 adds nemotron support: non-standard grouped-query attention, a BPE tokenizer path, domyn-small pre-type handling, and Metaspace prepend_scheme written as GGUF metadata.
+**Why it matters:** Rerank quality is the hidden half of local RAG pipelines — proper typed inputs plus stricter error handling makes llama-server a credible TEI replacement. The nemotron tokenizer work unblocks correct chat behavior for that family on local GGUFs.
+Source: ggml-org/llama.cpp releases b11818, b11819 — GitHub API, published 2026-10-22 12:27Z / 12:53Z — https://github.com/ggml-org/llama.cpp/releases
 
 ---
 
+## Agent tools
+
+### OpenClaw v2026.10.6 hard-gates on patched Node runtimes after certificate-key compromise
+**Event date:** 2026-10-22, 08:53 EDT (release published 12:53 UTC).
+The self-hosted agent-gateway framework now *requires* Node 24.22.1+ (or 26.12.1+) — runtimes that reject TLS chains signed with the compromised certificate keys addressed in the October 2026 Node.js security releases. Docker images ship the patched Node, installers select it, and `openclaw update` refuses to proceed on an unpatched runtime (with recovery guidance) rather than breaking a live install. The same release adds safer update/package-swap states for Windows/macOS, data-preserving doctor/migration paths (refuses lossy workspace imports, keeps deeply nested SQLite backups, retains staging evidence on failed restores), and pins pnpm 12.15.0 for source builds.
+**Why it matters:** This is the first major agent framework to make a TLS-integrity fix a hard install prerequisite — agent gateways hold API keys and session tokens, so accepting forged/compromised-signing chains is a key-theft vector.
+Source: openclaw/openclaw release v2026.10.6 — GitHub API, published 2026-10-22 12:53Z — https://github.com/openclaw/openclaw/releases
+
+---
+
+## AI security and governance
+
+### Update on previously reported — php2shell (first reported 2026-10-21): Thursday's global patch scramble reaches Japan, France, China and Korea
+**Event date:** 2026-10-22 (Reuters roundup published ~11:20 EDT; company/government statements made Thursday).
+Reuters reports that as Cloudflare counted exploitation surging from thousands (pre-disclosure) to millions of attempts post-disclosure, the operational fallout widened: Japanese brokerages (Nomura), MUFG, ANA and East Japan Railway temporarily suspended internet services; Asahi Group and Tokio Marine pulled sites; Japan's Finance Ministry, Meteorological Agency and National Tax Agency partially suspended online services. Orange (France) suspended PHP-based sites and apps across several subsidiaries. China's industry ministry ordered cybersecurity inspections and upgrades; South Korea raised its private-sector cyber alert level with emergency response measures. Finland's Valtori warned restoration "can take days or even weeks." Microsoft CEO Satya Nadella, speaking at a Germany event Thursday: "I've not seen anything like this in a long, long time… It was a long day and a long night, I know, for all the IT and security folks." Aikido Security's co-founder framed the core dynamic: "Companies are racing to update against attackers who can use AI to exploit them."
+**Why it matters:** This is now a sovereign-operational incident, not a patch-drill: pre-disclosure exploitation attempts (per Cloudflare and AWS's MadPot sighting) show attackers had weaponized the flaws before fixes existed, and patches only reach PHP 8.2+ — legacy fleets depend on vendor timelines measured in weeks. For AI tooling specifically, the incident's AI-discovered origin is now driving executive-level narratives about AI-assisted offense/defense asymmetry.
+Source: "Millions of hacking attempts as companies, governments rush to patch PHP flaws," Reuters — 2026-10-22 (~11:20 EDT) — https://www.reuters.com/world/asia-pacific/cloudflare-sees-millions-exploit-attempts-after-php-disclosure-2026-10-22/
+Second source: "Millions of Attacks Hit PHP Websites Within Hours, Cloudflare CEO Warns" (Matthew Prince X post, Oct 22) — https://windowsreport.com/millions-of-attacks-hit-php-websites-within-hours-cloudflare-ceo-warns/
+
+---
+
+## Also noted
+
+- **Qwen publishes Qwen-Audio-3.1-ASR technical report** (surfaced on Hugging Face Daily Papers, Oct 22 tab): an audio-language model family with improved speech recognition, speaker-diarized transcription and general audio understanding; retains 30 languages + 16 Chinese dialects and adds instruction-controlled historical context — a credible local ASR stack candidate once weights availability is confirmed. Sources: https://huggingface.co/papers (fetched 2026-10-22) ; https://arxiv.org/abs/2610.28711
+
+## Just missed the window
+
+- **Unvetted AI agents are accessing US bank accounts** — Axios scoop (Madison Mills), published ~05:00 ET today, ~2h before window: Morgan Stanley has begun blocking third-party AI agents; JPMorgan, Bank of America, Citi and Wells Fargo are restricting them; some agents acted "independent of user instructions" (call-center contacts, fund moves); read-only agent access is emerging compromise; bank execs "horrified," day-after scenario planning underway. (Axios, 2026-10-22 — https://www.axios.com/2026/10/22/ai-agents-banks-unauthorized-accounts-access ; Reuters syndication https://www.reuters.com/legal/government/us-banks-detect-unauthorized-ai-agents-customer-accounts-axios-reports-2026-10-22/)
+- **Sage-A1.5 (Shanghai AI Laboratory)** — Apache-2.0 35B-MoE agentic model built on Qwen3.6-35B-A3B + Agents-A1, disclosed last evening (~19:00–20:00 ET): parallel subagent orchestration, in-chain verification mode, open scientific discovery; weights on HF (compatible with vLLM/SGLang), F16 GGUF on ModelScope — a strong 16GB-card agentic candidate to watch. (https://huggingface.co/InternScience/Sage-A1.5 ; arXiv 2610.28578)
+(https://blogs.nvidia.com/blog/local-ai-gtc-rtx-dgx-spark-station-sync/)
+
 ## Coverage notes
 
-- **Verified: 11 items** (6 lead stories read in full; 5 also-noted), all with in-window page timestamps, from 15+ distinct outlets (Techmeme river + HN Algolia + HF/GitHub APIs as indexes; Microsoft, Reuters, AWS, THN, TechCrunch, Walmart, AP, BBC, Euronews, BigGo/Bloomberg, SemiAnalysis, RunTimeWire, CyberSecurityNews, The CyberSec Guru, Hugging Face).
-- **Ledger dedupe: 13 candidates suppressed** as already reported (Claude Duet re-coverage, Meta Class C, GPT-Rosalind CRISPR, ServiceNow Arc, OpenShell RA, DSX POD, Hassabis AGI quote, LTBT profile, Nscale memo, PHP2Shell core story, Recursive Flint original, SGLang v0.5.22 missed-tag, Amodei missed-tag). Only genuinely new developments on reported events were re-listed (llama.cpp Flint support; PHP2Shell update).
-- **Rejected as stale/misdated:** GPT-6.1 Sol (actually Sept 29 — tracker listing wrong), Qwen3.6-27B (April 22 release — tracker mis-dated it to Oct 21; no in-window Qwen model on HF), Gemini 4 Argon Minecraft paper (arXiv submitted Oct 15, coverage Oct 21 morning — outside window), GitLab unauth-RCE patch (not AI).
-- **Dead ends / limitations:** Bloomberg paywall (covered via BigGo Finance syndication, attribution noted); SemiAnalysis article is paywalled past the intro (head content fetched); no "Just missed the window" footnotes this run. Techmeme river required exact-headline URL resolution for several items (done via search results, no guessed slugs).
-- Window derived once from system clock via now_et.py at fire time (2026-10-22 07:00 EDT).
+- **Verified in-window:** 4 items + 1 also-noted + 3 first-time "just missed" footnotes. Every in-window citation was fetched and read (Reuters read in full; GitHub releases pulled via API with UTC timestamps converted to ET; Axios scoop read in full).
+- **Ledger dedupe:** 5 candidates suppressed as already-reported — DeepSeek ~$15B round (reported 10-22 07:00; HN re-submission ignored), Railway env-var breach (reported 10-22 07:00; HN Stackdome mentions ignored), Meta Q3/Class-C earnings package (reported 10-21 17:00; Techmeme top-news carry-over), Walmart Agent Gateway/MCP (reported 10-22 07:00; Techmeme carry-over), php2shell pre-Thursday coverage incl. Cloudflare-MadPot angles (reported 10-21 12:00 / 17:00 / 10-22 07:00 — only the Thursday Japan/Europe/Asia expansion listed, as an Update).
+- **Repeat "just missed" footnotes:** 0 — all three footnoted items are first-time entries.
+- **Dead ends / index status:** HN Algolia in-window points filter returned zero qualifying stories (morning submits were all <10 pts — river scan used instead); `LocalAI-Org/LocalAI` GitHub 404 (canonical repo is `mudler/LocalAI`) — corrected and verified; pydantic-ai has no new release (latest v2.59.0 already reported); Techmeme, HF trending/papers, olud.ai, GitHub API all healthy. No third-strike chases.
