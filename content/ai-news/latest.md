@@ -1,89 +1,64 @@
-# AI News Briefing — MiniMax Ships M3.1 Weights as Beijing Clears AI Exports; Treasury Tightens Outbound AI Capital
+# AI News Briefing — Friday, October 23, 2026 · 12:00 EDT Edition
 
-**Window: October 22, 2026 5:00 PM → October 23, 2026 7:00 AM ET** (swept back from the 5:00 PM Thursday fire)
+**Window:** 2026-10-23 07:00 → 12:00 EDT (previous fire → this fire). New items only; event dates anchor every entry.
 
-**TL;DR**
+## TL;DR
 
-- MiniMax published the MiniMax-M3.1-Flash open weights on Hugging Face: a 428B-A23B multimodal MoE, 252.4 GB across 48 shards, NVFP4 quantization-aware training — real downloadable weights, but under a community license with a $20M-revenue authorization line.
-- Chinese state media says DeepSeek and MiniMax are the first vendors registered and approved to open-source and license AI models overseas under Beijing's October 16 export-control proposal; MOFCOM has carved out APIs and already-published open-source releases.
-- The US Treasury proposed expanding the Outbound Investment Security Program to cover AI ("superintelligence"), supercomputing, HBM, hypersonics and biotech investments in China, Russia, North Korea, Iran and Cuba.
-- Anthropic says Claude produced machine-checked formal proofs that 239 fuzz-test entry points across 123 open-source libraries can never crash — proved at the RISC-V assembly level, the first large-scale AI-driven formal verification of production software.
-- The WSJ detailed why OpenAI fired three safety researchers: it suspected them of leaking closely guarded internal model designs through disappearing-message Signal chats.
-
----
+- Meta delayed enforcement of its controversial new commercial terms (the "AI scraping" clause) from October 30 to November 20, after publisher letters and EU/UK antitrust complaints; the EU antitrust watchdog welcomed the move.
+- On the tooling front, Microsoft Agent Framework .NET 1.26.0 and Ollama v0.40.10-rc0 both shipped inside the window.
+- Just missed the window: OpenAI's Decisions API GA announcement (yesterday afternoon) and CNBC's report that OpenAI is nearing an up to $30B round at a $1.25T pre-money valuation.
 
 ## Models and local inference
 
-### MiniMax releases M3.1 Flash open weights: 428B MoE, 252.4 GB, NVFP4 training — with a $20M licence line
-**Event date: Friday, October 23 (weights landed on Hugging Face overnight Beijing time).** Fulfilling the promise from the model's October 19 launch, MiniMax published `MiniMaxAI/MiniMax-M3.1-Flash` with the full model card: ~428B total / 23B active parameters, native multimodal inputs (text, image, video), a 1M-token input window with up to 524,288 output tokens, sparse attention throughout the first layers, and a 2.3 GB DSpark speculative-decoding drafter. The download is 252.4 GB in 48 safetensors shards. Two details matter more than the size: the routed experts and sparse-attention KV path are trained in NVFP4 (shared experts MXFP8, query path FP8), which vLLM's day-0 recipe turns into a 43.75% smaller KV cache and 76 concurrent 256K-token sequences on four B300s versus 28 for M3's FP8 KV — a 2.7x concurrency gain. And the license is MiniMax's own "minimax-community" terms, filed on HF as *license: other*: free for non-commercial use, commercial use requires prominent "Built with MiniMax M3" attribution, a one-time notice under $20M annual revenue, and MiniMax's prior written authorization above it.
-*Why it matters:* This is the second Chinese lab this week to put frontier-adjacent agentic weights on the Hub (after DeepSeek V4.1-Flash's MIT release) and it pressures the "open weights = free" assumption — the license is the procurement surprise. Benchmarks are launch-grade: 73.7% DeepSWE v1.1, 82.2 CyberGym, 61.7 OSWorld 2.0.
-The trickle-down to watch is the NVFP4 quantization-aware training + sparse-attention combo and the DSpark drafter — exactly the techniques that later land in KTransformers/unsloth/ATOM integrations MiniMax lists as "in progress" for smaller hardware. *(Update on previously reported: MiniMax-M3.1-Flash launch, ledger 2026-10-19.)*
-Sources:
-- Hugging Face model card — MiniMaxAI/MiniMax-M3.1-Flash (fetched October 23, 2026): https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
-- OrcaRouter, "MiniMax M3.1 Flash Weights: 428B and a $20M Licence Line" — October 23, 2026: https://www.orcarouter.ai/blog/minimax-m3-1-flash-open-weights
-- tokens.bd, "MiniMax M3.1 Flash Weights Are Out: Self-Host Guide" — October 23, 2026: https://tokens.bd/blog/minimax-m31-flash-open-weights-self-host-guide
+**NVIDIA Nemotron 3.5 Bolt E4B 4GB ships open weights — the "fits your whole GPU budget" agent model** — *Event date: Friday, October 23 (~11:41 EDT)*
 
-### DeepSeek and MiniMax become the first companies cleared to export AI models under Beijing's new rules
-**Event date: Friday, October 23 (Thursday evening Beijing time, via CCTV-affiliated Yuyuan Tantian).** China's Ministry of Commerce and Ministry of Science and Technology proposed export controls on 23 AI technologies on October 16 — covering LLMs, AI agents and computing clusters — with registration requirements effective immediately. DeepSeek and MiniMax have now completed that registration and are approved to proceed with open-source releases and overseas licensing. The state-media account said "the vast majority of artificial intelligence technologies will still be freely exportable," and MOFCOM has clarified that overseas access via APIs, official websites and apps is not a regulated export, with expedited "automatic licensing" for open-source technology. The timing is pointed: days earlier, DHS ordered DeepSeek stripped from US federal civilian IT, and the account explicitly contrasted Beijing's "encouraging openness" stance with Washington's restrictions.
-*Why it matters:* For anyone building on Chinese open weights, this converts last week's "is China about to choke off its own open-source strategy?" panic into a licensing regime that the two flagship labs have now navigated — with DeepSeek's V4.1 Flash upgrade and DeepInfer engine and MiniMax's M3.1 weights all cited as post-registration proof points. The regime risk is now procedural (registration, timing controlled by MOFCOM) rather than binary.
-Sources:
-- Reuters, "China's DeepSeek, MiniMax win approval for AI global use, state media-affiliated entity says" — October 23, 2026: https://www.reuters.com/business/media-telecom/chinas-deepseek-minimax-win-approval-ai-global-use-state-media-affiliated-entity-2026-10-23/
-- SCMP, "DeepSeek, MiniMax secure licences to deploy AI overseas under China export rules" — October 23, 2026: https://www.scmp.com/tech/policy/article/3371880/deepseek-minimax-secure-open-source-licenses-days-after-new-china-export-rules-state-media
-- Bloomberg, "DeepSeek, MiniMax Win Approval for Global Use, State Media Says" — October 23, 2026: https://www.bloomberg.com/news/articles/2026-10-23/deepseek-minimax-win-approval-for-global-use-state-media-says
+NVIDIA's AI account posted at 15:41 UTC (11:41 EDT) that "Nemotron 3.5 Bolt E4B 4GB is open and customizable… weights, data and recipes. Available now on Hugging Face," and the repo `nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB` is live (last modified today). It is an 8B-total / 4B-effective model post-trained by NVIDIA from Gemma-4-E4B-it, shipped as Q4_K_M GGUF (~6.2 GB download) with a companion DFlash drafter for speculative decoding via llama.cpp (`--spec-type draft-dflash`), a 64K-token context (131,072 declared in GGUF metadata), chat-template switches for thinking mode and conversational mode, and the OpenMDW-1.1 license. NVIDIA's own Q4_K_M benchmark row beats Gemma4-E4B-it across the board and posts standout local-agent numbers: ToolSandbox 74.13, RoleBench 71.21, IHEval 82.40, MultiChallenge 55.60. The E4B tier was pre-announced at the Nemotron 3.5 launch (Oct 15–19) with a firm Oct 23 date in NVIDIA's blog.
 
----
+**Why it matters:** This is the tier the local-agent crowd was waiting for — a tool-calling, voice-ready assistant model in a ~6 GB quantized file that pairs speculative decoding with llama.cpp out of the box.
+
+NVIDIA's launch blog explicitly targets "fast local voice and device assistants."
+
+Sources:
+- NVIDIA Nemotron 3.5 Bolt E4B 4GB model card — Hugging Face, updated 2026-10-23 (repo public this morning) — https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB
+- @NVIDIAAI on X, "Available now on @huggingface," 2026-10-23 15:41 UTC — https://x.com/NVIDIAAI/status/2113657115890118764
+- "NVIDIA Open Models Advance Europe's Sovereign Intelligence" — NVIDIA blog, Oct 21, 2026 (scheduled availability "Friday, Oct. 23") — https://blogs.nvidia.com/blog/open-models-europe-industry/
+
+**llama.cpp b11838** — *Event date: Oct 23, 09:37 EDT.* One in-window build (b11837 was skipped): fixes a time overflow in `ggml_time_us` (#30969), which could distort timing/telemetry on long-running servers. Source: https://github.com/ggml-org/llama.cpp/releases/tag/b11838
+
+**Ollama v0.40.10-rc0** — *Event date: Oct 23, 11:03 EDT.* First release candidate since v0.40.9; watch for the stable cut over the weekend. Source: https://github.com/ollama/ollama/releases/tag/v0.40.10-rc0
 
 ## Agent tools
 
-### Anthropic and PE firm Hg will launch a European AI-consultancy to embed engineers inside businesses
-**Event date: Friday, October 23 (Financial Times, ~6:40 AM ET).** Anthropic has agreed to back an independent consultancy with London-based private-equity firm Hg, targeted to launch by the end of 2026 with hubs in London and Berlin. The new company — funded by Anthropic through balance-sheet capital with Hg participating via HgCapital Trust — places AI consultants and engineers inside client organizations to run agent deployments, targeting software companies and white-collar sectors, and will also serve Hg's portfolio. It puts Anthropic directly against Accenture, Deloitte, EY, KPMG and PwC in the enterprise AI-services market.
-*Why it matters:* Frontier labs are verticalizing agent adoption: instead of only selling API tokens, Anthropic is selling guaranteed deployment capacity, and doing it in Europe where sovereignty concerns most slow enterprise agent rollouts. Expect the same playbook to spread — the model layer monetizing the integration layer.
-Sources:
-- Financial Times, "Anthropic strikes deal to launch European consultancy" — October 23, 2026: https://www.ft.com/content/df70bf20-e809-48d0-8485-f8f514a7fbc4
-- Techmeme item (6:40 AM ET, October 23, 2026): https://www.techmeme.com/261023/p7
+**Microsoft Agent Framework .NET 1.26.0** — *Event date: Oct 23, 10:32 EDT.* The .NET line picked up an AG-UI endpoint fix, correct composition of Copilot session hooks, honoring `allow_multiple_tool_calls` in the Anthropic client when `tool_choice` is unset, and ACGS joined the Python community projects. A routine-but-real hardening release for teams running agentic workflows on .NET.
 
----
+Source: https://github.com/microsoft/agent-framework/releases/tag/dotnet-1.26.0
 
 ## AI security and governance
 
-### US Treasury proposes banning Americans' investments in Chinese and Russian AI, supercomputing and HBM
-**Event date: Thursday, October 22 (NPRM issued; AP's report at ~9:10 PM ET).** Treasury issued a Notice of Proposed Rulemaking implementing the COINS Act (codified December 2025) that expands the Outbound Investment Security Program beyond semiconductors, quantum and AI-in-China to cover prohibitions or notification requirements for investments in "superintelligence"/AI systems, supercomputing, hypersonic systems, biotechnology, and advanced semiconductors including high-bandwidth memory — now aimed at China, Russia, North Korea, Cuba and Iran. It applies to investments above $50,000, excludes many financial investments such as passive stock purchases, and takes comments until December 7, 2026. Beijing's foreign ministry warned the measures "serve no one's interests."
-*Why it matters:* Combined with China's export registrations the same week (above), both governments are now formally treating AI capability — not just chips — as a controlled strategic asset, in both directions. VC and corporate-development teams touching Chinese labs (including open-weight-adjacent startups) face the next layer of the decoupling; Treasury's use of "SI" shows the definition itself is becoming policy.
-Sources:
-- AP, "US Treasury proposes a rule to crack down on high-tech investments in China, other adversaries" — October 22, 2026: https://apnews.com/article/treasury-china-tech-investments-rule-b742c292ff8eb19e6a4c8cf03d4d66b9
-- Treasury press release, "Treasury Issues Proposed Rule to Implement Comprehensive Outbound Investment Security Program": https://home.treasury.gov/news/press-releases/sb0667/
+**Meta delays its scraping-enabled business terms to November 20 after publisher and antitrust pressure** — *Event date: Friday, October 23* — *Update on: "Meta rewrote its scraping clause — legal experts say the problem is still there" (Nieman Lab, Oct 18, in ledger)*
 
-### Anthropic: Claude formally proved 123 open-source libraries crash-free at the RISC-V assembly level
-**Event date: late Thursday, October 22 (Anthropic research post; Techmeme 5:15 AM ET Friday).** Working with formal-methods startup Theorem, Anthropic's Frontier Red Team had Claude convert OSS-Fuzz fuzz tests into formal specifications and prove — on compiled RISC-V binaries — that 239 entry points across 123 real open-source libraries never crash for any input under 64 MB under modeled conditions (single-threaded static binary, fixed memory budget, modeled Linux OS). Roughly 180 million lines of Rocq proof were machine-checked by the Rocq kernel in a few weeks. Claude also found and patched bugs that had survived years of fuzzing. Anthropic is publishing a subset of the proofs plus its RISC-V and OS semantics; Theorem will run the pipeline for other OSS projects and ships a Claude skill for self-serve verification.
-*Why it matters:* The classic counterweight to AI-amplified offense (see ARTEX, PHP2Shell): proof-writing that took 20 person-years for seL4 is becoming an agent workflow. The caveats are real — proven properties are modeled, not intent — but "verification as a CI step at fuzzing-scale economics" just got its strongest public demo, and it lands on binaries, not source.
-Sources:
-- Anthropic Research, "LLMs are making formal software verification feasible at a much larger scale" — October 22, 2026: https://www.anthropic.com/research/formal-verification
-- Unite.AI, "Anthropic Says Claude Proved Security Properties Across 123 Libraries" — October 22/23, 2026: https://www.unite.ai/anthropic-says-claude-proved-security-properties-across-123-libraries/
+Meta spokesperson Daniel Roberts confirmed the effective date of its updated Commercial Terms and Self-Serve Ad Terms moves from October 30 to November 20, "to allow more time for us to explain to our partners and stakeholders what's changing and what's not," and to lay out "how Meta uses web crawlers and the fact that content owners will still be able to use robots.txt to signal preferences." The trigger chain: the News/Media Alliance sent a letter to Mark Zuckerberg on Thursday demanding revisions over "severe harm" to publishers, and publishers plus digital advertisers filed complaints with EU and UK antitrust authorities alleging the terms granted Meta an unlimited right to use their content for AI services (Meta rejects the claim). Reuters adds that the EU antitrust watchdog "welcomed the delay" amid ongoing discussions and had sent requests for information to companies that have not published model-training data summaries.
 
-### WSJ: OpenAI suspected fired safety researchers of leaking internal model designs via disappearing Signal chats
-**Event date: Thursday, October 22, 9:00 PM ET.** The Wall Street Journal reports that OpenAI's security team summoned three safety researchers last month, made them unlock their personal phones, and found chats — some with disappearing messages enabled — with an external AI-safety researcher; the company suspected them of leaking the internal designs of its AI models, among its most closely guarded secrets. The three were fired a week later in simultaneous 2 PM meetings. Fired researcher Tomek Korbak said he was told it was "a breach of trust because I interacted with a third party through unsanctioned channels."
-*Why it matters:* The October 1 firings were reported at the time; this is the first detailed account of *what* was allegedly leaked — model internals — and how (Signal with vanishing messages). It sharpens the chilling-effect debate over internal transparency work and tells outsiders that OpenAI now treats architectural detail as crown-jewel IP.
-Sources:
-- WSJ, "The Signal Chats That Cost OpenAI Researchers Their Jobs" — October 22, 2026 9:00 PM ET: https://www.wsj.com/tech/ai/the-signal-chats-that-cost-openai-researchers-their-jobs-594c5853
+**Why it matters:** A coordinated publisher + advertiser campaign moved a deadline from Big Tech in under a week, and the EU's parallel RFI on training-data transparency signals regulators are treating training-data provenance as an enforcement surface, not a voluntary disclosure. For anyone building on Meta's business platforms or scraping-adjacent data pipelines, the November 20 date is the one to watch — and robots.txt remains the operative opt-out lever.
 
-### PHP2Shell update: Japan stands up AI red-team unit as SoftBank suspends disaster-alert system for patching
-**Event date: Friday, October 23 (Tokyo).** *(Update on previously reported PHP2Shell items, ledger 2026-10-21/22.)* Japan said it will set up a team to simulate AI-driven cyberattacks against national systems — industry minister Ryosei Akazawa: "Defenders also need to make use of AI and respond proactively, staying one step ahead." SoftBank said it is suspending its mobile emergency-alert system (earthquake, tsunami, evacuation notifications) during maintenance to address a PHP vulnerability; JR East is phasing service restorations while the Ministry of Finance, National Tax Agency and Meteorological Agency keep some online services down. Trend Micro's Eva Chen argued Japanese firms are now attractive targets precisely because AI removes the language barrier.
-*Why it matters:* The most concrete national-response signal yet from the PHP2Shell week — an AI-attack-simulation unit and a carrier pulling its disaster-alert pipeline offline to patch show how far "critical infrastructure runs on PHP" consequences now reach.
 Sources:
-- Reuters, "Japan to simulate cyberattacks as PHP flaws roil global internet" — October 23, 2026: https://www.reuters.com/business/media-telecom/japan-simulate-cyberattacks-php-flaws-roil-global-internet-2026-10-23/
-
----
+- "Meta delays new business terms after publisher pushback on AI scraping" — The Verge (Emma Roth), Oct 23, 2026 10:47 EDT — https://www.theverge.com/tech/1017450/meta-business-terms-delayed-ai-scraping
+- "Meta to delay new commercial terms criticised by publishers, advertisers" — Reuters (Foo Yun Chee), Oct 23, 2026 — https://www.reuters.com/business/media-telecom/meta-delay-new-commercial-terms-criticised-by-publishers-advertisers-2026-10-23/
 
 ## Also noted
 
-- **OpenAI cut its valuation target to $1.25T pre-money** (from $1.4T pitched earlier this month) as it nears an up-to-$30B round led by UAE investors and Coatue — FT reported the cut at 6:35 PM ET Thursday; CNBC's underlying report (4:15 PM ET, Oct 22, updated 4:41 PM) says signatures are targeted by end of next week, positioned as an "opportunistic" bridge to a 2027 IPO, with a parallel UAE compute deal in negotiation. https://www.cnbc.com/2026/10/22/openai-funding-round-uae-investors.html
-- **llama.cpp shipped 4 in-window builds (b11828–b11836)** (Oct 22 23:25Z → Oct 23 08:20Z): server rerank-placeholder fix (#30864), CANN const-qualifier consistency (#30933); builds b11824–b11827/b11830–b11834 skipped. https://github.com/ggml-org/llama.cpp/releases
+- **Pathos AI closed a $237M Series E at ~$3B post-money** (announced Friday; Bristol Myers Squibb-backed per multiple outlets), funding a registrational study for AI-identified oncology asset JSKN-016 and a five-year, $55M license of a Tempus AI neurological dataset. Sources: Pathos press release, Oct 23 — https://www.pathos.com/pathos-ai-secures-237-million-in-series-e-financing-to-scale-agentic-ai-drug-development-platform-and-advance-oncology-pipeline ; Axios Pro, Oct 23 08:40 EDT — https://www.axios.com/pro/biotech-deals/2026-10-23/pathos-ai-raises-237m-3b-valuation
+- **BofA (via Reuters, 11:06 EDT):** global data-center spending to more than double to $2.1 trillion by 2028 — the macro backdrop keeping GPU supply tight. https://www.reuters.com/business/data-center-spending-more-than-double-21-trillion-by-2028-2026-10-23/
 
 ## Just missed the window
 
-- **GitLab's CVSS 10.0 unauthenticated RCE** — CVE-2026-110264, an integer overflow in the bundled Onigmo regex compiler affecting every self-managed CE/EE release since 7.0; out-of-band patches shipped **October 21** (fixed: 18.11.13, 19.0.10, 19.1.9, 19.2.9, 19.3.6, 19.4.3, 19.5.1). Coverage spiked in-window (The Register Oct 22), but the disclosure predates the window; as of Friday morning it is not in CISA KEV and no active exploitation has been reported. https://www.theregister.com/security/2026/10/22/max-severity-gitlab-bug-allows-remote-code-execution-over-12-years-of-releases/5304854
+- **OpenAI's Decisions API went generally available — announced yesterday (Oct 22) afternoon, re-covered on Techmeme at 9:25 AM today.** Built with GPT-6 Luna for bounded-answer decisions (predicate/choice/score), up to 10x faster than the Responses API, $0.10 per million input tokens with **no output-token charges**, cached input $0.01/M, up to 400 questions per request, native GPT-Live voice integration, US/EU inference residency and ZDR for eligible customers. The direct-competitor shot at Jev/TypeSafe-style decision models is worth a benchmark slot if you route agent control flow. Sources: OpenAI blog, Oct 22 — https://openai.com/index/decisions-api/ ; TechCrunch (Tim Fernholz), Oct 22 — https://techcrunch.com/2026-10-22/openai-makes-its-jev-competitor-widely-available-as-decision-model-competition-heats-up/
+- **OpenAI is nearing an up to $30B round at a $1.25T pre-money valuation**, led by UAE investors and Coatue, per CNBC (Oct 22); the company reportedly told investors it is "aiming to secure signatures by the end of next week." https://www.cnbc.com/2026-10-22/openai-funding-round-uae-investors.html
+- **Ruby 4.0.9 / 3.4.12 / 3.3.13 shipped (Oct 22, 23:11 UTC)** with upstream Onigmo fixes for the four GitLab regex CVEs — including the CVSS 10.0 CVE-2026-110264 footnoted in the 07:00 run. Ruby notes it may decide whether to request its own CVEs for these fixes. https://www.ruby-lang.org/en/news/2026-10-23/regexp-fixes-for-gitlab-cves/
 
 ## Coverage notes
 
-- **Verified in-window: 7 full items + 2 also-noted lines + 1 footnote**, every one from a fetched page carrying an in-window timestamp (or, for the FT/Anthropic late-night posts, a dated primary page plus Techmeme river timestamp); lead stories read in full.
-- Dead ends / limitations: FT and Bloomberg lead items are paywalled (corroborated via fetched Reuters/AP/Techmeme pages and attributed accordingly); WSJ is snippet-paywalled (lede fully read); Techmeme river items were resolved to fetchable article URLs per policy. No index outages.
+- **Verified: 10 items** (2 lead, 3 minor, 2 tooling releases, 3 footnotes), all with fetched pages carrying in-window (or explicitly-dated) timestamps; lead stories read in full.
+- **Ledger dedupe: 11 candidates suppressed as already reported** (MiniMax M3.1 Flash community quants, DeepSeek/MiniMax export approvals, Anthropic×Hg, Anthropic×Theorem, PHP2Shell-Japan update, WSJ Signal-chats re-coverage by The Verge, Canva Craft, METR monitoring story, ConnectWise/Storm-0940, MS Diagnostic Orchestrator, Claude Duet), plus 1 repeat-footnote suppression (GitLab CVE itself — only the new Ruby-fix release was footnoted).
+- Indexes used: Techmeme river, HN Algolia (created_at-filtered), HuggingFace model API, GitHub releases. HN was quiet in-window (one 5+ point story, non-AI). The Hacker News/The Verge morning cycle added no other in-window AI items. No index was down; the DDGS search backend flaked twice (nous fallback served).
+- Dead ends logged, not chased: X post page itself (fetch not attempted — post time corroborated via search index + HF repo state); no evidence found of a PHP2Shell KEV addition today.
