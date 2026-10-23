@@ -1,97 +1,99 @@
-# AI Hardware & Local Models Brief — Oct 22, 2026 · 17:45 ET edition
+# AI Hardware & Local Models Brief — Oct 23, 2026 (morning)
 
-**Window: 2026-10-22 12:45 → 17:46 EDT** (previous fire → now). New-items-only; event dates anchor to the window.
+**Window:** 2026-10-22 17:45 → 2026-10-23 07:45 EDT (overnight edition)
 
 ## TL;DR
 
-- **vLLM's afternoon merge wave** landed micro-scaling MXFP8 (W8A8) support for routed MoE experts via Quark, SM100 support for Step-5-Preview, a low-latency BF16 GEMM path for GLM-5.3 on SM107, and a new XPress speculative-decoding method — 14 PRs merged in-window.
-- **SGLang merged 18 PRs in-window**, headlined by plan-driven dense and MoE LoRA engines, a bf16 index-logits fast path for DeepSeek-V4.1 on SM100, and a QSA context-parallel optimization.
-- **llama.cpp shipped b11821–b11827**, including day-0 mtmd support for OpenBMB's MiniCPM-OCR 1.0 — merged while the weights were still not yet public on Hugging Face — plus an OpenCL depthwise conv2d kernel.
-- **mradermacher pushed a fresh quant wave**: i1 GGUFs of Terminal-RSI-27B (an RL-trained terminal-agent model), Baseten's elephant-1 decision model, Netra-2B Thai OCR, and AI Singapore's SEA-LION-Guard v2 moderation pair.
-- **A quiet afternoon for hardware**: zero verified silicon announcements in the window; the nearest miss was ServeTheHome's Qotom 10GbE mini-PC review, published just under two hours before the window opened.
-
----
-
-## Inference software and benchmarks
-
-### vLLM merges MXFP8 routed-expert quantization and Blackwell SM100/SM107 enablement — Oct 22
-Fourteen PRs merged between 12:45 and 17:46 EDT. The standout is **[Quantization][Quark] support for MXFP8 (W8A8) routed experts (#63125)** — micro-scaling 8-bit weights-and-activations applied specifically to MoE expert layers through AMD's Quark quantizer. Alongside it: **Step-5-Preview gains SM100 support (#63147)**, **GLM-5.3 gets a low-latency BF16 GEMM path on SM107 (#62843)**, and core gained a **new XPress speculative-decoding method (#54448)**. Housekeeping worth knowing: Kimi K3's XTML marker leakage in the Responses API was fixed (#62507) and Anthropic-style error vocabulary mapping landed (#62294).
-
-**Why it matters:** MXFP8 for routed experts is the block-scaled-quant format war arriving in the mainstream serving stack — experts are where MoE VRAM lives, and micro-scaling recovers accuracy that per-tensor FP8 loses on expert outliers. The SM100/SM107 work is datacenter-platform enablement, but the MoE quant path is what eventually cascades to consumer NVFP4/MXFP8 parity.
-
-**Local inference:** no immediate consumer-GPU change today; the payoff path is MoE quants (DeepSeek-V4.1-Flash, MiniMax-M3 class) getting accuracy-preserving block-scale formats that mirror what NVFP4 already does on RTX 50 cards like the 5060 Ti 16GB.
-
-Source (GitHub, merge-verified in-window): https://github.com/vllm-project/vllm/pull/63125 · also read: https://github.com/vllm-project/vllm/pull/62843 · https://github.com/vllm-project/vllm/pull/54448 · https://github.com/vllm-project/vllm/pull/63147
-
-### SGLang ships plan-driven LoRA engines and DeepSeek-V4.1 SM100 fast paths — Oct 22
-Eighteen PRs merged in-window. The flagship is **#45892, plan-driven dense and MoE LoRA engines** — adapter serving driven by pre-planned execution rather than per-request dispatch. Also: **dsv4 scores the V4.1 index logits in bf16 on SM100 (#45880)**, a **QSA context-parallel optimization (#43792)**, deterministic-inference groundwork via **seeded rejection-sampling draft proposals (#33395)**, and lm_head precision preserved with shared buffers (#45855).
-
-**Why it matters:** plan-driven LoRA is the multi-adapter serving story — community fine-tune stacks (Unsloth/axolotl outputs) become practical as swappable server adapters, and SGLang is racing vLLM for that workflow. The dsv4 items continue the week-long DeepSeek-V4.1 serving-accuracy series.
-
-**Local inference:** LoRA-at-scale matters most on single-consumer-GPU servers running multiple tuned personas/models; the SM100 tuning is datacenter-only.
-
-Source (GitHub, merge-verified in-window): https://github.com/sgl-project/sglang/pull/45892 · also: https://github.com/sgl-project/sglang/pull/45880 · https://github.com/sgl-project/sglang/pull/43792
-
-### llama.cpp b11821–b11827: MiniCPM-OCR 1.0 day-0 support lands before the weights are public — Oct 22
-Five releases published between 13:02 and 15:36 EDT. The headline merge is **#30979, "mtmd: add MiniCPM-OCR 1.0 support"** — llama.cpp's multimodal (mtmd) loader now carries support for OpenBMB's upcoming MiniCPM-OCR 1.0 document model; as of press time `openbmb/MiniCPM-OCR-1.0` was still not discoverable on Hugging Face, so engine support beat the weights. A tracker account reported matching day-0 support PRs opened in vLLM and SGLang as well. Also merged in-window: **OpenCL depthwise conv2d kernels (#30900)**.
-
-**Why it matters:** day-0 llama.cpp support is the community's strongest signal that a model is imminent — and OpenCL depthwise convs feed vision-encoder paths on older AMD GPUs and APUs where CUDA isn't an option.
-
-**Local inference:** once weights land, OCR VLMs in llama.cpp run comfortably on 6–12 GB cards via mtmd; the OpenCL kernel extends usable hardware to older Radeon/APU boxes.
-
-Source (GitHub): https://github.com/ggml-org/llama.cpp/pull/30979 (merged in-window) · https://github.com/ggml-org/llama.cpp/pull/30900 · releases: https://github.com/ggml-org/llama.cpp/releases (b11821 17:02 UTC → b11827 19:36 UTC)
-
----
-
-## Community spins and quantizations
-
-### mradermacher quantizes Terminal-RSI-27B — a recursive-self-improvement terminal agent (Oct 22, 16:08 EDT)
-New i1 imatrix GGUF ladder for **Teriminal-RSI/Terminal-RSI-27B**, an Apache-2.0 RL-trained terminal-agent model on the qwen3_5 architecture (arXiv 2610.22192), tagged for recursive self-improvement, code, and long context. The 27.8B BF16 base appeared yesterday (Oct 21) on Hugging Face.
-
-**Why it matters:** terminal-agent RL models are the current community obsession for local coding assistants, and this one arrives with an accompanying paper rather than being a mere style fine-tune.
-
-**Local inference:** i1 tiers bring 27B-class into ~12–16 GB cards (5060 Ti class); Q8_0 lands around 28 GB, i.e. 3090/4090 territory.
-Source (Hugging Face): https://huggingface.co/mradermacher/Terminal-RSI-27B-i1-GGUF · base: https://huggingface.co/Teriminal-RSI/Terminal-RSI-27B
-
-### Baseten's elephant-1 decision model gets GGUFs (Oct 22, 15:52 EDT)
-mradermacher shipped GGUFs of **baselabs/elephant-1**, Baseten's MIT-licensed decision model — a Qwen3.5-9B fine-tune for classification, routing, guardrails and calibration with vision input, shipping its own readout/engine tooling. Same "single-prefill probability readout" idea as the community's Mica series, from an inference-company lab. (Base repo was created Oct 19; the GGUF upload is the in-window event.)
-
-**Why it matters:** cheap local judge/routing models are the glue for agent pipelines — they gate which model or tool sees a request without paying API fees.
-
-**Local inference:** a 9.4B BF16 decision model quantizes to roughly 5–6 GB (i1/Q4) — trivially co-resident with a working model on a 16 GB card.
-Source (Hugging Face): https://huggingface.co/mradermacher/elephant-1-GGUF · base: https://huggingface.co/baselabs/elephant-1
-
-### Also noted (all mradermacher, all verified in-window by creation timestamp)
-- **Netra-2B-GGUF** (16:22 EDT) — Thai-language OCR/document VLM for receipts and key-information extraction; fits under ~2 GB. https://huggingface.co/mradermacher/Netra-2B-GGUF
-- **Gemma-SEA-LION-Guard-v2 E2B/E4B GGUFs** (15:41, 16:27 EDT) — AI Singapore's SEA-language content-moderation/decision models (MIT). https://huggingface.co/mradermacher/Gemma-SEA-LION-Guard-v2-E4B-GGUF
-- **Ministral-3-3B-Claude-Opus-Reasoning-Distilled-i1-GGUF** (16:46 EDT) — the 3B sibling of the already-reported 8B Opus-trace reasoning distill; ~2–3 GB at i1. https://huggingface.co/mradermacher/Ministral-3-3B-Claude-Opus-Reasoning-Distilled-i1-GGUF
-- **OPSD-Qwen3-4B-i1-GGUF** (14:02 EDT) — hybrid-reasoning math spin with no-think control. https://huggingface.co/mradermacher/OPSD-Qwen3-4B-i1-GGUF
+- **MiniMax M3.1-Flash weights are live on Hugging Face** — the 428B-total/23B-active multimodal MoE with a 1M-token context, shipped as MXFP8 quantization-aware checkpoints with a DSpark draft head; Unsloth day-0 GGUFs and a SGLang cookbook landed within hours.
+- **DeepSeek and MiniMax cleared China's new AI export-registration rule** — state media confirmed both completed filings Friday evening CST, and Beijing says open-sourcing gets expedited "automatic licensing," easing the biggest regulatory overhang over open-weight distribution.
+- **llama.cpp's overnight batch is a big one**: a Hexagon NPU op-fusion rework claiming 20–30% gains across Snapdragon v73–v85, a long-due SYCL graph record/replay port, and probabilistic DFlash2 draft sampling with measured wins on DGX Spark and RTX 50-class cards.
+- **RTX 5080 16GB wholesale prices spiked ~$300 in China overnight** to roughly $2,170–2,240, with ASUS and Gigabyte raising channel prices again amid unconfirmed reports the 16GB model is EOL ahead of a ~$2,990 24GB replacement.
 
 ---
 
 ## AI hardware and silicon
 
-No verified hardware announcements fell inside 12:45–17:46 EDT. VideoCardz's afternoon slate was gaming-driven (RTX 5090 melt saga, GALAX dual-connector 5080), and the circulating "NVIDIA discontinuing RTX 5090 / GB202 to RTX PRO" story traces back to Oct 10–11 reporting — excluded as out-of-window per the ledger rule.
+**RTX 5080 16GB wholesale prices jump ~$300 in China; ASUS and Gigabyte raise channel pricing again**
+Event date: October 23, 2026 (published 07:34 EDT; ASUS factory adjustment effective October 20)
+Chinese distributor outlet Board Channels reports RTX 5080 16GB wholesale pricing moved from 12,700–13,500 yuan ($1,900–2,020) to 14,500–15,000 yuan ($2,170–2,240) in one step. ASUS applied a 1,000-yuan (~$150) increase across all RTX 5080 models versus early October, with smaller bumps to RTX 5070 Ti/5070/5060 Ti 16GB (~$30); Gigabyte followed with a second adjustment this month (+1,200 yuan / ~$180 on 5080s). The report attributes the moves to tightening supply and rising memory costs driven by the industry's shift toward higher-margin HBM production, and claims the RTX 5080 16GB is being discontinued ahead of a 24GB replacement reportedly priced near 19,999 yuan (~$2,990) — NVIDIA has confirmed neither the EOL nor the replacement.
+*Why it matters:* The 16GB Blackwell tier (5080, 5070 Ti, 5060 Ti 16GB) is the volume entry class for local inference — every one of them just got more expensive in the channel, and the rumored EOL of the 5080 16GB would squeeze the used market for the card most hobbyists use for Q4-class 27B models. HBM prioritization as the named cause ties consumer-card inflation directly to the AI buildout.
+*Local inference:* 16GB GDDR7 cards — the budget workhorse tier for 27B Q4 and quantized image models; budget builds on 5060 Ti 16GB/5070 Ti just moved ~$30 higher at distribution, with US/EU retail lag likely.
+Source: "ASUS reportedly raises RTX 5080 prices by $150 in China, Gigabyte follows with $180 increase" — VideoCardz, Oct 23, 2026 11:34 GMT — https://videocardz.com/newz/asus-reportedly-raises-rtx-5080-prices-by-150-in-china-gigabyte-follows-with-180-increase
+
+---
 
 ## Model releases
 
-No open-weight release crossed the window boundary. The three near-misses are footnoted below.
+**Update on previously reported (ledger Oct 19 — MiniMax-M3.1-Flash API launch, "weights Oct 23"): the weights actually shipped overnight**
+Event date: October 23, 2026 (~23:37 EDT Oct 22 repo update; Unsloth quants 00:20 EDT, SGLang cookbook merged 21:07 EDT Oct 22)
+MiniMax published MiniMaxAI/MiniMax-M3.1-Flash on Hugging Face: a native multimodal (text/image/video) mixture-of-experts model, ~428B total parameters with 23B active per token, 1M-token context, MiniMax Sparse Attention throughout (the first three full-attention layers were converted to sparse), quantization-aware training on experts and attention paths, and a bundled DSpark speculative-decoding draft head replacing the earlier EAGLE-style MTP. Model-card numbers include 76.2 BankerToolBench, 73.7% DeepSWE v1.1, 61.7 OSWorld 2.0 and 82.2 CyberGym. The release is 48 safetensors shards under an "other" license with mxfp8 as the shipped precision; recommended serving stacks are SGLang, vLLM and TokenSpeed, with Transformers/KTransformers/Unsloth/ATOM integrations "in progress." Unsloth's day-0 mirrors (unsloth/MiniMax-M3.1-Flash and a GGUF repo) appeared within ~45 minutes of the upload, and SGLang merged a MiniMax-M3.1 cookbook overnight.
+*Why it matters:* This is the first frontier-class agentic/coding MoE to ship with sparse attention, FP8 QAT and a spec-decode draft head as first-class artifacts — exactly the "serving economics" package the ledger predicted on Oct 19 — and it lands the same night Beijing confirmed MiniMax's export registration (next item), making it the clearest signal yet that Chinese open-weight releases will continue.
+*Local inference:* As shipped (mxfp8, ~220GB of weight bytes) this is multi-GPU/server territory — no single-card fit; the day-0 GGUF ladder is the path to 96–128GB-RAM offload rigs, and the DSpark head is what will keep decode speeds sane on community rigs once llama.cpp/KTransformers wiring lands. Usable 1M context depends on GPU memory and serving config.
+Sources:
+- "MiniMaxAI/MiniMax-M3.1-Flash" — Hugging Face, last modified 2026-10-23 03:37 UTC — https://huggingface.co/MiniMaxAI/MiniMax-M3.1-Flash
+- "unsloth/MiniMax-M3.1-Flash-GGUF" — Hugging Face, created 2026-10-23 04:20 UTC — https://huggingface.co/unsloth/MiniMax-M3.1-Flash-GGUF
+- "DeepSeek, MiniMax secure licences to deploy AI overseas under China export rules" — SCMP, Oct 23, 2026 (state-media post Thursday evening CST) — https://www.scmp.com/tech/policy/article/3371880/deepseek-minimax-secure-open-source-licenses-days-after-new-china-export-rules-state-media
+
+**DeepSeek and MiniMax clear China's new AI export-filing rule; open-sourcing gets "immediate reporting and export" automatic licensing**
+Event date: October 23, 2026 (CCTV-affiliated Yuyuan Tantian post, Thursday evening CST — early Friday EDT)
+DeepSeek and MiniMax have completed registration under China's new AI technology export-control regime, per state media — the first two labs cleared since MOFCOM and MOST proposed adding export controls to 23 AI-related technology categories (including large language models, AI agents and computing clusters) last week. The rules require registration of technology-ownership transfers and overseas licensing, but API/website/app access is exempt, and for open-sourcing a spokesperson confirmed expedited "automatic licensing" as quick as "immediate reporting and export." State media framed the regime as boundary-setting, not a clampdown: "the vast majority of artificial intelligence technologies will still be freely exportable." SCMP notes both labs open-sourced major updates this week (DeepSeek's V4.1 Flash upgrade plus the DeepInfer framework; MiniMax's M3.1).
+*Why it matters:* For one week the market's biggest open-weight publishers had been operating under an ambiguous pre-export filing requirement; explicit fast-track licensing for open-sourcing removes the worst-case scenario (a freeze on Chinese weight drops) and is the regulatory backdrop that let MiniMax's M3.1-Flash land hours later.
+*Local inference:* Directly de-risks the release pipeline that local inference depends on — DeepSeek V4.1-Flash and MiniMax M3.1 are two of the heaviest-downloaded open-weight families on 16GB-to-8-GPU-class rigs.
+Sources:
+- SCMP, Oct 23, 2026 — https://www.scmp.com/tech/policy/article/3371880/deepseek-minimax-secure-open-source-licenses-days-after-new-china-export-rules-state-media
+- "DeepSeek and MiniMax clear China's new AI export registration" — AI Chat Daily, Oct 23, 2026 (~04:47 EDT) — https://www.aichatdaily.com/ai-security/deepseek-minimax-clear-china-s-new-ai-export
+
+---
+
+## Community spins and quantizations
+
+**mradermacher's overnight GGUF batch: day-0 GLM-5.3-Flash quant ladder leads**
+Event date: October 23, 2026 (repos created 05:00–11:14 UTC / 01:00–07:14 EDT)
+mradermacher pushed a fresh wave of imatrix GGUFs in-window: GLM-5.3-Flash-GGUF (the MIT-licensed Z.ai flash-class MoE that SGLang's v0.5.22 notes already benchmarked), Muse-Glimmer-30B-AZ-Focus-i1-GGUF (an AxonZeta efficient-reasoning spin of Muse Glimmer 30B), and EchoVLM_v2-i1-GGUF (chaoyinshe's Apache-2.0 agent/vision-language model, both imatrix and full tiers).
+*Why it matters:* GLM-5.3-Flash is the newest top-tier open coding family without mainline quant coverage, and the full Q2→Q8 ladder landing within a day keeps Z.ai's flash model in the "runs tonight" category for llama.cpp/Strata users.
+*Local inference:* 30B-class (Muse Glimmer, EchoVLM) quants fit single 16–24GB cards at mid-bit tiers; the GLM-5.3-Flash ladder targets large-VRAM/multi-GPU and CPU-offload rigs (repo lists standard GGUF tiers, 262K-class context per the family).
+Sources:
+- "mradermacher/GLM-5.3-Flash-GGUF" — Hugging Face, created 2026-10-23 05:00 UTC — https://huggingface.co/mradermacher/GLM-5.3-Flash-GGUF
+- "mradermacher/Muse-Glimmer-30B-AZ-Focus-i1-GGUF" — Hugging Face, created 2026-10-23 10:31 UTC — https://huggingface.co/mradermacher/Muse-Glimmer-30B-AZ-Focus-i1-GGUF
+- "mradermacher/EchoVLM_v2-i1-GGUF" — Hugging Face, created 2026-10-23 11:14 UTC — https://huggingface.co/mradermacher/EchoVLM_v2-i1-GGUF
+
+---
+
+## Inference software and benchmarks
+
+**llama.cpp overnight (b11828–b11836): Hexagon NPU op-fusion rework claims 20–30%, SYCL graphs finally land, probabilistic DFlash2**
+Event date: October 22–23, 2026 (merges 21:45Z → 11:45Z)
+Three merges stand out. #30843 (merged 00:05 EDT) is a major Hexagon backend refactor: new fusion infrastructure with GELU+MUL, REPEAT+GET_ROWS, BINARY_NX chains, RMS_NORM+MUL and SSM_CONV+SILU fusions, plus flash-attention scratch moved off tiny callback stacks — the author reports "performance improves across the board in the 20–30% range," tested on single-NPU v73–v85 and dual/quad-NPU devices. #28725 (22:39 EDT) ports CUDA-style graph record/replay to SYCL — significant decode gains on Arc A770 (kernel-dispatch overhead was dominating), negligible on B70, so it ships off-by-default. #30663 (01:45 EDT) adds probabilistic drafter support for DFlash2 with published tables: up to +4.8% t/s on DGX Spark (Qwen3.8-27B, temp 1.0) and +4–12% on Muse-Glimmer-30B across RTX 5090/RTX Pro 6000/Spark at temperature ≥0.6. Also merged: a Nemotron-3.5-Embed tokenization fix (#30974), +4% B70 prefill from MKL attention dependency chaining (#30684), realtime-API commit completion fixes and rerank placeholder substitution (b11828/b11829).
+*Why it matters:* The Hexagon numbers are the biggest single NPU-side jump of the week and matter for every Snapdragon mini-PC and AI laptop (the £300-box crowd from yesterday's edition included); SYCL graphs are a prerequisite for competitive Intel Arc decode; DFlash2 gets smarter where sampled decoding actually runs.
+*Local inference:* Hexagon → Snapdragon X/X2 NPUs (v73–v85, incl. dual/quad NPU notebooks); SYCL graphs → Intel Arc A-series/B-series (A770 benefits most, opt-in flag); DFlash2 probabilistic → DGX Spark, RTX 5090, RTX Pro 6000 (measured); MKL FA → Intel GPU/CPU prefill.
+Sources:
+- llama.cpp releases b11828–b11836 — GitHub, Oct 22 23:25Z → Oct 23 08:20Z — https://github.com/ggml-org/llama.cpp/releases
+- PR #30843 (Hexagon op fusion) — https://github.com/ggml-org/llama.cpp/pull/30843
+- PR #28725 (SYCL graph record/replay) — https://github.com/ggml-org/llama.cpp/pull/28725
+- PR #30663 (probabilistic DFlash2 drafts) — https://github.com/ggml-org/llama.cpp/pull/30663
+
+**SGLang's overnight merge wave (78 PRs): DeepSeek-V4.1 prefill gets the CUDA-graph treatment**
+Event date: October 22–23, 2026 (merged 21:45Z → 11:45Z)
+In-window: a dsv4 performance series fused the MXFP8 producers into breakable prefill graphs (#45980), replayed the V4.1 prefill graph past 16K-token contexts on SM90/Hopper (#45941), wrote prefill index selections and K-rows in single kernels (#45938/#45934), integrated DeepGEMM MegaGate routing (#43262) and served token-interleaved V4.1 KV caches through sgl-flash-mla (#45893). Spec-decode/infra: HiCache gained fused DFLASH KV in unified hybrid SWA pools (#45700), a MegaGate prefill-graph gating fix (#45969), and DSv4.1 decode host-work moved into the megakernel path (#45450). Ecosystem: a MiniMax-M3.1 cookbook merged day-0 with the weight drop (#45924), FLUX.3's prompt and image encoders were split for disaggregated diffusion serving (#45309), Cosmos3 gained CPU serving (#45478), and the SemiAnalysis AgentX cookbook was refreshed with seven open InferenceX launches (#46005).
+*Why it matters:* This is the same engine that other briefs measured at 2.3x on H200 for V4.1-Flash; the overnight series keeps grinding prefill/decode costs on Hopper and Blackwell, and the day-0 M3.1 cookbook means the new MiniMax weights are benchmarkable out of the box.
+*Local inference:* Hopper/Blackwell server-side, but the DFLASH-in-HiCache work and GGUF MoE fixes (#45754/#45566) land in code paths community rigs hit; cookbook gives M3.1 serving recipes.
+Source: sgl-project/sglang merged-PR search, 2026-10-22T21:45Z..2026-10-23T11:45Z (78 merges) — https://github.com/sgl-project/sglang
+
+**vLLM overnight: quiet night of frontend/correctness merges**
+Event date: October 22–23, 2026
+Fourteen merges, no headliners (the previous window's XPress spec-decode, Quark MXFP8 and GLM-5.3 SM107 items were reported last edition): Responses API now accepts/echoes prompt-cache and safety_identifier fields (#62856), Anthropic-compatible error-type vocabulary mapping (#62294), FA4 FP8 descale strides fixed for singleton KV heads (#58304), a KV-block leak fix under P/D-disaggregation fault tolerance (#56430), and ROCm int8 GEMM kernel-selection CI fixes (#62099).
+*Why it matters:* Incremental, but the Anthropic-API error mapping and Responses-API echo make local vLLM a cleaner drop-in behind coding agents.
+*Local inference:* General serving hygiene; ROCm int8 selection helps AMD consumer cards.
+Source: vllm-project/vllm merged-PR search, 2026-10-22T21:45Z..2026-10-23T11:45Z (14 merges) — https://github.com/vllm-project/vllm
 
 ---
 
 ## Just missed the window
 
-- **KittenML Kitten-TTS 2** (announced last night, ~21:00 EDT Oct 21; weights updated 00:39 EDT today) — the world's first 1.58-bit (ternary) TTS: real-time on CPU, zero-shot voice cloning, multilingual, emotion/emphasis control, with GGUF weights for a llama.cpp fork. Genuinely notable for on-device voice. https://huggingface.co/KittenML/kitten-tts-2 · https://github.com/KittenML/KittenTTS
-- **InclusionAI Ling-3.0-flash-Sante** (announced this morning; HF last-modified 10:53 EDT) — Ant Group's healthcare-specialized open-weight MoE, 124B total / 5.1B active, MIT, 512 experts — the second Ling model dropped today. https://huggingface.co/inclusionAI/Ling-3.0-flash-Sante
-- **HuggingFaceBio Carbon-X** (repo Oct 21, announced on Reddit this morning) — 14B DNA-and-language model fine-tuned from Qwen3-14B; claims to beat every open model tested on five DNA benchmarks at ~1,000x lower cost than the frontier comparator. Runs locally via llama.cpp. https://huggingface.co/HuggingFaceBio/Carbon-X
-- **ServeTheHome: Qotom Q51551UT review** (published 10:52 EDT — 1h53m before the window) — industrial mini-PC with Intel Core Ultra 5 125H (NPU included), 4x 10GbE + 6x 2.5GbE, and a headless PCIe Gen5 x8 slot: a homelab box that can cluster inference nodes and host an add-in GPU. https://www.servethehome.com/qotom-q51551ut-4x-10gbe-and-6x-2-5gbe-intel-mini-pc-review/
-
----
+- **Ling-3.0-tiny UBTree DFlash draft port for stock llama.cpp** (+8% prose / +61% code-gen decode at acceptance 0.53) — the converted GGUF (yury-kapoyko/Ling-3.0-tiny-UBTree-dflash-GGUF) was published 11:44 EDT Oct 22, about six hours before this window opened. Worth watching for llama.cpp-side UBTree support. https://huggingface.co/yury-kapoyko/Ling-3.0-tiny-UBTree-dflash-GGUF
 
 ## Coverage notes
 
-- **Verified: 11 items** (3 lead, 5 quant/also-noted, 4 footnotes) — every included URL fetched; GitHub merges timestamp-verified via `merged:2026-10-22T16:45..21:46Z` queries; HF uploads verified by API `createdAt`.
-- **Ledger dedupe: 8 candidates suppressed** as already reported — capy-flash v0.7.1, the £300 Snapdragon mini-PC/Janas follow-up, the Strata-beating R9700 PR thread, Flint re-coverage (two threads + bartowski's flint GGUF, also pre-window), Fujitsu GODZILLA re-surfacing, TensorRT-LLM v1.4.0rc1, Ollama v0.40.9-rc2 (pre-window + reported), Muse Spark Open score-vs-size chart (re-cover of a reported model).
-- **Excluded on age:** NVIDIA OpenShell's Reddit resurgence traces to the Sept 28 developer-blog disclosure (repo Feb 24) — re-coverage, not an event.
-- **Dead ends:** Reddit's JSON endpoints 403 (used the reddit-reading Atom route); `openbmb/MiniCPM-OCR-1.0` not yet public on HF (API-confirmed — item framed accordingly); DeepSeek/MiniMax China export-registration story looked borderline policy and its report timestamps sit before the window — skipped; AuroraTTS-100K and the community Huawei Atlas comparison table left out as unverifiable in-budget.
-- **Indexes checked:** ServeTheHome, VideoCardz, Hugging Face trending + author feeds, GitHub releases/merged-PR searches (llama.cpp, vLLM, SGLang, Ollama, TensorRT-LLM), r/LocalLLaMA top-day via Atom feeds. Tom's Hardware /latest returned 404.
+- **Verified:** 6 reportable items (1 hardware/silicon, 2 model-release block incl. 1 previously-reported update, 1 community-quant batch, 2 software/benchmark roundups… counting distinct events: 6) plus 1 "Just missed the window" footnote — every item fetched and date-checked against the 17:45→07:45 EDT window; lead stories (MiniMax weights, export registration, llama.cpp batch, RTX 5080 pricing) read in full at primary sources.
+- **Ledger dedupe:** 9 candidates suppressed as already reported — last edition's vLLM merge set (#63125/#62843/#54448/#63147/#62507 reappeared in the merge sweep), Ollama v0.40.9 (GA tag carries the same 01:33Z Oct 22 publish time as the reported rc1; only assets rebuilt in-window), TensorRT-LLM v1.4.0rc1 (no new release), the WorldlyAd7946 Snapdragon mini-PC "update" (same thread as the 12:45 entry), capy-flash v0.7.1 discussion, NVIDIA Nemotron-3.5-Embed/Parse/Rerank (HF repos predate window, lastModified Oct 21; its "missed:" footnote was already spent on the Oct 21 GTC open-models package — Register's 04:47 EDT story is re-coverage), ServeTheHome's Intel Ohio One/Fab 62 milestone (published ~Oct 21), the RTX 5090-discontinuation rumor (first surfaced Oct 10), and the Muse-Spark-Open score-vs-size chart (discussion, not an event).
+- **Dead ends / limitations:** the popular "Making Kokoro TTS 50–100x faster" post could not be timestamp-verified through the anonymous Reddit feed (dropped per the two-strike rule); InternScience/Sage-A1.5 (36B) trending "updated ~22h ago" predates the window and is unconfirmed — not chased; The Register's AI feed was the only index needing a path retry.
