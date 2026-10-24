@@ -1,6 +1,6 @@
 {
   "site": "The Perimeter",
-  "updated": "2026-10-23T18:09:33",
+  "updated": "2026-10-24T07:23:56",
   "feeds": [
     {
       "tag": "cybersec",
@@ -142,7 +142,7 @@
       "tag": "ai-news",
       "title": "The AI Brief",
       "latest": "latest.md",
-      "updated": "2026-10-23T12:16:50",
+      "updated": "2026-10-24T07:23:56",
       "archive": [
         {
           "date": "2026-10-11",
@@ -329,10 +329,16 @@
           "file": "2026-10-23.md",
           "image": "media/2026-10-23.jpg",
           "audio": "media/2026-10-23.mp3"
+        },
+        {
+          "date": "2026-10-24",
+          "file": "2026-10-24.md",
+          "image": "media/2026-10-24.jpg",
+          "audio": "media/2026-10-24.mp3"
         }
       ],
-      "audio": "media/2026-10-23-1216.mp3",
-      "image": "media/2026-10-23-1216.jpg"
+      "audio": "media/2026-10-24.mp3",
+      "image": "media/2026-10-24.jpg"
     },
     {
       "tag": "ai-hardware",
