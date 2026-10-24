@@ -1,68 +1,65 @@
-# AI News Briefing — Saturday, October 24, 2026 (07:00→12:00 ET)
+# AI News Briefing — Saturday, October 24, 2026 (12:00–17:00 ET)
 
-**Window:** 2026-10-24 07:00 → 12:00 EDT (11:00–16:00 UTC). New items only; events first disclosed inside the window. Saturday morning — quiet on new model drops, active on the inference-engine front.
+**Window:** 2026-10-24 12:00 → 17:00 America/New_York (previous fire 12:00; this 17:00 run). New-items-only, ledger-deduped.
 
 ## TL;DR
 
-- **vLLM landed an AMD wave this morning** — seven ROCm/quantization merges between 08:00 and 08:28 ET, including a W4A8 int8-dot MXFP4 GEMV decode kernel for RDNA3/RDNA3.5 *desktop* Radeon GPUs and DeepSeek-V4-Pro/V4.1-Flash decode paths for MI355X/MI325X.
-- **llama.cpp shipped three builds in-window** (b11853, b11854, b11856). The notable one: b11854 adds Vulkan `ggml src1 precision` support — the accumulator-precision knob that guards against fp16 overflow in Vulkan matmul paths.
-- **OpenClaw opened a gateway-only "extended-stable" (LTS-equivalent) line** with v2026.9.34 at 07:38 ET — end-of-September codebase plus critical security fixes, a hard Node-runtime floor, and an `apply_patch` atomicity fix for coding agents.
-- **No new model releases disclosed in the window.** Tracked labs (Qwen, DeepSeek, Moonshot, Mistral, Cohere, Google, Microsoft, NVIDIA, MiniMax, IBM, Tencent) posted no new Hugging Face checkpoints between 07:00 and 12:00 ET — verified by `createdAt` on the HF API.
-- **AI security and governance: zero first-disclosure items in-window.** The morning's security coverage (Brotli/Node2Shell multi-runtime, LiteLLM master-key) all restates pre-window disclosures.
+- **Ollama v0.40.11 went GA** this afternoon — the release adds on-device speech generation on macOS (voice replies during `ollama run`, plus a streaming `/v1/audio/speech` endpoint) and ships the d3 decision-model family (2B/4B/9B/27B) from vLLM Semantic Router into Ollama.
+- **The Information (3:45 PM ET):** Replit moved most of its AI spend to OpenAI in a deal worth **$100M+/year at 30%+ off**, after Anthropic discontinued its discount — an update on this month's provider-switch story.
+- **Local-inference engines kept shipping:** llama.cpp put out seven builds (b11857–b11868, 14:20–16:23 ET) and vLLM merged four PRs in-window, including adaptive verification for batch-sharded speculative sampling.
+- **Just missed the window:** Google's Agent Compute Engine launch (announced Oct 22 at AGNTCon+MCPCon, HN thread this afternoon) and Pennsylvania's AI ad-labeling law (signed Thursday).
 
 ## Models and local inference
 
-**vLLM's Saturday morning AMD push: MXFP4 GEMV for consumer RDNA3, DeepSeek-V4 decode on MI355X/MI325X**
-*Event date: October 24, 2026, 08:00–08:28 ET (merge times, verified via GitHub API)*
+**Ollama v0.40.11 hits GA — speech generation and d3 decision models land on desktop**
+*Event date: Saturday, Oct 24 — GA binaries published 17:27 UTC (1:27 PM ET).*
+The stable v0.40.11 build went live this afternoon (asset timestamps 2026-10-24T17:27:58Z), completing the v0.40.11-rc0 line reported this morning. Two features define it: **speech** — Ollama can now generate audio on macOS, so `ollama run phonon "Hello"` plays text or a chat model's reply aloud as it is generated, and apps can stream audio through an OpenAI-compatible `/v1/audio/speech` endpoint; and **d3 decision models** — the vLLM Semantic Router decision-model family (2B, 4B, 9B, 27B) arrives natively, letting a local model classify text, answer yes/no questions, or score options with calibrated probabilities via `--ask`.
+*Why it matters:* This turns Ollama into a full local voice + routing stack — TTS and cheap structured-decision inference without any cloud call.
+*Sources:*
+- Release notes — Ollama GitHub Releases, v0.40.11 (assets 2026-10-24T17:27 UTC): https://github.com/ollama/ollama/releases
+- Prior edition coverage of the RC this morning (Ollama v0.40.11-rc0: Phonon voice catalog, vllm-d3 fix).
 
-Seven merges landed in the window in quick succession. The most locally-relevant: **#60413** adds a W4A8 int8-dot MXFP4 GEMV decode kernel targeting RDNA3 and RDNA3.5 *desktop* GPUs (i.e., RX 7000/9000-class consumer cards) — MXFP4-quantized weights with int8 activations on the decode path. Alongside it: **#61482** gives DeepSeek-V4-Pro a standalone mono decode layer on MI355X, **#62713** enables DeepSeek-V4.1-Flash `--monokernel` on MI325X (the PR body cites up to 16× prefill speedup with ~170.11 GiB per rank at TP4 and ≤42-row decode buckets), **#57909** adds MiniMax-M3 indexer context-parallelism for ROCm, and **#63001** fixes loading of NVIDIA ModelOpt mixed-precision **DFlash and DSpark** speculative-decoding drafts — the same draft-model family used for spec decode on small local rigs. A shared memory-lookup backbone also merged (#61791, UMBP 3/10).
+**llama.cpp ships seven builds this afternoon (b11857–b11868)**
+*Event date: Saturday, Oct 24, builds tagged 18:20–20:23 UTC (2:20–4:23 PM ET).*
+Highlights: MUL_MAT_ID now accepts a `-1` expert index to skip computation (#26631, all backends incl. Vulkan/WebGPU); `-sm tensor` is denied on arches that build MoE amax scaling graphs, preventing silently wrong split-state results (#31081); an RDMA `rdma_recv` bounds check (#30399); Metal drops the legacy `mul_mm_id` amax rescale now handled in the compute graph (#30924); a server entrypoint refactor introducing `server_role` (router/single/download modes, #31113); and Hexagon flash attention gains a KV-head team split for multicore NPU inference (#31055) — directly relevant to Snapdragon/Hexagon laptops running MoE models with few KV heads.
+*Why it matters:* The Hexagon head-split fix and the MoE split-state correctness guard both improve quality of small-MoE serving on non-NVIDIA hardware; server_role cleanup lands groundwork for router-mode deployments. (The MiniMax-M3 NVFP4 scale-forwarding fix, b11861/#31097, was reported this morning and is not re-listed.)
+*Sources:*
+- Releases — ggml-org/llama.cpp GitHub, b11857–b11868 (tags 2026-10-24 18:20–20:23 UTC): https://github.com/ggml-org/llama.cpp/releases
 
-*Why it matters:* consumer-AMD cards keep closing the quantized-decode gap with NVIDIA — an MXFP4/int8 GEMV path on RDNA3 desktop hardware means FP4-style decode weights become practical outside datacenter ROCm boxes. And the ModelOpt DFlash/DSpark draft-loading fix removes a real footgun for anyone running spec decode with quantized drafts.
-
-Source: [vLLM #60413 — [Perf][ROCm][Kernel] W4A8 int8-dot MXFP4 GEMV for RDNA3/RDNA3.5](https://github.com/vllm-project/vllm/pull/60413) — merged 2026-10-24 12:09:44 UTC (08:09 ET)
-Source: [vLLM #62713 — DeepSeek V4.1-Flash enable --monokernel on MI325X](https://github.com/vllm-project/vllm/pull/62713) — merged 2026-10-24 12:12:01 UTC (08:12 ET)
-Source: [vLLM #63001 — Load ModelOpt mixed-precision DFlash and DSpark drafts](https://github.com/vllm-project/vllm/pull/63001) — merged 2026-10-24 12:28:36 UTC (08:28 ET)
-
-**llama.cpp b11853–b11856: Vulkan src1-precision control, HIP byte-permute fallback, spec-rejection test**
-*Event date: October 24, 2026, 07:12–11:06 ET (release publish times, verified via GitHub API)*
-
-Three releases published inside the window. **b11853** (07:12 ET) adds a HIP byte-permute fallback for targets lacking `__builtin_amdgcn_perm` (#30915) — the PR notes 66 of 145 HIP files failed to build without it. **b11854** (10:35 ET) ships Vulkan `ggml src1 precision` support (#30656), which selects the accumulator precision for `mul_mat`: lower precision can be faster, but the PR explicitly documents that some Vulkan paths using fp16 accumulators can overflow to infinity, with fp32 scaling as the guard. **b11856** (11:06 ET) adds a speculative-rejection draft-sampling test (#30213). Also merged in-window: MiniMax-M3 quantization scales now forwarded into the compute graph (#31097, fixing tool-calling with quantized weights), an out-of-bounds read fix in the RPC `rdma_recv` path (#30399), and the WebUI Models Manager route (#30988).
-
-*Why it matters:* the Vulkan precision switch is the kind of correctness-vs-speed lever local users on Windows/AMD GPU boxes have been asking for; the RPC bounds-check fix closes a memory-safety gap in distributed inference.
-
-Source: [llama.cpp b11856 release](https://github.com/ggml-org/llama.cpp/releases/tag/b11856) — published 2026-10-24 15:06:48 UTC (11:06 ET)
-Source: [llama.cpp b11854 release](https://github.com/ggml-org/llama.cpp/releases/tag/b11854) — published 2026-10-24 14:35:59 UTC (10:35 ET)
-Source: [llama.cpp PR #30656 — vulkan: ggml src1 precision support](https://github.com/ggml-org/llama.cpp/pull/30656) — merged 2026-10-24 04:05 UTC
+**vLLM merges four PRs in-window, led by speculative-sampling verification**
+*Event date: Saturday, Oct 24, merged 16:22–20:35 UTC (12:22–4:35 PM ET).*
+The most notable merge: **[Sampling] adaptive verification support for batch-sharded speculative sampling** (#58466, merged 4:35 PM ET), tagged for Model Runner V2. Also merged: a GLM-5.3 perf change skipping scale calculation in `concat_and_cache_mla` for a claimed 1.2–3.0% end-to-end TPOT improvement, a `profile_prefix` payload on the HTTP `/start_profile` endpoint, and a FlashInfer bump to 0.7.2.post1.
+*Why it matters:* Adaptive verification tightens vLLM's spec-decode pipeline (verifying draft tokens more cheaply across sharded batches), and the FlashInfer bump propagates upstream kernel fixes into default installs.
+*Sources:*
+- Merged-PR search — vllm-project/vllm GitHub (merged:2026-10-24T16:00Z–21:00Z, 4 results): https://github.com/vllm-project/vllm/pull/58466
 
 ## Agent tools
 
-**OpenClaw opens a gateway-only "extended-stable" LTS-equivalent line with v2026.9.34**
-*Event date: October 24, 2026, 07:38 ET (release publish time, verified via GitHub API)*
-
-OpenClaw published **v2026.9.34**, described in the release notes as "a gateway-only extended-stable release, which is our current equivalent to LTS": the end-of-September OpenClaw codebase plus critical security updates, intended for organizations that want a supported-but-current line. Highlights read from the release body: `apply_patch` now validates the full ordered patch envelope before the first disk write, so an invalid later hunk can no longer delete files already changed by earlier operations (#160409); the gateway enforces patched Node runtimes (`>=24.22.1 <25 || >=26.12.1`) — the same floors introduced after the Node.js Brotli RCE; the vulnerable bundled `zod` copies are patched for GHSA-mrhx-c7xc-m3w5; `before_tool_call` hooks are restored; and Memory Wiki note writes survive session compaction (#160322).
-
-*Why it matters:* an LTS-equivalent channel signals OpenClaw is maturing toward enterprise deployment cadence. The `apply_patch` atomicity fix addresses a genuine data-integrity failure mode for coding agents (partial patch application), and the Node floor enforcement quietly turns a runtime CVE fix into an install-time requirement.
-
-Source: [OpenClaw v2026.9.34 release](https://github.com/openclaw/openclaw/releases/tag/v2026.9.34) — published 2026-10-24 11:38:56 UTC (07:38 ET)
+**Update on previously reported (ledger Oct 18, "Replit makes OpenAI its default over Anthropic"): The Information puts numbers on the switch — $100M+/year at 30%+ off**
+*Event date: Saturday, Oct 24, published 3:45 PM ET.*
+The Information reported that Replit recently moved most of its AI spend from Anthropic to OpenAI, which gave **more than 30% off in a deal worth over $100M per year**, after Anthropic discontinued its discount. The piece ("Anthropic's Margin is OpenAI's Opportunity") frames it as part of a broader pattern of OpenAI undercutting Anthropic to win coding-platform customers, with companies like DataCamp and Rippling shifting spending. This materially extends the Oct 18 item, which established the switch (default model swap) but not the deal's economics.
+*Why it matters:* The 30%+ discount rate and nine-figure annual size show how price — not just capability — is reshaping agent-platform provider choice, and that Anthropic's tighter discount policy is actively bleeding customers.
+*Sources:*
+- The Information, "Anthropic's Margin is OpenAI's Opportunity" (Techmeme river listing 3:45 PM ET): https://www.theinformation.com/articles/anthropics-margin-openais-opportunity (paywalled; summary via Techmeme card)
+- Techmeme river, Oct 24 3:45 PM ET: https://www.techmeme.com/river
+- Background: TNW, "Anthropic ends discounts once tokens run out" (Sept 28): https://thenextweb.com/news/anthropic-openai-enterprise-discounts-tokens-the-information
 
 ## AI security and governance
 
-No first-disclosure items verified inside the window. The Hacker News and BleepingComputer front pages this morning carried Brotli/Node2Shell multi-runtime coverage, the LiteLLM master-key/GitHub-token pipeline story, and the x402 SDK flaw — each restating vendor or researcher disclosures from Oct 21–23, so none qualify as in-window events under the window rule (see footnotes and coverage notes).
+No new in-window disclosures this afternoon. The php2shell storyline was quiet since the overnight Barron's/SoftBank updates (all reported in earlier editions), and Techmeme's afternoon carried no new AI-governance events.
 
 ## Also noted
 
-- No new checkpoints from tracked model authors in the HF window (`createdAt` sweep of NVIDIA, Qwen, MoonshotAI, unsloth, HuggingFaceTB, deepseek-ai, mistralai, CohereForAI, google, microsoft, MiniMaxAI, IBM Granite, OpenMOSS): the newest entries are Oct 22–23 uploads.
-- Hugging Face's daily papers page for today carried no in-window dated entries.
+- Nothing else cleared the verification bar for this five-hour Saturday window; AI model-release trackers recorded **zero new tracked model releases on Oct 24**.
 
 ## Just missed the window
 
-- **Block's Dessa** (announced Friday, Oct 23) — The Verge's Jay Peters reports Block unveiled a "true speech-to-speech" model trained on "nothing but human conversation" that Block says runs locally on a MacBook Pro M4 Max or newer. [The Verge](https://www.theverge.com/ai-artificial-intelligence/1017906/robert-hart-block-dessa-ai-voice-speech)
-- **Cursor's "Computer Use" agents** (announced Friday, Oct 23) — semi-autonomous agents that operate desktop apps by viewing and clicking, with an approval step before actions affecting customer data. [TechCrunch](https://techcrunch.com/2026/10/23/cursors-ai-agents-can-now-use-computers-just-like-people/)
-- **Tencent's Hy-Nomas** (weights up Friday ~11:18 UTC) — Apache-2.0 open-weight interactive video world model (two-stage DiT, 111-frame chunk rollout) with an INT8 path that runs on a single RTX 4090 per the model card. [Tencent Hy-Nomas on Hugging Face](https://huggingface.co/tencent/Hy-Nomas)
-- **TypeSafe AI Jev leak** (CEO Diogo Almeida disclosed to customers Friday evening, Oct 23) — startupfortune.com reported an exposed storage bucket leaked every customer's Jev model output, with the company telling customers to assume all Jev output was exposed. Note: the outlet's own page timestamps are internally inconsistent, so treat details cautiously. [Startup Fortune](https://startupfortune.com/typesafe-ai-admits-a-leak-exposed-every-customers-jev-model-output/)
+- **Google announces Agent Compute Engine + expanded agent governance** (announced Thursday, Oct 22 at AGNTCon+MCPCon; HN submission today 4:44 PM ET): purpose-built microVM compute (hardware-isolated Cloud Hypervisor on Titanium IPU, copy-on-write memory sharing, fast checkpoint/restore, per-microVM Hyperdisk) that already powers Gemini agent sessions, preview "in the coming months"; plus open-source **Agent Substrate** on GKE (claimed 10x density, 200k-agent benchmark at 500 activations/sec under 500 ms suspend/resume, works with Claude Code, OpenClaw, Hermes) and Agent Gateway governance (token/cost governance, model routing). First time surfaced in this brief. https://cloud.google.com/blog/topics/ai-infrastructure/introducing-agent-compute-engine-and-expanded-agent-governance
+- **Pennsylvania's AI Deceptive Advertising Act signed by Gov. Shapiro on Thursday, Oct 22** (The Verge surfaced it today): ads significantly modified or generated by AI must carry a label in the same format as the ad, regardless of where the ad was created; parody/satire/fiction exempted. https://www.theverge.com/ai-artificial-intelligence/1018187/pennsylvania-ai-deceptive-advertising-act
 
 ## Coverage notes
 
-- **Verified in-window items: 3** (vLLM merge cluster, llama.cpp b11853–b11856, OpenClaw v2026.9.34) + 4 "Just missed the window" footnotes (all newly footnoted — never tagged before).
-- **Ledger dedupe — 8 candidates suppressed as already reported:** Kimi K3.1 Pro API, Anthropic Mythos 5 × UK AISI GitHub attack (re-covered again today by AI Weekly), OpenAI offline training environment, UK AI Biosecurity Lab / AIBL-100M, Jassy "AWS sold out through 2027", PHP Foundation one-staffer (re-published by Reuters/usnews early this morning), unsloth's Nemotron-3.5-Bolt-E4B GGUF re-surface, and The Verge's re-cover of the Anthropic scorpion-antivenom claim (repeat of an already-footnoted item — suppressed).
-- **Dead ends / limitations:** r/LocalLLaMA's JSON endpoint returned 403; llmmarketcap.com returned 429; Techmeme river items are URL-less and the two in-window river entries (Ciena CEO WSJ interview, NY Post Finland data-center story at 3:01 a.m. ET) are respectively an interview and an out-of-window-published article, so neither was listed. No new model releases is a genuine finding this window, not a retrieval failure.
+- **Verified this run:** 4 items (1 lead GA release, 1 lead market update, 2 engine-tracker items) + 2 "Just missed the window" footnotes, backed by 13 fetched source pages (HN Algolia API, Techmeme home + river, aireleasetracker, Google Cloud blog, The Decoder ×2, AIBriefs, GitHub releases ×3, GitHub merged-PR API ×2, TNW, The Information [paywall — relied on Techmeme's verbatim card]).
+- **Ledger dedupe:** ~8 candidates suppressed as already reported or re-covered: Block Dessa (footnoted at 12:00 today), Kimi K3.1 Pro + Artificial Analysis ranking (footnoted at 07:00 today), OpenAI offline-world/internet-restriction and CPU-cache covert-channel details (reported 07:00 today as securing-frontier-training), Sam Altman sandbox-escape interview (The Decoder, Oct 23), Google Personal Intelligence ads policy (Oct 23 coverage of Oct 16 policy), arXiv submission rate cap (Oct 1–2), Andy Jassy AWS "sold out through 2027" (reported 07:00 today). Repeat "Just missed" footnotes were not re-listed (Block Dessa, Cursor Computer Use, Hy-Nomas, TypeSafe leak, Kimi K3.1, AWS Infinity, Mythos-5 attribution).
+- **Out-of-window skips:** Utopai $60M seed (Fri 7:10 PM ET river), Mave $28M Series A (Fri 5:15 PM ET), Ciena CEO WSJ interview (11:40 AM ET, 20 min early), Instacart sale talks (non-AI business), NYT Alpha School piece (education, out of scope).
+- **Limitations:** The Information lead item is paywalled — deal figures come from Techmeme's verbatim card plus corroborating outlets; no new model releases were disclosed today per release trackers; Saturday afternoon is a structurally quiet news block.
