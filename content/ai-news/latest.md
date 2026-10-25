@@ -1,65 +1,60 @@
-# AI News Briefing — Saturday, October 24, 2026 (12:00–17:00 ET)
+# AI News Briefing — Sunday, October 25, 2026
 
-**Window:** 2026-10-24 12:00 → 17:00 America/New_York (previous fire 12:00; this 17:00 run). New-items-only, ledger-deduped.
+**Window:** Saturday, October 24, 17:00 ET → Sunday, October 25, 2026, 07:00 ET (overnight sweep; previous fire Oct 24, 17:00 ET).
 
 ## TL;DR
 
-- **Ollama v0.40.11 went GA** this afternoon — the release adds on-device speech generation on macOS (voice replies during `ollama run`, plus a streaming `/v1/audio/speech` endpoint) and ships the d3 decision-model family (2B/4B/9B/27B) from vLLM Semantic Router into Ollama.
-- **The Information (3:45 PM ET):** Replit moved most of its AI spend to OpenAI in a deal worth **$100M+/year at 30%+ off**, after Anthropic discontinued its discount — an update on this month's provider-switch story.
-- **Local-inference engines kept shipping:** llama.cpp put out seven builds (b11857–b11868, 14:20–16:23 ET) and vLLM merged four PRs in-window, including adaptive verification for batch-sharded speculative sampling.
-- **Just missed the window:** Google's Agent Compute Engine launch (announced Oct 22 at AGNTCon+MCPCon, HN thread this afternoon) and Pennsylvania's AI ad-labeling law (signed Thursday).
+- **Moonshot's Kimi K3.1 Pro is heading for the top open-weights crown — and a paid-influencer scandal.** VentureBeat's deep dive (Saturday 8:31 PM PT) puts it 4th on the Artificial Analysis Intelligence Index at 55 with weights due November 4, while screenshots circulating on X since Saturday allege a creator campaign required pre-approved copy and told influencers not to disclose paid partnerships.
+- **A training-free harness called GVS5H has five local Qwen3.8-27B instances matching Claude Fable 5 on hard LiveCodeBench (92.4% vs 90.4%)** — a top-165 HN story overnight and directly relevant to single-GPU coding agents.
+- **llama.cpp mainlined native DeepSeek-V4.1-Flash support** in b11870 and shipped a server-hardening fix rejecting pathologically nested JSON that was crashing llama-server.
+- **vLLM merged 19 PRs overnight**, headlined by deprecating the LM Format Enforcer structured-outputs backend and landing Kimi-K3/MiniMax-M3 tuned presets ahead of the November 4 weights drop.
+- **Axios: lawmakers across parties now treat AI leaders' boom/doom swing as a political liability**, with named criticism aimed at Sam Altman and Dario Amodei.
 
 ## Models and local inference
 
-**Ollama v0.40.11 hits GA — speech generation and d3 decision models land on desktop**
-*Event date: Saturday, Oct 24 — GA binaries published 17:27 UTC (1:27 PM ET).*
-The stable v0.40.11 build went live this afternoon (asset timestamps 2026-10-24T17:27:58Z), completing the v0.40.11-rc0 line reported this morning. Two features define it: **speech** — Ollama can now generate audio on macOS, so `ollama run phonon "Hello"` plays text or a chat model's reply aloud as it is generated, and apps can stream audio through an OpenAI-compatible `/v1/audio/speech` endpoint; and **d3 decision models** — the vLLM Semantic Router decision-model family (2B, 4B, 9B, 27B) arrives natively, letting a local model classify text, answer yes/no questions, or score options with calibrated probabilities via `--ask`.
-*Why it matters:* This turns Ollama into a full local voice + routing stack — TTS and cheap structured-decision inference without any cloud call.
-*Sources:*
-- Release notes — Ollama GitHub Releases, v0.40.11 (assets 2026-10-24T17:27 UTC): https://github.com/ollama/ollama/releases
-- Prior edition coverage of the RC this morning (Ollama v0.40.11-rc0: Phonon voice catalog, vllm-d3 fix).
+**Kimi K3.1 Pro: near-certain open-weights leader by November 4 — shadowed by undisclosed-promotion allegations** — *event date: Saturday, October 24 (VentureBeat analysis published Oct 24, 8:31 PM PT; allegations surfaced on X Oct 24)*
+Moonshot's 3-trillion-parameter post-trained version of Kimi K3 currently scores 55 on Artificial Analysis's Intelligence Index (4th overall, ahead of GPT-6 Astra, DeepSeek V4.1-Flash-1017 and Meta's Muse Wonder), with the biggest jumps in agentic work: Terminal-Bench 4.0 13%→67% and CyberGym-E2E-AA 58%→95% versus Kimi K3. API pricing is $2/$10 per million input/output tokens — half of Claude Opus 5.5 — and full open-license weights are promised November 4. At the same time, screenshots posted Saturday by accounts on X (reproduced by VentureBeat and RuntimeWire) allege a creator-marketing brief for the launch that standardized promotional talking points and told participants not to disclose the commercial relationship, reportedly under NDA; the brief's issuer is unknown and the screenshots are not independently authenticated. Reuters reported Saturday that Moonshot deliberately stripped cyber-related data from the training corpus and RL environments — its internal cyber benchmark fell to 81.0% from 90.5% in an unfiltered version — under a stated policy of "not to release open weights that would extend the absolute frontier of cyber capability."
+*Why it matters:* If the benchmarks hold, November 4 gives the open-weights ecosystem its first genuine frontier coding model — but a disclosure scandal lands badly just as enterprises weigh Chinese open-weight adoption under the DHS DeepSeek-removal precedent.
+Source: VentureBeat — Carl Franzen, Oct 24, 2026 8:31 PM PT — https://venturebeat.com/technology/moonshots-kimi-k3-1-pro-flirts-with-open-weights-leadership-amid-paid-influencer-scandal-allegations
+Source (second): RuntimeWire — Oct 24, 2026 — https://runtimewire.com/article/kimi-k31-pro-creator-marketing-disclosure-claims
+Source (cyber curbs context): Reuters — Eduardo Baptista, Oct 24, 2026 — https://www.reuters.com/technology/moonshot-curbs-hacking-ability-new-kimi-model-fears-grow-over-ai-powered-2026-10-24/
 
-**llama.cpp ships seven builds this afternoon (b11857–b11868)**
-*Event date: Saturday, Oct 24, builds tagged 18:20–20:23 UTC (2:20–4:23 PM ET).*
-Highlights: MUL_MAT_ID now accepts a `-1` expert index to skip computation (#26631, all backends incl. Vulkan/WebGPU); `-sm tensor` is denied on arches that build MoE amax scaling graphs, preventing silently wrong split-state results (#31081); an RDMA `rdma_recv` bounds check (#30399); Metal drops the legacy `mul_mm_id` amax rescale now handled in the compute graph (#30924); a server entrypoint refactor introducing `server_role` (router/single/download modes, #31113); and Hexagon flash attention gains a KV-head team split for multicore NPU inference (#31055) — directly relevant to Snapdragon/Hexagon laptops running MoE models with few KV heads.
-*Why it matters:* The Hexagon head-split fix and the MoE split-state correctness guard both improve quality of small-MoE serving on non-NVIDIA hardware; server_role cleanup lands groundwork for router-mode deployments. (The MiniMax-M3 NVFP4 scale-forwarding fix, b11861/#31097, was reported this morning and is not re-listed.)
-*Sources:*
-- Releases — ggml-org/llama.cpp GitHub, b11857–b11868 (tags 2026-10-24 18:20–20:23 UTC): https://github.com/ggml-org/llama.cpp/releases
+**GVS5H: five orchestrated Qwen3.8-27B models match Claude Fable 5 on hard LiveCodeBench — on a single GPU** — *event date: surfaced to the HN front page Sunday ~03:56 UTC (165 points)*
+The GVS5H ("Gorilla vs. 5 Humans") project introduces ledger-based zero-shot self-orchestration: fresh instances of one model decompose a problem and coordinate through a shared filesystem holding a plan, notes and the current solution — no training, no manager prompt. Across eleven models on the 100 latest hard LiveCodeBench problems, gains reach 25.6 points on pinned backends; locally served, open-weight Qwen3.8-27B rises from 66.8% to 92.4% pass@1, slightly above Fable 5's 90.4%, while orchestrated Qwen3.8 Flash Next hits 93.0% at claimed 9% of the cost. Code is MIT-licensed, paper CC-BY, with run artifacts included; gains are explicitly not universal across models.
+*Why it matters:* Inference-time organization — not bigger weights — closing the frontier coding gap is the kind of result that changes what a self-hosted coding agent on one GPU can be expected to do.
+Source: GitHub — slee-persis/GVS5H, fetched Oct 25, 2026 — https://github.com/slee-persis/GVS5H
+Source (HN discussion): News.ycombinator.com, Oct 25, 2026 — https://news.ycombinator.com/item?id=50228167
 
-**vLLM merges four PRs in-window, led by speculative-sampling verification**
-*Event date: Saturday, Oct 24, merged 16:22–20:35 UTC (12:22–4:35 PM ET).*
-The most notable merge: **[Sampling] adaptive verification support for batch-sharded speculative sampling** (#58466, merged 4:35 PM ET), tagged for Model Runner V2. Also merged: a GLM-5.3 perf change skipping scale calculation in `concat_and_cache_mla` for a claimed 1.2–3.0% end-to-end TPOT improvement, a `profile_prefix` payload on the HTTP `/start_profile` endpoint, and a FlashInfer bump to 0.7.2.post1.
-*Why it matters:* Adaptive verification tightens vLLM's spec-decode pipeline (verifying draft tokens more cheaply across sharded batches), and the FlashInfer bump propagates upstream kernel fixes into default installs.
-*Sources:*
-- Merged-PR search — vllm-project/vllm GitHub (merged:2026-10-24T16:00Z–21:00Z, 4 results): https://github.com/vllm-project/vllm/pull/58466
+**llama.cpp b11869–b11871: DeepSeek-V4.1-Flash mainlined; nested-JSON crash fix** — *event date: Saturday 21:18 UTC → Sunday 06:28 UTC*
+Three in-window builds. b11870 adds native DeepSeek-V4.1-Flash ("deepseek41") model support — compressed-KV read layers computed once in the cache, Engram rows gathered in-graph like qwen4exp, Metal fusion baseline added (PR #31086, co-authored by Daniel Han). b11871 fixes a server-crashing flaw: deeply nested request JSON (hundreds of levels on macOS, ~10,000 on Linux) overflowed the HTTP thread stack and killed llama-server; the schema builder, jinja engine and decision code now reject inputs nested past 128 levels with a 400 (PR #30242). b11869 fixed jinja select/selectattr argument handling. Post-release Sunday-morning commits fuse FFN gate/up matmuls in CUDA MMQ and add OpenCL q2_k support.
+*Why it matters:* Native V4.1-Flash support removes the plugin/branch workaround for the most popular open-weight MoE of the month, and the JSON-depth fix matters to anyone exposing llama-server beyond localhost.
+Source: GitHub releases — Oct 24–25, 2026 — https://github.com/ggml-org/llama.cpp/releases
 
-## Agent tools
-
-**Update on previously reported (ledger Oct 18, "Replit makes OpenAI its default over Anthropic"): The Information puts numbers on the switch — $100M+/year at 30%+ off**
-*Event date: Saturday, Oct 24, published 3:45 PM ET.*
-The Information reported that Replit recently moved most of its AI spend from Anthropic to OpenAI, which gave **more than 30% off in a deal worth over $100M per year**, after Anthropic discontinued its discount. The piece ("Anthropic's Margin is OpenAI's Opportunity") frames it as part of a broader pattern of OpenAI undercutting Anthropic to win coding-platform customers, with companies like DataCamp and Rippling shifting spending. This materially extends the Oct 18 item, which established the switch (default model swap) but not the deal's economics.
-*Why it matters:* The 30%+ discount rate and nine-figure annual size show how price — not just capability — is reshaping agent-platform provider choice, and that Anthropic's tighter discount policy is actively bleeding customers.
-*Sources:*
-- The Information, "Anthropic's Margin is OpenAI's Opportunity" (Techmeme river listing 3:45 PM ET): https://www.theinformation.com/articles/anthropics-margin-openais-opportunity (paywalled; summary via Techmeme card)
-- Techmeme river, Oct 24 3:45 PM ET: https://www.techmeme.com/river
-- Background: TNW, "Anthropic ends discounts once tokens run out" (Sept 28): https://thenextweb.com/news/anthropic-openai-enterprise-discounts-tokens-the-information
+**vLLM: 19 merges overnight — LM Format Enforcer deprecated, Kimi-K3 presets land pre-weights** — *event date: merges Oct 24 21:00 UTC → Oct 25 09:22 UTC*
+The overnight merge batch (19 PRs) headlined the formal deprecation of the LM Format Enforcer structured-outputs backend (#63423), new InferenceX/AgentX tuned presets for Kimi-K3 and MiniMax-M3 (plus an aligned Kimi-K3 MI355X ROCm recipe, #63520), a cluster of KV-offload correctness fixes (#63266, #61780, #60810), MegaMoE LoRA backend validation (#63496), and a DeepGEMM pin bump.
+*Why it matters:* Deprecating a second structured-outputs backend consolidates vLLM on grammar-native paths, and tuned Kimi-K3 recipes appearing before November 4 signals the weights release is being engineered for day-one serving.
+Source: GitHub — merged PR search, Oct 24–25, 2026 — https://github.com/vllm-project/vllm
 
 ## AI security and governance
 
-No new in-window disclosures this afternoon. The php2shell storyline was quiet since the overnight Barron's/SoftBank updates (all reported in earlier editions), and Techmeme's afternoon carried no new AI-governance events.
+**Axios: AI leaders' boom/doom whiplash becomes a political liability** — *event date: Sunday, October 25, 2026, 7:00 AM ET*
+Maria Curi reports that lawmakers and Hill staffers in both parties say AI executives are becoming a political liability as they swing between prosperity and existential-danger claims. Utah Sen. John Curtis says no group is more "disconnected from the lives of ordinary Americans" than the AI industry; Rep. Ro Khanna said "you can't trust billionaires to make the decisions that keep us safe," aimed at Sam Altman; Sen. Bernie Moreno blasted Dario Amodei's "fearmongering rhetoric." The piece also recounts Anthropic's late disclosure of a model security incident affecting US government websites (notified October 8, blogged the next evening) and its retracted federal-preemption clause, OpenAI's state-preemption lobbying, and an ongoing FTC investigation into both companies.
+*Why it matters:* With the FTC probe, Anthropic's draft-bill fallout and the midterms framing this, Washington's patience is thinning just as OpenAI/Anthropic/Nvidia posted record lobbying quarters — expect faster, harsher moves on disclosure obligations.
+Source: Axios — Maria Curi, Oct 25, 2026 7:00 AM ET — https://www.axios.com/ (via Techmeme river; syndicated full text at BigGo)
+Source (fetched copy): BigGo Finance — Oct 25, 2026 — https://finance.biggo.com/news/8c16497e-0dd9-4727-b026-13b0b27a2b4a
 
 ## Also noted
 
-- Nothing else cleared the verification bar for this five-hour Saturday window; AI model-release trackers recorded **zero new tracked model releases on Oct 24**.
+- Apollo's chief economist Torsten Slok (via Techmeme, Sat 5:30 PM ET): outside tech, no financial payoff from AI yet — now viewed as a margin-hurting cost center while VC-backed firms burn more tokens.
 
 ## Just missed the window
 
-- **Google announces Agent Compute Engine + expanded agent governance** (announced Thursday, Oct 22 at AGNTCon+MCPCon; HN submission today 4:44 PM ET): purpose-built microVM compute (hardware-isolated Cloud Hypervisor on Titanium IPU, copy-on-write memory sharing, fast checkpoint/restore, per-microVM Hyperdisk) that already powers Gemini agent sessions, preview "in the coming months"; plus open-source **Agent Substrate** on GKE (claimed 10x density, 200k-agent benchmark at 500 activations/sec under 500 ms suspend/resume, works with Claude Code, OpenClaw, Hermes) and Agent Gateway governance (token/cost governance, model routing). First time surfaced in this brief. https://cloud.google.com/blog/topics/ai-infrastructure/introducing-agent-compute-engine-and-expanded-agent-governance
-- **Pennsylvania's AI Deceptive Advertising Act signed by Gov. Shapiro on Thursday, Oct 22** (The Verge surfaced it today): ads significantly modified or generated by AI must carry a label in the same format as the ad, regardless of where the ad was created; parody/satire/fiction exempted. https://www.theverge.com/ai-artificial-intelligence/1018187/pennsylvania-ai-deceptive-advertising-act
+- **LiteLLM root-cause report (Friday):** the Oct 21 v1.107.0 PyPI/container backdoor traced to a LiteLLM Agent Platform master key committed to a public repo May 27 and never revoked; attacker used it Oct 10 to grab GitHub CLI OAuth tokens from logs and hijack the release pipeline; malicious build harvested cloud creds, SSH keys, browser data and AI-tool auth files.
+- **PHP second RCE warning (Friday, Oct 23):** the PHP team flagged CVE-2026-115560 as a possible unpatched code-execution risk with mitigations only — two days after the emergency PHP2Shell patches (The Hacker News).
+- **CISA KEV (Friday):** added Collabora Online Built-in CODE Server and Arista VeloCloud Orchestrator flaws to the Known Exploited Vulnerabilities catalog, both under active exploitation.
 
 ## Coverage notes
 
-- **Verified this run:** 4 items (1 lead GA release, 1 lead market update, 2 engine-tracker items) + 2 "Just missed the window" footnotes, backed by 13 fetched source pages (HN Algolia API, Techmeme home + river, aireleasetracker, Google Cloud blog, The Decoder ×2, AIBriefs, GitHub releases ×3, GitHub merged-PR API ×2, TNW, The Information [paywall — relied on Techmeme's verbatim card]).
-- **Ledger dedupe:** ~8 candidates suppressed as already reported or re-covered: Block Dessa (footnoted at 12:00 today), Kimi K3.1 Pro + Artificial Analysis ranking (footnoted at 07:00 today), OpenAI offline-world/internet-restriction and CPU-cache covert-channel details (reported 07:00 today as securing-frontier-training), Sam Altman sandbox-escape interview (The Decoder, Oct 23), Google Personal Intelligence ads policy (Oct 23 coverage of Oct 16 policy), arXiv submission rate cap (Oct 1–2), Andy Jassy AWS "sold out through 2027" (reported 07:00 today). Repeat "Just missed" footnotes were not re-listed (Block Dessa, Cursor Computer Use, Hy-Nomas, TypeSafe leak, Kimi K3.1, AWS Infinity, Mythos-5 attribution).
-- **Out-of-window skips:** Utopai $60M seed (Fri 7:10 PM ET river), Mave $28M Series A (Fri 5:15 PM ET), Ciena CEO WSJ interview (11:40 AM ET, 20 min early), Instacart sale talks (non-AI business), NYT Alpha School piece (education, out of scope).
-- **Limitations:** The Information lead item is paywalled — deal figures come from Techmeme's verbatim card plus corroborating outlets; no new model releases were disclosed today per release trackers; Saturday afternoon is a structurally quiet news block.
+- **Verified:** 5 reported items (12 source pages fetched and date-verified) + 1 also-noted + 4 missed-window footnotes; 2 lead stories (Kimi, GVS5H) read in full.
+- **Ledger dedupe:** ~8 in-window candidates suppressed as already reported or pre-window re-coverage — Kimi K3.1 Pro launch itself and Artificial Analysis placement (ledger Oct 23), OpenAI no-internet training / THN "VM escapes" re-coverage (ledger Oct 24), OpenClaw v2026.9.34 (ledger Oct 24), sglang v0.5.22 (ledger Oct 19), Ollama v0.40.11 (ledger Oct 24), Apricitas creative-jobs analysis (published Sep 27, HN re-spike only), CoreWeave chip-backed debt (Bloomberg Friday Oct 23), plus the four footnoted misses above.
+- **Dead ends / limitations:** Saturday is a thin news day — no closed-weight model releases found in-window; The Hacker News' October 25 lead was a re-report of the already-ledgered OpenAI training post and was dropped. Bloomberg and Axios originals are paywalled/403 to direct fetch — syndicated copies fetched and cited alongside the originating outlet. Reuters dated the Moonshot cyber-curbs piece Saturday, but the underlying disclosure was at Friday's launch, so it appears only as context on the Kimi item.
