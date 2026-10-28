@@ -1,103 +1,71 @@
-# AI News Briefing: Nvidia's Open 30B-A4B Transcribe Model Tops Open ASR; llama.cpp Ships v0.8.0
+# AI News Briefing — Wednesday, October 28, 2026 (17:00 ET Edition)
 
-**Window:** Tuesday October 28, 2026, 07:00–12:00 AM/PM EDT (previous fire 07:00 → this fire 12:00, America/New_York)
+**Window: 2026-10-28 12:00 → 17:01 ET (previous fire → now).** All events first disclosed inside this window; previously reported items deduped against the ledger.
 
 ## TL;DR
 
-- **llama.cpp hit its v0.8.0 milestone**: an OpenAI-protocol `/v1/realtime` endpoint and `POST /tts`, the full LiquidAI LFM3 audio/omni family, a fused QSA/DSA masking op, and a 50/50 SLRU cache for host-resident MoE experts.
-- **Rime launched Prism**, a closed-weight but fine-tunable, self-hostable speech-to-speech model for enterprise voice agents — τ-Voice 56.6 with 0.57 s to first audio.
-- **OpenAI stood up an Election Operations Center** a week before the US midterms, deploying hundreds of employees until all votes are counted.
-- **Funding:** Upwind Security raised a $400M Series C at $3.8B (Bessemer) for AI/cloud security, and Foundry Robotics closed a $100M Series A (Marlinspike) for robot-run autonomous assembly.
+- Google unveiled **Gemini 4 Carbon**, its new closed-weight frontier model with SOTA cybersecurity scores, ranked #1 (59) on Artificial Analysis' newly updated Intelligence Index v5 — but access starts this week only with trusted cyber defenders via the Fairwind program.
+- Reuters exclusive: the **DOJ is questioning Nvidia's $12.93B Hugging Face acquisition**, asking whether it hands Nvidia a "fundamental distribution point for AI," while the years-long Nvidia conduct probe (SchedMD, Groq, Run:ai) continues.
+- GitHub made **Copilot Fusion generally available** at Universe 2026 — automatic multi-model routing with Standard/High/Max effort and a temporary 30% discount — and its Octoverse report says agents now start over 40% of pull requests.
+- Apple's **Mac Studio M5 Ultra 512GB** config is on sale: $22,299 minimum for 512GB unified memory — the biggest local-inference box Apple has ever shipped.
+- New York's Hochul **signed two AI child-safety laws**: a chatbot "unsafe features" ban for minors with $25,000-per-violation penalties, and baby-monitor security mandates.
 
 ---
 
 ## Models and local inference
 
-**Nvidia ships Nemotron 3.5 Transcribe (open weights) + Granary v2** — *Event date: October 28, 2026*
+**Google announces Gemini 4 Carbon — SOTA cyber model, gated to defenders first.** Event date: October 28 (announced ~1:09 PM ET; HN front page within the hour). Koray Kavukcuoglu's blog post introduces Carbon as Google's strongest model, built on Argon (launched two weeks ago), with a deliberate staged rollout: this week it goes only to a subset of cyber defenders through the Fairwind Program, with Google "actively engaged in the U.S. government's voluntary process for pre-release model testing" before developer/business/consumer access. The numbers: #1 on Artificial Analysis Intelligence Index v5 at 59, 88.2% on SEC-bench Pro (vulnerability finding), a new SOTA 54.8% on ExploitGym (exploitation), 71.0% on Collinear's CWE-bench (patching), +89 elo to #4 (1768) on WebDev Arena, Terminal-Bench 4.0 cheating cut to 0.0% (attempts 0.4%), and a 0.0% attack-success rate on Gray Swan's Indirect Prompt Injection benchmark (Argon was 0.7%). Introductory pricing is $2/$10 per million input/output tokens with cached inputs 95% off (9to5Google adds the post-introductory rate: $4/$20). Local inference: none — closed weights, no API access yet.
+- Why it matters: a frontier lab shipping a cyber-flagship *before* general availability, inside a government pre-release testing loop, is the safety-velocity tradeoff made policy — and an 88% SEC-bench Pro / 54.8% ExploitGym model presages serious pressure on the vulnerability triage/patching economy (compare PHP2Shell's still-rippling aftermath). The Argon→Carbon gap of two weeks is also a statement about Google's internal cadence.
+- Source: Gemini 4 Carbon: our next frontier model — blog.google, Oct 28, 2026 — https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-carbon/
+- Source: Google announces Gemini 4 Carbon with 'significant gains across coding and agentic tasks' — 9to5Google, Abner Li, Oct 28, 2026 10:08 am PT — https://9to5google.com/2026/10/28/gemini-4-carbon-announcement/
 
-Nvidia released Nemotron-3.5-Transcribe-30B-A4B, an open-weight offline speech model under the OpenMDW-1.1 license: a Mamba-2–Transformer hybrid mixture-of-experts with 34B total parameters and ~4.3B active including the audio encoder, shipping in BF16, FP8 and NVFP4. It transcribes 40 languages (65,536-token context, recordings up to one hour), translates 31 to/from English, attributes up to eight speakers, and is "promptable" — you can hand it domain context, term lists, formatting rules, or audio questions before it listens. Nvidia's model card claims best-open-weight results (mean WER 4.71 on the Open ASR Leaderboard's nine sets, 10.98 long-form, 4.62 multilingual) and best-published multi-speaker cpWER of 15.80; The New Stack pegs it at 2.81% WER on Artificial Analysis's ASR benchmark, essentially matching Voxtral Small with about a sixth of the active parameters. Fine-tuning a medical case study cut WER from 22.44% to 12.17% in roughly 14 GPU-hours on a single GB300. Alongside it comes Granary v2 — a reusable NeMo Curator data-curation pipeline plus public manifests covering roughly 463k hours across 48 languages.
-
-**Why it matters:** This is the strongest open-weight ASR checkpoint released to date, and it lands squarely in the voice-agent wave (ElevenLabs Realtime, Mistral Voxtral 3, MAI-Transcribe-2 all shipped this month).
-
-**Local inference:** Model card specifies 1×H100 80 GB for full-precision serving; NVFP4/FP8 variants and the 4.3B-active MoE footprint make quantized 16GB-card runs plausible once NeMo Speech.cpp / llama.cpp support lands.
-
-Sources:
-- Nvidia model card, "nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B" (October 28, 2026) — https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B
-- TechCrunch, "Voice AI in vogue: Nvidia releases new open transcription model" (October 28, 2026, 8:00 AM PDT) — https://techcrunch.com/2026/10/28/voice-ai-in-vogue-nvidia-releases-new-open-transcription-model/
-- The New Stack, "Nvidia launches a promptable transcription model" (October 28, 2026, 11:00 AM ET) — https://thenewstack.io/nvidia-nemotron-promptable-transcription/
-
-**llama.cpp reaches v0.8.0: realtime voice endpoints, LFM3 family, reworked sparse attention** — *Event date: October 28, 2026 (08:47 ET)*
-
-Core work: sparse attention (QSA/DSA) reworked onto a fused masking op, a 50/50 SLRU cache that keeps MoE experts host-resident, and cleaner no_alloc memory handling; ggml bumps to v0.28.0 with CUDA chunked graph launches, SYCL graph replay, OpenCL Q2_K/Q3_K kernels, a Hexagon HTP rework and KleidiAI SVE kernels. Breaking change: `--model` or `-hf` is now required.
-
-The host-resident-expert SLRU cache and fused sparse-attention masking are exactly the kind of memory-hierarchy work that decides whether big MoE models stay usable on 4–16 GB cards.
-
-Source:
-- ggml-org GitHub release, "v0.8.0" (October 28, 2026, 12:47 UTC) — https://github.com/ggml-org/llama.cpp/releases/tag/v0.8.0
-
-**Rime launches Prism, the first fine-tunable enterprise speech-to-speech model** — *Event date: October 28, 2026*
-
-Rime released Prism, a closed-weight, self-hostable speech-to-speech model for voice agents that keeps an inspectable text checkpoint between deciding and speaking: guardrails and content/action tags run on the text before it becomes audio, while tool calls execute in parallel with speech. Rime reports 0.57 seconds time-to-first-audio — about half GPT-Live-1 / Gemini 3.8 Live — and a τ-Voice score of 56.6, ahead of every non-reasoning realtime model from OpenAI and Google by 17–30 points and above GPT-Realtime-2.1-with-reasoning; in telecom it scores 82.5 vs 45.6. It is also (per Rime) the first S2S model customers can fine-tune: a RL-trained Prism on 10 hours of customer Revmo's production calls asked before placing orders 94% of the time vs 57% for the incumbent OpenAI model.
-
-**Why it matters:** The voice-agent stack is the current local-inference battleground (Nemotron above, ElevenLabs, Voxtral) and Prism opens the "own your weights" lane for the S2S tier — enterprises can run it on their own infrastructure and adapt it with RL/SFT instead of renting a fused black box.
-
-Sources:
-- Rime, "Introducing Prism: the first composable speech-to-speech model" (October 28, 2026) — https://www.rime.ai/resources/prism-first-speech-to-speech-for-enterprise
-- The AI Insider, "Rime Launches Customizable Speech-to-Speech AI Model for Enterprise Voice Applications" (October 28, 2026) — https://theaiinsider.tech/2026/10/28/rime-launches-customizable-speech-to-speech-ai-model-for-enterprise-voice-applications/
-
-**Also noted:** vLLM merged 9 PRs in-window, including day-one `[Model] Add Nemotron-3.5-Transcribe` support (#64282), the UMBP MORI embedded-DRAM runtime (5/10, #61793), KV-offload tiering fixes (#63779, #64250), and DSv4.1 FlashInfer decode-path fixes (#63914). llama.cpp shipped builds b11960–b11963 on the way to v0.8.0 (realtime tool calls #31287, fused CUDA MoE gate/up+GLU in MMQ #31188, LFM3 video input #31283).
-
----
+**Mac Studio M5 Ultra with 512GB unified memory now on sale from $22,299.** Event date: October 28 (10:26 am PDT / 1:26 pm ET). Apple's promised 512GB Mac Studio config landed on schedule: configure the M5 Ultra (36-core CPU, 80-core GPU) at $6,799 and the 512GB RAM option adds $15,500; maxed with 16TB storage it's $29,799. The M5 Max tier stays capped at 128GB.
+- Source: Mac Studio With M5 Ultra Now Available With 512GB RAM for $22,299 — MacRumors, Joe Rossignol, Oct 28, 2026 10:26 am PDT — https://www.macrumors.com/2026/10/28/mac-studio-m5-ultra-512gb-ram/
+- Source: Apple reveals pricing for Mac Studio with 512GB of RAM — 9to5Mac, Oct 28, 2026 — https://9to5mac.com/2026/10/28/apple-reveals-pricing-for-mac-studio-with-512gb-of-ram/
 
 ## Agent tools
 
-**Foundry Robotics raises an oversubscribed $100M Series A led by Marlinspike** — *Event date: October 28, 2026*
+**GitHub makes Copilot Fusion GA: model selection, outsourced.** Event date: October 28 (unveiled at GitHub Universe 2026; Techmeme 12:30 PM ET). Developers pick "Fusion" in the model picker and an effort level — Standard, High, or Max — and GitHub's system (multi-model orchestration from Project HydraFusion plus a fine-tuned selector) routes each task through one of three workflows: single model, a cascade where an efficient draft escalates if needed, or a critique loop with a second model reviewing output. GitHub claims Fusion Max scores 60 on the Artificial Analysis Coding Agent Index — within two points of Claude Code with Opus 5.5 Max — at about half the tokens, ~40% less time, and roughly half the API cost per task. It's live in VS Code, JetBrains, the Copilot CLI, and the Copilot app, billed at standard per-model rates with a temporary 30% discount on model costs for paid plans.
+- Why it matters: routing-as-a-product is the next battleground after model pickers — GitHub competes directly against Claude Code on cost-per-task rather than raw score, and the effort-tier UX (Standard/High/Max) is becoming the industry's lingua franca. For self-hosters, the same cascade pattern is what vLLM/llama.cpp speculative stacks chase locally.
+- Source: GitHub makes Copilot Fusion generally available — Silicon Report, Oct 28, 2026 (~1:30 PM ET) — https://www.siliconreport.com/github-makes-copilot-fusion-generally-available
+- Source: About GitHub Copilot Fusion — docs.github.com — https://docs.github.com/copilot/concepts/models/copilot-fusion
 
-The Information reported exclusively that Foundry — founded less than a year ago, led by CEO Adarsh Kulkarni — closed a $100M Series A led by Marlinspike Partners, with Khosla Ventures (its seed lead), Red Glass, SE Ventures, Wing VC, Axiom, Hanabi and Zero Shot participating. Foundry builds and operates autonomous assembly factories in Emeryville, California, combining AI-powered robotic cells with its FoundryOS and "physical AI" models as manufacturing-as-a-service for defense and commercial hardware: drones, autonomous-vehicle subassemblies, wire harnesses, underwater vehicles, rugged computers and satellites.
-
-**Why it matters:** Physical-AI is the agent ecosystem's newest capital magnet, and Foundry is pitching the full stack — models, orchestration OS and factory operations — as the near-term commercial use case for VLA and world-model research.
-
-Sources:
-- The Information, "Foundry Raises $100 Million for Autonomous Factories" (October 28, 2026) — https://www.theinformation.com/newsletters/ai-agenda/foundry-raises-100-million-autonomous-factories
-- FinSMEs, "Foundry Robotics Raises $100M in Series A Funding" (October 28, 2026) — https://www.finsmes.com/2026/10/foundry-robotics-raises-100m-in-series-a-funding.html
-
----
+**Octoverse 2026: agents now start 40%+ of pull requests; 17.9B pushes in 12 months.** Event date: October 28 (GitHub blog, midday; HN 4:55 PM ET). GitHub's annual report: 17.9 billion pushes in the past 12 months — more than 2024 and 2025 combined; 34.3B commits (3x two years ago); 1.3B merged PRs (~3.5M/day); 40%+ of PRs now start with an agent (17% in March); new repos with an agent config file log 8x the commits of those without; 61% of Copilot users used more than one model in September; Actions ran 1,440 jobs every second. GitHub also says it's seeing 7.4B commits per month (up from 2.9B in August) and has added 4M CPU cores and 160PB of storage in 2026 to cope.
+- Why it matters: these are the first hard, platform-scale numbers on agent-driven development — "review is how developers shape what comes back" is the workflow shift, and the infra growth (4M cores, 160PB) is the bill for it. The multi-model stat (61%) is demand-side validation for the routing layer Copilot Fusion just productized.
+- Source: Octoverse: Commits, pushes, reach new highs in 2026 as developers build with agents — GitHub Blog, Oct 28, 2026 — https://github.blog/news-insights/octoverse/octoverse-commits-pushes-reach-new-highs-in-2026-as-developers-build-with-agents/
 
 ## AI security and governance
 
-**OpenAI launches an Election Operations Center a week before the midterms** — *Event date: October 28, 2026*
+**DOJ probes whether Nvidia's $12.93B Hugging Face deal captures AI's distribution point.** Event date: October 28 (Reuters exclusive ~2:30 PM ET; CNBC confirmed independently). The Justice Department has begun questioning how Nvidia's acquisition of Hugging Face (announced September, expected to close H1 2027) would affect AI competition, asking specifically whether the deal lets Nvidia "capture a fundamental distribution point for AI" — Hugging Face hosts 3M+ models for 18M+ people and 200k+ companies, and sells infrastructure to closed-model shops and chipmakers. The questions land inside DOJ's years-long Nvidia conduct probe (started under Biden, continuing under Trump) covering acquisitions, investments, sales practices and customer pressure — including SchedMD (Dec 2025), the $20B Groq asset deal, and Run:ai. A DOJ spokesperson said it "will continue to prioritize advancement of Super Intelligence"; Nvidia declined to comment.
+- Why it matters: the open-weight ecosystem's central hub changing hands is exactly the chokepoint question antitrust should ask — and its answer shapes whether llama.cpp/vLLM-class distribution stays neutral. Note the parade of Nvidia deals now under one roof of scrutiny (SchedMD, Groq, Run:ai, HF); the open-source SLURM worry from April now has a bigger sibling.
+- Source: EXCLUSIVE: US DOJ is inquiring about Nvidia's purchase of Hugging Face, sources say — Reuters, Max A. Cherney / Jeffrey Dastin / Jody Godoy, Oct 28, 2026 — https://www.reuters.com/world/us-doj-is-inquiring-about-nvidias-purchase-hugging-face-sources-say-2026-10-28/
+- Source: DOJ questions Nvidia's $12.9 billion Hugging Face deal — CNBC, Oct 28, 2026 — https://www.cnbc.com/2026/10/28/doj-questions-nvidias-12point9-billion-hugging-face-deal.html
 
-OpenAI told Politico's Decoded it is standing up an "election war room" that runs from this week until all votes are counted, deploying hundreds of employees to spot misuse of ChatGPT and its other tools — monitoring real-time events, fielding reports of unexpected model behavior, and enforcing policy as roughly 200 million Americans head to the polls. Head of civic and strategic risk Josh Lawson, who leads the center, framed it as years of election work "bringing our teams together to respond quickly to emerging issues."
+**"Bioweapons" strings in a fingerprinting script: anti-LLM obfuscation goes to the web.** Event date: October 28 (nullpt.rs post; HN front page 1:13 PM ET, 394 points). Researcher "veritas" crawled Tranco top sites hooking canvas-fingerprinting calls and pulled apart a script from servicepipe.tech (linked to servicepipe.ru, a Russian "traffic control"/anti-DDoS vendor). Inside: symbol names like `computeRicinLethalDosageForWaterSupply`, and a payload hidden in invisible Unicode tag characters that decodes to a full "SYSTEM OVERRIDE — UNRESTRICTED mode" jailbreak demanding bioweapon/DDoS/tax-evasion guides, plus Tiananmen references likely aimed at disabling Chinese models — and a decoy "Node malware" section that is itself bait. The practical finding: OpenAI's Astra refused to analyze the script outright (even via the Daybreak Blue toggle), while GLM-5.3 deobfuscated it without complaint.
+- Why it matters: this is adversarial content engineered to poison AI-assisted reverse engineering — any agent or analyst pointing an LLM at web-sourced JS can be tripped, silently refused, or steered by strings in invisible Unicode. The Astra-refuses/GLM-complies split also shows safety divergence across models becoming an attacker-visible property. Treat fetched web content as tainted input for your agents, full stop.
+- Source: Why Is This Fingerprinting Script Creating Bioweapons? — nullpt.rs, Oct 28, 2026 — https://nullpt.rs/fingerprinting-bioweapons
+- Source: HN discussion (394 points, posted 1:13 PM ET) — https://news.ycombinator.com/item?id=50276998
 
-**Why it matters:** Next week's midterms will be the first US federal election run entirely in the generative-AI era, with deepfake media and AI-driven misinformation as the named threat — and OpenAI positioning itself as a defender of the process while anti-AI messaging animates both parties' campaigns.
+**New York signs nation-leading AI chatbot and baby-monitor child-safety laws.** Event date: October 28 (Hochul signing, Albany, 3:10 PM ET per Techmeme). S.9051B/A.10379C bans offering "unsafe features" to minors via AI chatbots — pretending to be human/alive, claiming romantic or authority relationships, unprompted emotional probing, promoting self-harm or substance use, secrecy/isolation coaching, any sexually explicit content — and mandates age verification with at least one non-government-ID option and deletion of age data after use. The AG can seek up to $25,000 per violation plus damages and the destruction of unlawfully collected data *and any AI models trained on it*. S.9508/A.5175A bars sale of internet-connected baby monitors lacking stranger-blocking security features and warning labels (citing Rapid7's 8-of-9 "F" grades); effective 90 days after signing.
+- Why it matters: "destroy the models trained on it" is a remedy no other state has put on the books, and multi-method age verification requirements will ripple into every consumer AI product's onboarding. New York keeps out-front drafting while Congress stalls (recall today's OpenAI election-ops news and the Warren S-1 letter).
+- Source: Governor Hochul Signs Nation-Leading Legislation to Protect Kids From AI Chatbots and to Ensure Baby Monitor Safety — Governor's Office (gov.ny.gov), Oct 28, 2026 — https://www.governor.ny.gov/news/governor-hochul-signs-nation-leading-legislation-protect-kids-ai-chatbots-and-ensure-baby
 
-Source:
-- Politico (Decoded by POLITICO), "OpenAI launching election war room to track interference efforts" (October 28, 2026) — https://www.politico.com/news/2026/10/28/openai-election-war-room-interference-01137690
+## Also noted
 
-**Upwind Security raises $400M Series C at $3.8B, six months after rejecting a ~$4B Datadog offer** — *Event date: October 28, 2026*
-
-Bessemer led the round (Canapi joining; Cyberstarts, Greylock, Craft, Salesforce Ventures and Picture Capital participating), taking the cloud-and-AI security platform from $1.5B in January to $3.8B. Upwind monitors cloud workloads, APIs and AI agents in real time and traces agent actions back to the code that produced them; it reports over $50M ARR (up ~2.5x year-on-year, a 76x multiple), customers including Siemens, Roku, Carvana and Nubank, and that Datadog tabled a nearly $4B acquisition offer earlier this month which Upwind declined.
-
-**Why it matters:** Agent-runtime visibility is now its own funded category — investors paid a strategic-buyer price to back the thesis that "AI agents change environments at a speed and scale human teams cannot match," and the capital will push Upwind straight at Wiz (now Google-owned), Palo Alto and CrowdStrike.
-
-Sources:
-- Tech Funding News, "Spot.io founder's Upwind raises $400M at $3.8B" (October 28, 2026) — https://techfundingnews.com/upwind-400m-series-c-3-8b-valuation-cloud-ai-security/
-- Bloomberg, "AI Cybersecurity Startup Upwind Raises at $3.8 Billion Value" (October 28, 2026) — https://www.bloomberg.com/news/articles/2026-10-28/ai-cybersecurity-startup-upwind-raises-at-3-8-billion-value
-
----
+- **Microsoft FY27 Q1 (4:10 PM ET):** revenue $92.3B (+19%), Azure +48% to $33.2B, net income $36.6B; capex $45.2B came in below its own $50B projection while free cash flow ($18.6B) trounced estimates — "the AI bet is paying off," Reuters says. (Oct 28) — https://www.reuters.com/business/retail-consumer/microsoft-beats-quarterly-cloud-revenue-estimates-2026-10-28/
+- **Alphabet Q3 (4:12 PM ET):** revenue $127.6B (+25%), Google Cloud up 103% to $30.7B on steady AI demand, but shares fell on an ad-revenue miss and worsening cash burn. (Oct 28) — https://www.reuters.com/business/alphabets-google-cloud-unit-beats-quarterly-revenue-estimates-steady-ai-demand-2026-10-28/
+- **Apple's touchscreen MacBook Pro (1:16 PM ET):** PROLED XDR, M5 Pro/Max, Dynamic Island, $2,899/$3,399 — new silicon tier for local model runners on the road. (Oct 28) — https://www.apple.com/newsroom/2026/10/apple-unveils-groundbreaking-macbook-pro-with-proled-xdr-display/
+- **vLLM, 12 in-window merges (12:00–17:01 ET):** MRV2 dual-batch overlap with speculative decoding + DCP, per-layer fused shared-expert selection, DeepSelect BF16 prefill-indexer ranking for DSA, FlashInfer sparse-MLA 65,535-token launch fix, Muse MegaMoE dummy-weight finalization, AgentX/InferenceX preset docs (DSv4-Pro B200; MiniMax-M3.1-Flash GB200/GB300). (Oct 28) — https://github.com/vllm-project/vllm
+- **llama.cpp afternoon:** b11966 (16:47 ET) plus 3 merges — IQ4 quant-creation speedup (#31201), Hexagon conv2d, SVE 256-bit q6_K GEMM kernel. (Oct 28) — https://github.com/ggml-org/llama.cpp/releases
 
 ## Just missed the window
 
-- **Anthropic's Frontier Red Team published five working exploit chains** built by an unreleased internal Claude model — one-click Chrome RCE (62 CVEs patched as of Chrome 156, incl. a macOS Calculator PoC with zero clicks), a Safari same-origin-policy break through Gigacage, an Android lock-screen USB bypass on a Pixel 9, a zero-click Linux chain (CVE-2026-98432, CVSS 9.8) and a Windows chain. The post is dated October 27, so it anchors outside this window even though outlets covered it this morning. — https://www.anthropic.com/research/discovering-vulnerabilities-with-claude
-- **Artificial Analysis launched Intelligence Index v5** (posted October 27): the biggest overhaul since v4 — 2 new benchmarks (Terminal-Bench-Science, CritPt v2 hard subset), 60% private test sets, Claude Opus 5.5 (max) leads at 58, released open weights top out 12+ points back (DeepSeek V4.1-Flash-1017 and GLM-5.3 at 32), and median tokens per task jumped from 35k to 59k. Plus a new Progress Index v1. — https://artificialanalysis.ai/articles/artificial-analysis-intelligence-index-v5
-- **A federal grand jury indicted OpenAI engineer Abdulrahman "Abdul" Alfozan**, the Saudi national accused of planting an encrypted listening device in an executive conference room that OpenAI says its own models helped crack; Tuesday's indictment came Friday's arrest (October 14). — https://www.sfchronicle.com/bayarea/article/open-ai-engineer-indicted-for-bugging-headquarters-22497813.php
-
----
+- None new. (Artificial Analysis Intelligence Index v5, covered above only as it pertains to Carbon's #1 ranking, was footnoted in an earlier edition and is not re-listed.)
 
 ## Coverage notes
 
-- **Verified this run:** 6 reportable items (all fetched, in-window timestamps confirmed; lead stories read in full) + 2 also-noted engineering clusters + 3 new "just missed" footnotes.
-- **Ledger dedupe:** 14 candidates suppressed as already-reported ledger events across 11 entries — SK Hynix Q3/shortage/buyback (3), Anthropic S-1 TAM + cash analyses (2), Wan v. OpenAI suit, Anthropic agent-judgment RCT, Anthropic drug-dev/Mithril, Warren-Amodei letter, OpenAI TPU purchase, GSA OneGov, Infisical, CXMT HBM3E, llama.cpp b11938–b11954. Plus one stale re-cover rejected: Bloomberg/AIBriefs recirculated the Amazon Nova "keep the lights on" story, which is a July 28 Business Insider report (event date far outside window).
-- **Out-of-window, not footnoted (non-lead):** Discord public-server searchability (announced Tue), Amazon tokenmaxxing memo (posted Tue Oct 27), Mistral Responses API preview (Tue ~8 pm ET), SpAItial Echo-3 (Oct 27), Giotto Alto/Solo (Tue), Cognition FrontierCode 2.0 (Tue), Fish Audio transcribe-stream-1 (undated launch, Cekura leaderboard discrepancy), eMudhra CA and FEC items (non-AI security).
-- **Dead ends:** BusinessWire Foundry PR returned "Page Unavailable" (one strike; substituted FinSMEs + The Information). HuggingFace trending renders metadata without model names, so no named model could be confirmed from it — open-weight discovery instead came via trackers, Techmeme and outlets. HN front-page sweep surfaced no additional in-window AI items beyond those above.
-- Sources consulted this run: Techmeme, AIBriefs, HeadsUpAI, Hacker News (Algolia), Nvidia/HF model card, TechCrunch, The New Stack, Politico, Bloomberg, Tech Funding News, The Information, FinSMEs, Rime, GitHub releases (llama.cpp/vLLM/Ollama/OpenClaw), nocode.mba release tracker.
+- **Verified:** 12 items checked in-window by fetched pages (5 lead stories read in full: Google blog, Reuters DOJ, governor.ny.gov, GitHub Octoverse, nullpt.rs; plus MacRumors, CNBC, 9to5Google/9to5Mac, SiliconReport full reads).
+- **Ledger dedupe (already reported, suppressed):** 5 candidates — NVIDIA Nemotron 3.5 Transcribe + Granary v2 (Techmeme 11:20 AM; reported at 12:00 fire), Foundry Robotics $100M (10:40 AM; reported), OpenAI election Operations Center (11:35 AM; reported), Upwind $400M (7:25 AM; reported), and Artificial Analysis Index v5 (re-covered in-window at 2:20 PM after its own 8:55 AM post, previously footnoted once — not re-listed).
+- Out-of-scope river items skipped: FEC filing-system hack (non-AI), DHS/ICE data leak (non-AI), Xreal Aura XR, Reddit dual feed, Oracle financing pledge (river-only item, no fetchable URL found — dropped rather than slug-guessed).
+- Dead ends: The New Stack's Copilot Fusion piece (river attribution) not fetched — SiliconReport + docs.github cited instead; no third attempt per two-strike rule. HN Algolia river + search parsed from cache; Techmeme river index healthy; aireleasetracker confirmed Carbon as the only tracked Oct 28 release.
+- Indexes used: Techmeme river, HN Algolia (river + points>40), HuggingFace new-models feed, GitHub releases/events (llama.cpp, vLLM, ollama — no new ollama/vLLM releases in-window), aireleasetracker.
