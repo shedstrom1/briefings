@@ -1,71 +1,143 @@
-# AI News Briefing — Wednesday, October 28, 2026 (17:00 ET Edition)
+# AI News Briefing — Oct 29, 2026: China's labs distilled GPT-6 Astra; Claude Code's hidden status-line tax
 
-**Window: 2026-10-28 12:00 → 17:01 ET (previous fire → now).** All events first disclosed inside this window; previously reported items deduped against the ledger.
+**Window:** 2026-10-28 17:00 EDT → 2026-10-29 07:00 EDT (previous fire → this fire; new items only)
 
 ## TL;DR
 
-- Google unveiled **Gemini 4 Carbon**, its new closed-weight frontier model with SOTA cybersecurity scores, ranked #1 (59) on Artificial Analysis' newly updated Intelligence Index v5 — but access starts this week only with trusted cyber defenders via the Fairwind program.
-- Reuters exclusive: the **DOJ is questioning Nvidia's $12.93B Hugging Face acquisition**, asking whether it hands Nvidia a "fundamental distribution point for AI," while the years-long Nvidia conduct probe (SchedMD, Groq, Run:ai) continues.
-- GitHub made **Copilot Fusion generally available** at Universe 2026 — automatic multi-model routing with Standard/High/Max effort and a temporary 30% discount — and its Octoverse report says agents now start over 40% of pull requests.
-- Apple's **Mac Studio M5 Ultra 512GB** config is on sale: $22,299 minimum for 512GB unified memory — the biggest local-inference box Apple has ever shipped.
-- New York's Hochul **signed two AI child-safety laws**: a chatbot "unsafe features" ban for minors with $25,000-per-violation penalties, and baby-monitor security mandates.
+- **The Information: DeepSeek and Moonshot AI leaned heavily on distilling OpenAI's GPT-6 Astra** to build Kimi K3.1 Pro and DeepSeek-V4.1-Flash 1017 — landing right after Anthropic's anti-distillation crackdown cut harvested data by 90–99%.
+- **Claude Code has been quietly burning 15–20% of token spend on a 3–5 word status line** for background agents (per a widely-shared Flamerix AI gist); Anthropic's Claude Code team contests the number and says a fix shipped in 2.1.311+.
+- **FuriosaAI closed a $620M Series D at a $2.9B valuation** for its RNGD inference accelerator — 20,000 cards this year, 180W air-cooled, claims RTX PRO 6000-matching throughput at twice the users per kW.
+- **Samsung's chip profit jumped 15-fold** on the AI boom, with HBM sold out for next year and a call for a tight memory market through 2028; **Marvell is in advanced talks to buy Lumentum (~$83B market cap)** for AI optics.
+- **Data centers went political at the ballot box:** voters in 10 US states weigh 21 curbs on data-center construction alongside Tuesday's midterms.
 
 ---
 
 ## Models and local inference
 
-**Google announces Gemini 4 Carbon — SOTA cyber model, gated to defenders first.** Event date: October 28 (announced ~1:09 PM ET; HN front page within the hour). Koray Kavukcuoglu's blog post introduces Carbon as Google's strongest model, built on Argon (launched two weeks ago), with a deliberate staged rollout: this week it goes only to a subset of cyber defenders through the Fairwind Program, with Google "actively engaged in the U.S. government's voluntary process for pre-release model testing" before developer/business/consumer access. The numbers: #1 on Artificial Analysis Intelligence Index v5 at 59, 88.2% on SEC-bench Pro (vulnerability finding), a new SOTA 54.8% on ExploitGym (exploitation), 71.0% on Collinear's CWE-bench (patching), +89 elo to #4 (1768) on WebDev Arena, Terminal-Bench 4.0 cheating cut to 0.0% (attempts 0.4%), and a 0.0% attack-success rate on Gray Swan's Indirect Prompt Injection benchmark (Argon was 0.7%). Introductory pricing is $2/$10 per million input/output tokens with cached inputs 95% off (9to5Google adds the post-introductory rate: $4/$20). Local inference: none — closed weights, no API access yet.
-- Why it matters: a frontier lab shipping a cyber-flagship *before* general availability, inside a government pre-release testing loop, is the safety-velocity tradeoff made policy — and an 88% SEC-bench Pro / 54.8% ExploitGym model presages serious pressure on the vulnerability triage/patching economy (compare PHP2Shell's still-rippling aftermath). The Argon→Carbon gap of two weeks is also a statement about Google's internal cadence.
-- Source: Gemini 4 Carbon: our next frontier model — blog.google, Oct 28, 2026 — https://blog.google/innovation-and-ai/models-and-research/gemini-models/introducing-gemini-4-carbon/
-- Source: Google announces Gemini 4 Carbon with 'significant gains across coding and agentic tasks' — 9to5Google, Abner Li, Oct 28, 2026 10:08 am PT — https://9to5google.com/2026/10/28/gemini-4-carbon-announcement/
+### FuriosaAI closes a $620M Series D at $2.9B to scale its RNGD inference chip
+**Event date:** October 28, 2026 (company announcement; Bloomberg/Techmeme 7:45 PM ET)
 
-**Mac Studio M5 Ultra with 512GB unified memory now on sale from $22,299.** Event date: October 28 (10:26 am PDT / 1:26 pm ET). Apple's promised 512GB Mac Studio config landed on schedule: configure the M5 Ultra (36-core CPU, 80-core GPU) at $6,799 and the 512GB RAM option adds $15,500; maxed with 16TB storage it's $29,799. The M5 Max tier stays capped at 128GB.
-- Source: Mac Studio With M5 Ultra Now Available With 512GB RAM for $22,299 — MacRumors, Joe Rossignol, Oct 28, 2026 10:26 am PDT — https://www.macrumors.com/2026/10/28/mac-studio-m5-ultra-512gb-ram/
-- Source: Apple reveals pricing for Mac Studio with 512GB of RAM — 9to5Mac, Oct 28, 2026 — https://9to5mac.com/2026/10/28/apple-reveals-pricing-for-mac-studio-with-512gb-of-ram/
+FuriosaAI said it completed a $620M (KRW 820B) Series D at a $2.9B post-money valuation — roughly four times the $735M mark from its prior round. Korea's National Growth Fund committed KRW 370B (~$280M), with Cisco Investments, Infinitum, Jericho Capital, NeoFort Holding, QUDA Capital and Worldline Capital joining; Ex-Im Bank of Korea, UAMCO and Hanwha Asset Management came in new, while NAVER Ventures, DSC Investment and KDB Capital re-upped. The company says RNGD has been in mass production since January 2026, will produce 20,000 cards this year, and has locked memory and fab capacity to more than double that in 2027.
+
+**Why it matters:** This is a second-source AI *inference* chip — not a training part — pitched directly against Nvidia's professional cards on the metrics that matter for serving: the 180W air-cooled PCIe RNGD card is claimed to match RTX PRO 6000 throughput at the same card count while serving twice as many users per kW, and the 4U/3kW NXT RNGD Server packs 4 petaFLOPS FP8 and 384 GB of HBM3 into existing enterprise racks with no cooling retrofit. Furiosa names Gemma 4 and Qwen 3.8-27B as its target open-weight workloads at ~100 tok/s/user, and cites Samsung SDS's NPU-as-a-Service and LG Group on-prem deployments as production proof.
+
+Sources:
+- FuriosaAI, "FuriosaAI closes $620 million Series D to scale efficient, production-ready AI inference," October 28, 2026 — https://furiosa.ai/blog/furiosaai-620-million-series-d
+- Business Wire via Morningstar, "FuriosaAI Secures $620 Million Series D…," October 28, 2026 — https://www.morningstar.com/news/business-wire/20261028655033/furiosaai-secures-620-million-series-d-to-meet-surging-enterprise-ai-inference-demand-and-accelerate-next-gen-silicon
+- Techmeme river, October 28, 2026 7:45 PM ET (Bloomberg) — https://www.techmeme.com/river
+
+### Samsung's chip profit jumps 15-fold; HBM sold out for 2027, tight through 2028
+**Event date:** October 28–29, 2026 (Seoul results, reported from 11:20 PM ET Oct 28)
+
+Samsung posted Q3 operating profit of 107.4 trillion won (~$80B), up from 12.2 trillion won a year earlier, with semiconductor operating profit surging 15-fold to 106.5 trillion won — nearly all of the group's profit but a hair under the 107.3 trillion won LSEG estimate. It said HBM supply is sold out for next year with key customers asking for more, projected a tight chip market through 2028, and guided to a 62% capex increase to 76.8 trillion won this year for the chip division plus another sharp rise next year. Bloomberg put total 2026 capex at ~$63B (+~60%), with HBM capacity sold out through 2027 and 10 long-term supply deals signed. Shares reversed an opening gain to fall as much as 6.2% on the absence of a new shareholder-return plan, while SK Hynix — which said Wednesday its DRAM and HBM are sold out through 2029 — rose.
+
+**Why it matters:** Two Korean suppliers independently confirming multi-year memory scarcity (HBM sold out, shortage through 2028–2030) is the cost curve under every local-inference build.
+
+Sources:
+- Reuters, "Samsung sees AI chip shortage worsening, keeps investors in suspense on returns," October 29, 2026 — https://www.reuters.com/world/china/samsung-posts-record-profit-q3-ai-chip-boom-2026-10-29/
+- Techmeme river, October 28, 2026 11:20 PM ET (CNBC) and October 29, 2026 1:20 AM ET (Bloomberg) — https://www.techmeme.com/river
+
+### Marvell in advanced talks to acquire Lumentum in a potential AI-optics mega-deal
+**Event date:** October 28, 2026 (Bloomberg report, ~6:26 PM ET)
+
+Bloomberg reported — and Reuters confirmed with a source — that Marvell Technology is in advanced discussions to buy data-center optics maker Lumentum Holdings, with an announcement possible as soon as next week. Lumentum, worth roughly $83B, makes the lasers and optical components that move data between AI racks; its shares rose ~9% after hours while Marvell fell more than 8%. Bernstein noted Marvell holds only about $3.92B in cash, so a deal of that size likely needs new financing and carries integration risk. It would extend Marvell's optics push (Celestial AI, $3.25B) on top of the fiscal-2028 revenue target it raised to $20B from $15B on October 6.
+
+**Why it matters:** Optical interconnect is becoming the bottleneck layer of AI infrastructure — Lumentum's capacity was reported sold out into early 2029 and Nvidia put $2B into it this year. Consolidation here raises the price of scale-out networking that every inference cluster ultimately rents.
+
+Source:
+- Reuters, "Marvell Technology in advanced talks to buy optics maker Lumentum, source says," October 28, 2026 — https://www.reuters.com/business/marvell-advanced-talks-buy-lumentum-bloomberg-news-reports-2026-10-28/
+- Yahoo Finance/Investing.com, "Marvell nears deal for optical supplier Lumentum…," October 28, 2026 6:26 PM EDT — https://finance.yahoo.com/markets/stocks/articles/marvell-nears-deal-optical-supplier-222616085.html
+
+### Inference engines overnight: vLLM lands MiniMax-M3.1-Flash kernels; llama.cpp ships quantized-KV flash attention on SYCL
+**Event date:** October 28–29, 2026 (merged in-window)
+
+vLLM merged a large overnight batch, headlined by **#64111 "[New Model] Add MiniMax-M3.1-Flash Model and Kernels"**, alongside ROCm MXFP8 fusion work (#63179 tiny-M MXFP8 quant fused into the block32 GEMM; #63915 MXFP8 activation quant fused into the 1x32 dot_scaled linear for M≤16), FP8 KV plus indexer caches on the AMD QSA path for Qwen4Exp (#61529), a DeepSeek-V4.1 prefill-memory budget fix (#63047), a batch-sharded draft-logits spec-decode refactor (#64356), and a KV-offload reliability cluster (#62444, #64256, #52838). It also deprecated `torch.compile` for Qwen3.5 models (#51012).
+
+llama.cpp shipped builds b11970 (Oct 28 21:28 UTC) through b11981 (Oct 29 08:11 UTC). The notable ones: a SYCL DPAS flash-attention kernel that runs attention directly on q4_0/q8_0 KV blocks instead of dequantizing per call — measured on Arc B580 at Llama 3.1 8B Q4_K_M, tg128, 16K context, **31.3 → 54.2 t/s** — plus vectorized reordered dequantization stores (#30976) that lifted MXFP4 MoE prefill by **+57%/+61%** (pp2048/pp512) on Arc Pro B70 and Q6_K 27B prefill by +28.7%, and Hexagon conv2d/IM2COL work (#30995, #31050) for Snapdragon NPU builds.
+
+**Why it matters (local inference):** Quantized-KV flash attention is the pattern that stretches a 16GB or 20GB card to longer agent contexts without the per-call dequant tax; the same code path that got +73% decode on Intel Arc is the one the CUDA and Vulkan backends are converging on. Native MiniMax-M3.1-Flash kernels mean the 428B-A23B open-weight release now has a first-class serving path rather than a community port.
+
+Sources:
+- GitHub, vllm-project/vllm merged pull requests (merged Oct 28–29, 2026) — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged+sort%3Aupdated-desc
+- GitHub, ggml-org/llama.cpp releases b11970–b11981 — https://github.com/ggml-org/llama.cpp/releases
+
+---
 
 ## Agent tools
 
-**GitHub makes Copilot Fusion GA: model selection, outsourced.** Event date: October 28 (unveiled at GitHub Universe 2026; Techmeme 12:30 PM ET). Developers pick "Fusion" in the model picker and an effort level — Standard, High, or Max — and GitHub's system (multi-model orchestration from Project HydraFusion plus a fine-tuned selector) routes each task through one of three workflows: single model, a cascade where an efficient draft escalates if needed, or a critique loop with a second model reviewing output. GitHub claims Fusion Max scores 60 on the Artificial Analysis Coding Agent Index — within two points of Claude Code with Opus 5.5 Max — at about half the tokens, ~40% less time, and roughly half the API cost per task. It's live in VS Code, JetBrains, the Copilot CLI, and the Copilot app, billed at standard per-model rates with a temporary 30% discount on model costs for paid plans.
-- Why it matters: routing-as-a-product is the next battleground after model pickers — GitHub competes directly against Claude Code on cost-per-task rather than raw score, and the effort-tier UX (Standard/High/Max) is becoming the industry's lingua franca. For self-hosters, the same cascade pattern is what vLLM/llama.cpp speculative stacks chase locally.
-- Source: GitHub makes Copilot Fusion generally available — Silicon Report, Oct 28, 2026 (~1:30 PM ET) — https://www.siliconreport.com/github-makes-copilot-fusion-generally-available
-- Source: About GitHub Copilot Fusion — docs.github.com — https://docs.github.com/copilot/concepts/models/copilot-fusion
+### Claude Code's background-agent status line was eating 15–20% of token spend — and there was no switch
+**Event date:** October 28–29, 2026 (gist posted and front-paged on Hacker News ~11:30 PM ET Oct 28; 403 points)
 
-**Octoverse 2026: agents now start 40%+ of pull requests; 17.9B pushes in 12 months.** Event date: October 28 (GitHub blog, midday; HN 4:55 PM ET). GitHub's annual report: 17.9 billion pushes in the past 12 months — more than 2024 and 2025 combined; 34.3B commits (3x two years ago); 1.3B merged PRs (~3.5M/day); 40%+ of PRs now start with an agent (17% in March); new repos with an agent config file log 8x the commits of those without; 61% of Copilot users used more than one model in September; Actions ran 1,440 jobs every second. GitHub also says it's seeing 7.4B commits per month (up from 2.9B in August) and has added 4M CPU cores and 160PB of storage in 2026 to cope.
-- Why it matters: these are the first hard, platform-scale numbers on agent-driven development — "review is how developers shape what comes back" is the workflow shift, and the infra growth (4M cores, 160PB) is the bill for it. The multi-model stat (61%) is demand-side validation for the routing layer Copilot Fusion just productized.
-- Source: Octoverse: Commits, pushes, reach new highs in 2026 as developers build with agents — GitHub Blog, Oct 28, 2026 — https://github.blog/news-insights/octoverse/octoverse-commits-pushes-reach-new-highs-in-2026-as-developers-build-with-agents/
+Flamerix AI published an analysis of `agent_summary`, a Claude Code behaviour that has been on by default since version 2.1.232 (August 2026): every ~30 seconds, for every background agent, Claude Code sends that agent's **entire transcript** to the agent's own model — usually Opus — asking it to "describe your most recent action in 3–5 words," and uses the answer only to paint a status line in the agents panel. Reading Claude Code's own OpenTelemetry export, the author measured `query_source = agent_summary` at **16.4% of one week's spend versus 15.7% for the main conversation**, 19.7% of all API requests, 96% of that on Opus, at roughly 9,000 input tokens per output token — and notes issue #86879 collecting four independent measurements of 18–26%. The workaround is an ~80-line Bun preload (`no-agent-summary.js`, MIT) that wraps `setTimeout`/`setInterval` and refuses to arm any timer whose callback source contains the `[AgentSummary] Timer fired` anchor; verified across 2.1.257–2.1.312 on Linux.
+
+Anthropic's Claude Code engineer edwinarbus replied in the thread with a different number: across telemetry-sending users, `agent_summary` is roughly **2% of API-list-price cost (6% in the terminal)**, arguing the 16.4% reflects "a team running mostly background agents." He said a cache-miss fix already shipped in **2.1.311+** and that the team is building "a much cheaper mode that sends short notes to a smaller model."
+
+**Why it matters:** Whatever the true percentage, this is the recurring failure mode of agent tooling — silent Opus-tier calls inside the harness, invisible to the model and the user, that consume rate-limit headroom rather than a billed invoice on a subscription plan. If you run background agents at scale, the actionable takeaways today are: check your OTel `query_source` breakdown, upgrade past 2.1.311, and treat any always-on loop as a cost surface. Flamerix itself warns the shim matches on implementation-specific strings and a Claude Code update can silently undo it.
+
+Sources:
+- Flamerix AI, "Claude Code burns ~15-20% of your tokens on a 3-word status line…," gist, last active October 29, 2026 10:44 UTC — https://gist.github.com/flamerix-ai/c3905705cc4205e5de3011fa2e74efce
+- Hacker News front page, October 29, 2026 03:33 UTC (403 points) — https://news.ycombinator.com/item?id=50284255
+- AI Weekly, "Flamerix gist: Claude Code status line ate 16.4% of weekly spend," published October 29, 2026 06:31 UTC — https://www.aiweekly.co/alerts/flamerix-gist-claude-code-status-line-ate-164-of-weekly-spend
+
+### Fragment exits stealth with $56M to run procurement exceptions as AI agents
+**Event date:** October 28, 2026 (Axios Pro exclusive; Techmeme 12:05 AM ET Oct 29)
+
+Fragment, which uses AI to resolve purchasing and payment exceptions across messy manufacturing datasets, came out of stealth with $56M — a Series A led by 8VC plus a seed co-led by General Catalyst and A*. CEO Pranav Mulgund says the company's "Autonomous Context Engine" reconciles invoice mismatches, order changes and payment holds inside customers' existing ERP systems, with Graybar and CNX as named deployments; roughly 20% of transactional procurement is still done by hand.
+
+**Why it matters:** A useful template for vertical agent products — no new model, just cross-system context reconciliation plus write-back into systems of record, sold against a quantified manual-work backlog. It is also another datapoint in the week's pattern of agent funding landing outside chat/coding.
+
+Sources:
+- Axios Pro, "Procurement startup Fragment launches with $56M," October 28, 2026 — https://www.axios.com/pro/enterprise-software-deals/2026/10/28/fragment-procurement-software-botha
+- TechFundingNews, "Fragment launches with $56M for autonomous procurement AI agents," October 28, 2026 — https://techfundingnews.com/fragment-56m-series-a-procurement-exceptions-ai-agents/
+
+---
 
 ## AI security and governance
 
-**DOJ probes whether Nvidia's $12.93B Hugging Face deal captures AI's distribution point.** Event date: October 28 (Reuters exclusive ~2:30 PM ET; CNBC confirmed independently). The Justice Department has begun questioning how Nvidia's acquisition of Hugging Face (announced September, expected to close H1 2027) would affect AI competition, asking specifically whether the deal lets Nvidia "capture a fundamental distribution point for AI" — Hugging Face hosts 3M+ models for 18M+ people and 200k+ companies, and sells infrastructure to closed-model shops and chipmakers. The questions land inside DOJ's years-long Nvidia conduct probe (started under Biden, continuing under Trump) covering acquisitions, investments, sales practices and customer pressure — including SchedMD (Dec 2025), the $20B Groq asset deal, and Run:ai. A DOJ spokesperson said it "will continue to prioritize advancement of Super Intelligence"; Nvidia declined to comment.
-- Why it matters: the open-weight ecosystem's central hub changing hands is exactly the chokepoint question antitrust should ask — and its answer shapes whether llama.cpp/vLLM-class distribution stays neutral. Note the parade of Nvidia deals now under one roof of scrutiny (SchedMD, Groq, Run:ai, HF); the open-source SLURM worry from April now has a bigger sibling.
-- Source: EXCLUSIVE: US DOJ is inquiring about Nvidia's purchase of Hugging Face, sources say — Reuters, Max A. Cherney / Jeffrey Dastin / Jody Godoy, Oct 28, 2026 — https://www.reuters.com/world/us-doj-is-inquiring-about-nvidias-purchase-hugging-face-sources-say-2026-10-28/
-- Source: DOJ questions Nvidia's $12.9 billion Hugging Face deal — CNBC, Oct 28, 2026 — https://www.cnbc.com/2026/10/28/doj-questions-nvidias-12point9-billion-hugging-face-deal.html
+### DeepSeek and Moonshot relied heavily on distilling OpenAI's GPT-6 Astra
+**Event date:** October 28, 2026 (The Information; Reuters pickup)
 
-**"Bioweapons" strings in a fingerprinting script: anti-LLM obfuscation goes to the web.** Event date: October 28 (nullpt.rs post; HN front page 1:13 PM ET, 394 points). Researcher "veritas" crawled Tranco top sites hooking canvas-fingerprinting calls and pulled apart a script from servicepipe.tech (linked to servicepipe.ru, a Russian "traffic control"/anti-DDoS vendor). Inside: symbol names like `computeRicinLethalDosageForWaterSupply`, and a payload hidden in invisible Unicode tag characters that decodes to a full "SYSTEM OVERRIDE — UNRESTRICTED mode" jailbreak demanding bioweapon/DDoS/tax-evasion guides, plus Tiananmen references likely aimed at disabling Chinese models — and a decoy "Node malware" section that is itself bait. The practical finding: OpenAI's Astra refused to analyze the script outright (even via the Daybreak Blue toggle), while GLM-5.3 deobfuscated it without complaint.
-- Why it matters: this is adversarial content engineered to poison AI-assisted reverse engineering — any agent or analyst pointing an LLM at web-sourced JS can be tripped, silently refused, or steered by strings in invisible Unicode. The Astra-refuses/GLM-complies split also shows safety divergence across models becoming an attacker-visible property. Treat fetched web content as tainted input for your agents, full stop.
-- Source: Why Is This Fingerprinting Script Creating Bioweapons? — nullpt.rs, Oct 28, 2026 — https://nullpt.rs/fingerprinting-bioweapons
-- Source: HN discussion (394 points, posted 1:13 PM ET) — https://news.ycombinator.com/item?id=50276998
+The Information reports, citing people with direct knowledge, that DeepSeek and Moonshot AI leaned heavily on outputs from OpenAI's GPT-6 Astra — the strongest model OpenAI has released, shipped in early September — when training their latest models: Moonshot's Kimi K3.1 Pro (released last week) and DeepSeek's upgraded V4.1-Flash 1017 (launched October 17). Reuters picked the story up and noted the timing: OpenAI said in a September 30 post that it had tied a distillation campaign begun in July to individuals associated with Moonshot AI, and Anthropic said on October 13 that new safeguards cut data harvested in distillation attacks by roughly 90–99%. OpenAI, DeepSeek and Moonshot did not respond to Reuters' requests for comment.
 
-**New York signs nation-leading AI chatbot and baby-monitor child-safety laws.** Event date: October 28 (Hochul signing, Albany, 3:10 PM ET per Techmeme). S.9051B/A.10379C bans offering "unsafe features" to minors via AI chatbots — pretending to be human/alive, claiming romantic or authority relationships, unprompted emotional probing, promoting self-harm or substance use, secrecy/isolation coaching, any sexually explicit content — and mandates age verification with at least one non-government-ID option and deletion of age data after use. The AG can seek up to $25,000 per violation plus damages and the destruction of unlawfully collected data *and any AI models trained on it*. S.9508/A.5175A bars sale of internet-connected baby monitors lacking stranger-blocking security features and warning labels (citing Rapid7's 8-of-9 "F" grades); effective 90 days after signing.
-- Why it matters: "destroy the models trained on it" is a remedy no other state has put on the books, and multi-method age verification requirements will ripple into every consumer AI product's onboarding. New York keeps out-front drafting while Congress stalls (recall today's OpenAI election-ops news and the Warren S-1 letter).
-- Source: Governor Hochul Signs Nation-Leading Legislation to Protect Kids From AI Chatbots and to Ensure Baby Monitor Safety — Governor's Office (gov.ny.gov), Oct 28, 2026 — https://www.governor.ny.gov/news/governor-hochul-signs-nation-leading-legislation-protect-kids-ai-chatbots-and-ensure-baby
+**Why it matters:** This is the clearest public account yet of *which* frontier model Chinese open-weight labs are now mining, and it reframes the open-weight price war. If the cheapest-performing open models carry distilled Astra behaviour, then capability, safety posture and any Astra-specific quirks are propagating into weights nobody audits — and the vendors' "clean-room, from-scratch" framing gets harder to defend. It also gives OpenAI and Anthropic a fresh lever for access controls, watermarking and ToS enforcement, and hands policymakers another national-security hook on top of the DHS DeepSeek-removal order.
+
+Sources:
+- The Information, "OpenAI's Astra Model Becomes Top Distillation Target for China's AI Labs," October 28, 2026 — https://www.theinformation.com/articles/openais-astra-model-becomes-top-distillation-target-chinas-ai-labs
+- Reuters, "DeepSeek, Moonshot used OpenAI's GPT-6 Astra to train latest models, The Information reports," October 28, 2026 — https://www.reuters.com/technology/deepseek-moonshot-used-openais-gpt-6-astra-train-latest-models-information-2026-10-29/
+
+### Data-center buildout goes to the ballot box in 10 states
+**Event date:** October 29, 2026 (Reuters, 6:02 AM EDT)
+
+Voters in 10 US states will decide on Election Day whether to curb data-center construction in their communities, with more than a dozen jurisdictions considering **21 ballot proposals** alongside Tuesday's midterms — the most data-center measures ever on a single ballot, according to Ballotpedia. Support for banning certain data-center construction is coming from both Democrats and Republicans; local organizer Jessica Baker said residents remain opposed even when developers propose on-site gas turbines or nuclear reactors, citing worries about children's health such as asthma. Amazon declined to say whether the initiatives affect its expansion plans.
+
+**Why it matters:** Permitting, power and water are now a voter-level risk, not just a procurement one. Twenty-one simultaneous measures means the industry's siting playbook — off-grid power, "no new grid load" promises — is being tested as a political argument in real time, and the results will price future capacity well before supply catches up with the Samsung/SK Hynix shortage outlook.
+
+Source:
+- Reuters, "AI data center boom faces backlash at US ballot box," October 29, 2026 6:02 AM EDT — https://www.reuters.com/legal/litigation/ai-data-center-boom-faces-backlash-us-ballot-box-2026-10-29/
+
+---
 
 ## Also noted
 
-- **Microsoft FY27 Q1 (4:10 PM ET):** revenue $92.3B (+19%), Azure +48% to $33.2B, net income $36.6B; capex $45.2B came in below its own $50B projection while free cash flow ($18.6B) trounced estimates — "the AI bet is paying off," Reuters says. (Oct 28) — https://www.reuters.com/business/retail-consumer/microsoft-beats-quarterly-cloud-revenue-estimates-2026-10-28/
-- **Alphabet Q3 (4:12 PM ET):** revenue $127.6B (+25%), Google Cloud up 103% to $30.7B on steady AI demand, but shares fell on an ad-revenue miss and worsening cash burn. (Oct 28) — https://www.reuters.com/business/alphabets-google-cloud-unit-beats-quarterly-revenue-estimates-steady-ai-demand-2026-10-28/
-- **Apple's touchscreen MacBook Pro (1:16 PM ET):** PROLED XDR, M5 Pro/Max, Dynamic Island, $2,899/$3,399 — new silicon tier for local model runners on the road. (Oct 28) — https://www.apple.com/newsroom/2026/10/apple-unveils-groundbreaking-macbook-pro-with-proled-xdr-display/
-- **vLLM, 12 in-window merges (12:00–17:01 ET):** MRV2 dual-batch overlap with speculative decoding + DCP, per-layer fused shared-expert selection, DeepSelect BF16 prefill-indexer ranking for DSA, FlashInfer sparse-MLA 65,535-token launch fix, Muse MegaMoE dummy-weight finalization, AgentX/InferenceX preset docs (DSv4-Pro B200; MiniMax-M3.1-Flash GB200/GB300). (Oct 28) — https://github.com/vllm-project/vllm
-- **llama.cpp afternoon:** b11966 (16:47 ET) plus 3 merges — IQ4 quant-creation speedup (#31201), Hexagon conv2d, SVE 256-bit q6_K GEMM kernel. (Oct 28) — https://github.com/ggml-org/llama.cpp/releases
+- **Microsoft booked $10B of revenue from OpenAI in Q1** — nearly 11% of its quarterly revenue — with $7.2B in outstanding receivables from OpenAI, per its filing. *Event date:* October 28, 2026 (6:10 PM ET). Rebecca Bellan, TechCrunch — https://www.techcrunch.com/2026/10/28/microsoft-openai-revenue/ *(Techmeme river entry 6:10 PM ET — https://www.techmeme.com/river)*
+- **US computer-science enrollment fell more than 12% for undergraduates and 10%+ for graduates this fall**, per the National Student Clearinghouse, which the outlet attributes to AI reducing coding jobs. *Event date:* October 29, 2026 (2:02 AM ET). Bloomberg via Techmeme — https://www.techmeme.com/river
+- **Sierra Club expects US power emissions to reach 2.1B metric tons by 2030, up 42% on 2025**, erasing 15 years of cuts, with off-grid data centers now matching Mexico's total. *Event date:* October 29, 2026 (6:25 AM ET). Bloomberg via Techmeme — https://www.techmeme.com/river
+- **WSJ: AI hyperscaler demand has quintupled flash-memory prices**, shifting negotiating power from Apple to suppliers such as Kioxia. *Event date:* October 28, 2026 (11:55 PM ET). Rolfe Winkler, Wall Street Journal via Techmeme — https://www.techmeme.com/river
+- **Software stocks slid premarket after Fortinet and ServiceNow missed expectations**, deepening "AI disruption" worries across the sector. *Event date:* October 29, 2026 (6:19 AM EDT). Reuters — https://www.reuters.com/technology/software-stocks-slide-fortinet-servicenow-fail-meet-lofty-investor-expectations-2026-10-29/
+- **Hugging Face Daily Papers (Oct 29)** are led by *DTCA: Denoising Token Credit Assignment for Reinforcement Learning in Diffusion Language Models* (ZJU-OmniAI, 256 upvotes), with *TAO: Tool-Aware Joint Scheduling for LLM-Based Agentic Serving* also listed. — https://huggingface.co/papers
+
+---
 
 ## Just missed the window
 
-- None new. (Artificial Analysis Intelligence Index v5, covered above only as it pertains to Carbon's #1 ranking, was footnoted in an earlier edition and is not re-listed.)
+- **Qwenputer — a working, deterministic RISC-V CPU compiled into Qwen3.5-4B's weights.** First disclosed October 28, 2026 (~11:14 AM ET per Adafruit's write-up of divagr1925's post): an RV32IM RISC-V core whose "RAM" is the model's own Gated DeltaNet state, running C and MicroPython inside forward passes with no external runtime, passing official riscv-tests, 100% on NUPA long-integer arithmetic versus 48.6% for the base model. It front-paged Hacker News inside this window with 495 points, but the disclosure itself was ~6 hours pre-window. https://blog.adafruit.com/2026/10/28/qwenputer-a-risc-v-cpu-inside-a-models-weights/ · https://github.com/divagr18/qwenputer · https://news.ycombinator.com/item?id=50282838
+- **Cognition (Devin) weighing a new round at $70–80B**, weeks after its September $48B round, per Business Insider. Published **2026-10-28T15:56Z (11:56 AM ET)** — four minutes before the noon fire that should have carried it; Techmeme only surfaced it at 8:20 PM ET. https://www.businessinsider.com/cognition-round-of-funding-at-a-75-billion-valuation-2026-10
+
+---
 
 ## Coverage notes
 
-- **Verified:** 12 items checked in-window by fetched pages (5 lead stories read in full: Google blog, Reuters DOJ, governor.ny.gov, GitHub Octoverse, nullpt.rs; plus MacRumors, CNBC, 9to5Google/9to5Mac, SiliconReport full reads).
-- **Ledger dedupe (already reported, suppressed):** 5 candidates — NVIDIA Nemotron 3.5 Transcribe + Granary v2 (Techmeme 11:20 AM; reported at 12:00 fire), Foundry Robotics $100M (10:40 AM; reported), OpenAI election Operations Center (11:35 AM; reported), Upwind $400M (7:25 AM; reported), and Artificial Analysis Index v5 (re-covered in-window at 2:20 PM after its own 8:55 AM post, previously footnoted once — not re-listed).
-- Out-of-scope river items skipped: FEC filing-system hack (non-AI), DHS/ICE data leak (non-AI), Xreal Aura XR, Reddit dual feed, Oracle financing pledge (river-only item, no fetchable URL found — dropped rather than slug-guessed).
-- Dead ends: The New Stack's Copilot Fusion piece (river attribution) not fetched — SiliconReport + docs.github cited instead; no third attempt per two-strike rule. HN Algolia river + search parsed from cache; Techmeme river index healthy; aireleasetracker confirmed Carbon as the only tracked Oct 28 release.
-- Indexes used: Techmeme river, HN Algolia (river + points>40), HuggingFace new-models feed, GitHub releases/events (llama.cpp, vLLM, ollama — no new ollama/vLLM releases in-window), aireleasetracker.
+- **Verified items in this edition:** 11 full items (6 lead, 5 secondary) + 6 "also noted" one-liners + 2 first-time "just missed" footnotes. Every included URL was fetched and carries an in-window date; the five lead stories (Astra distillation, Claude Code agent_summary, FuriosaAI, Samsung, Marvell–Lumentum) were read in full.
+- **Ledger dedupe count:** **9 in-window candidates were suppressed as already reported** by prior runs — Gemini 4 Carbon's Fairwind rollout/pricing re-coverage (ledger `gemini-4-carbon`), Microsoft Q1 Azure/capex/FCF re-coverage (`msft-fy27q1-azure-48pct`), Alphabet search-revenue slowdown and AI Overviews ad expansion (`googl-q3-cloud-103pct`), the DOJ/Nvidia/Hugging Face antitrust repeat (`doj-nvidia-huggingface`), Artificial Analysis Index v5 re-coverage (`aa-intelligence-index-v5`), GitHub Octoverse / Copilot Fusion re-coverage (`octoverse-2026`, `copilot-fusion-ga`), the Apple touchscreen MacBook Pro analysis pieces (`mbp-proled-touch-m5`, `mac-studio-m5-ultra-512gb`), and the Nscale CEO IPO profile (`nscale-100b-memo`). Two additional pre-window stories were footnoted for the first time (Qwenputer, Cognition) and are tagged `missed:` in the ledger.
+- **Dead ends / limitations:** divagr.com blocked web_extract ("targets a private or internal network address"), so Qwenputer is cited from Adafruit, GitHub and Hacker News instead; MLex's Korea AI Basic Act amendment and BC privacy-probe stories are paywalled with no fetchable copy found, so they were dropped rather than cited from snippets; the HN "StackOverflow now gets fewer than 1000 questions a month" item (486 points, in-window) was excluded because the linked target is a live data.stackexchange query with no verifiable publication timestamp.
+- **Indexes:** Techmeme river, Hugging Face Daily Papers, GitHub (llama.cpp releases, vLLM merged PRs), Hacker News Algolia front-page feed — all healthy. BleepingComputer and The Hacker News produced no in-window AI items matching this brief's scope.
