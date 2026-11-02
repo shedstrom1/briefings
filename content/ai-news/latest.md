@@ -1,93 +1,97 @@
-# AI News Briefing — Monday, November 2, 2026 (12:00 ET edition)
+# AI News Briefing — Nov 2, 2026 · 12:00–17:00 ET
 
-**Window: 2026-11-02 07:00 → 12:00 EST** (previous fire 07:00; new items only)
+**Window:** Monday, November 2, 2026, 12:00 PM → 5:00 PM ET (previous fire → now). New-items-only; ledger dedupe applied.
 
 ## TL;DR
 
-- **Anthropic's amended S-1 lands with Q3 numbers**: $16.96B Q3 revenue, $23.29B net loss, and $895.4B in compute purchase commitments and leases — the largest infrastructure commitment stack disclosed by any AI lab.
-- **Marvell agreed to buy Lumentum for $115B** (all-stock, EV including debt) — the year's top M&A deal and a direct bet that optical connectivity is the next AI-infrastructure battleground; Marvell takes on Broadcom.
-- **A US startup economy is surgically uncensoring Chinese open-weight models**: Rest of World reports Hirundo and Lazarus AI are using machine unlearning and weight edits on Qwen/DeepSeek for Western enterprise deployment — with CrowdStrike data showing sensitive-topic prompts produced 50% more severely vulnerable code.
-- **Quiet repo action**: 17 vLLM merges and a llama.cpp build cluster (b12040–b12050) shipped in-window, headlined by SYCL multi-GPU communication +19% on Arc Pro B70s and Vulkan RDNA3/4 split-K tuning.
-- **Putin decreed** private Russian data centers reserve 10% of capacity for the state, 10-day compliance, after October drone strikes on Yandex/Sber/VK facilities.
+- **"Weight-space programming" lands on HN's front page:** a new research post shows GPT-6 Astra can natively read and write neural-network weights — editing 0.016% of Qwen3.5-0.8B's weights lifted MATH-500 from 7.9% to 48.1% with no gradient descent.
+- **OpenAI launches the Grid Protectors Program**, committing future US compute campuses to cut electricity demand when grids are strained, starting with up to 1,000 MW of flexible demand response in Georgia.
+- **DeepSeek ships "creator mode" for DeepSeek Harness**, letting users turn plain-English ideas into working agent plugins (demos: a 3D model renderer and a video-editing workbench).
+- **Anthropic officially confirms the new Claude Code game-cloning limits** Tom's Hardware reported today — the first vendor confirmation of the "tengu_heron_brook" rule users spotted over the weekend.
+- **Quieter but real:** SUSE is cutting ~10% of staff citing "automation and AI"; llama.cpp shipped a Vulkan tensor-parallel allreduce and a run of in-window builds.
 
 ---
 
 ## Models and local inference
 
-### Anthropic's amended S-1: Q3 revenue $16.96B, commitments stack hits $895.4B
-**Event date: Monday, Nov 2, 2026 (amended Form S-1 filed with the SEC, ~9:30 AM ET)** — *Update on previously reported (ledger: anthropic-s1-ant, Oct 26).*
+**GPT-6 Astra can natively read and write neural network weights — MATH-500 7.9% → 48.1% on Qwen3.5-0.8B** — *Event date: Monday, November 2, 2026*
 
-Anthropic's amended IPO prospectus added third-quarter numbers missing from the original filing: Q3 revenue of roughly $17.0B (up ~1,127% year-over-year but decelerating quarter-over-quarter — +47% after +144% in Q2), a $23.29B Q3 net loss (down from $66.3B in Q2, which was dominated by fair-value revaluations of convertible notes), and $33.24B nine-month revenue up roughly 1,200%. The company booked a $567M operating loss in Q3 after a $974M operating profit in Q2. The headline number for infrastructure watchers: **$895.4B in aggregate purchase commitments and lease agreements, "substantially all of which is related to compute and infrastructure"**, with compute and infrastructure expenses up $14.4B (+329%) year-over-year over the nine months. Reuters reports investors now value Anthropic around $1.5T, down from roughly $2T, ahead of a Nasdaq road show.
+Rikiya Takehi published "Sparks of Weight-Space Programming" — a research post finding that frontier LLMs used natively in natural language can read and write raw neural-network weights without an optimizer or gradient descent. Across nine experiments, GPT-6 Astra named the game a PPO-trained policy played from its weights alone (4/4), identified which language a 7.2M-param char-LM was trained on from middle layers only (finding induction heads via the Elhage et al. technique unprompted), wrote MinAtar and Go networks from scratch that beat 100M-step PPO policies, and — the headline result — diagnosed a reasoning-loop defect in Qwen3.5-0.8B's weights that the model card itself warns about, then fixed it by editing 0.016% of the weights: MATH-500 went from 7.9% to 48.1% and IFEval tripled under identical sampling settings. Full experiment logs are released at github.com/RikiyaT/lm_understand-logs, and the team says a benchmark and harness for "weight-space programming" are in development. The post hit the Hacker News front page at 1,320 points.
 
-**Why it matters:** The commitments figure — larger than most nations' annual budgets — makes Anthropic's balance sheet the clearest single datapoint for the AI buildout's financing risk, arriving in the same week S&P soured on Meta's capex and hyperscaler cash flows disappointed. Q3's operating-loss flip (from Q2 operating profit) and slowing QoQ growth give the bull/bear debate its sharpest test yet at IPO time.
+*Why it matters:* This is the first credible demonstration that a frontier model can treat weight space as a *readable, writable program* rather than something only symbolic optimizers touch — with direct consequences for interpretability (auditing backdoors without running inference), cheap capability steering/unlearning, and the recursive-self-improvement debate. Caveats: results are early, small-scale, and self-published; independent replication is the open question.
 
-Source: Anthropic reports $17 billion in Q3 revenue, purchase commitments of $895.4 billion in revised S-1 — CNBC (Ashley Capoot), published Mon Nov 2, 2026 9:32 AM EST — https://www.cnbc.com/2026/11/02/anthropic-ant-s-1-quarter-financials.html
-Source: Anthropic's quarterly loss shrinks, revenue jumps ahead of blockbuster IPO — Reuters (Utkarsh Shetti, Arasu Kannagi Basil), Nov 2, 2026 — https://www.reuters.com/business/anthropics-quarterly-loss-shrinks-revenue-jumps-ahead-blockbuster-ipo-2026-11-02/
+If it replicates, weight-space edits become a practical tool for the small-model ecosystem before it touches frontier serving.
 
-### Marvell agrees to acquire Lumentum in a $115B all-stock AI-connectivity deal
-**Event date: Monday, Nov 2, 2026 (definitive agreement announced pre-market)** — *Update on previously reported (ledger: marvell-lumentum-talks, Oct 28 "advanced talks").*
+Source: Sparks of Weight-Space Programming — Rikiya Takehi, Nov 2, 2026 — https://rikiyat.github.io/blog/weight-space-programming/
+Source: Hacker News discussion (1,320 pts, posted 1:21 PM ET) — https://news.ycombinator.com/item?id=50341174
+Source: Techmeme river item (3:00 PM ET) — https://www.techmeme.com/river
 
-Marvell and Lumentum confirmed the deal from scratch: an all-stock transaction with an implied enterprise value of $115B for Lumentum (~$1,132/share, a 23.9% premium to the unaffected Oct 28 close; equity value ~$102.5B). Lumentum holders receive a fixed 4.500 Marvell shares per Lumentum share; Marvell holders keep ~67% of the combined company. Marvell projects expanded TAM to $550B, >$1B annual run-rate cost synergies, and non-GAAP EPS accretion in year one; CEO Matt Murphy stays chairman and CEO. The thesis is the copper-to-optical transition in scale-up AI fabrics. Marvell fell ~5–6% and Lumentum ~10–11% on the announcement — the market is not paying the premium quietly.
+**llama.cpp ships b12052–b12059, led by a Vulkan tensor-parallel allreduce** — *Event date: November 2, 2026*
 
-**Why it matters:** This consolidates custom-silicon-plus-photonics under one roof to fight Broadcom, with Nvidia (which invested $2B in each company this year) as the big third-party winner of a credible optical alternative. It also prices the AI-infra M&A market at the exact moment bond markets are closing to AI builders.
+Seven llama.cpp builds landed in and around the window: a Vulkan ring all-reduce for tensor-parallel multi-GPU inference (#25051, published 07:57 ET just ahead of the window, deterministic with 3+ GPUs), OpenCL topk_mask (#31441), vm_allocate replacing posix_memalign on all Apple platforms (#31437), ggml-zdnn host buffer sharing (#31481), an imatrix --nextn crash fix (#31522), and a more efficient unified multi-sequence flash_attn_ext_rows kernel. vLLM (v0.33.0 reported at the 12:00 fire), Ollama, SGLang and OpenClaw were otherwise quiet this afternoon.
 
-Source: Marvell and Lumentum to Combine, Creating a Category Leader in AI Connectivity — Marvell Investor Relations press release, Nov 2, 2026 — https://investor.marvell.com/news-events/press-releases/detail/1040/marvell-and-lumentum-to-combine-creating-a-category-leader-in-ai-connectivity
-Source: Marvell to buy Lumentum in $115 billion deal in AI data-center bet — Reuters (Anhata Rooprai), Nov 2, 2026 — https://www.reuters.com/legal/transactional/marvell-buy-lumentum-115-billion-deal-ai-data-center-bet-2026-11-02/
+*Why it matters:* A working Vulkan tensor-parallel path is a meaningful step for multi-consumer-GPU rigs without CUDA — relevant for AMD/Intel local builds.
 
----
+*Local inference:* The allreduce targets exactly the 2–4× GPU consumer setups local users run; OpenCL topk_mask feeds MoE sparsity on Adreno/Intel iGPUs.
+
+Source: llama.cpp releases (GitHub atom, builds b12052–b12059, Nov 2) — https://github.com/ggml-org/llama.cpp/releases
 
 ## Agent tools
 
-### 42AI exits stealth with $62.5M for a "behavioral world model" that predicts individual decisions
-**Event date: Monday, Nov 2, 2026 (11:45 AM ET exclusive)**
+**DeepSeek adds "creator mode" to Harness — plugins from plain-English ideas** — *Event date: Monday, November 2, 2026*
 
-Israeli startup 42AI came out of stealth with $62.5M seed for a transformer-based behavioral world model that models per-person psychological tendencies from operational interactions (KYC, support calls, transfers) and outputs probabilities of future decisions — already deployed at roughly ten financial brokerages, where one reportedly gained ~$30M via dynamic hedging. A separate language model generates explanations for predictions; training rewards punish drift from learned risk tendencies.
+DeepSeek's Harness team announced creator mode on Monday: users describe a tool in plain English and the agent builds a working plugin for itself, with demos including a 3D model renderer and a video-editing workbench (Bloomberg's Debby Wu carried the launch at 12:40 PM ET). Investing.com's Reuters-syndicated piece (12:53 PM ET) frames it as a land-grab for the Hangzhou lab's developer-focused agent harness, which competes directly with Anthropic's coding services; it follows Saturday's enhanced coding-assistant release (the Super-Agent prototype already logged in our ledger). Third-party write-ups flag the obvious security caveat — an agent that writes and installs its own plugins widens the trust surface.
 
-**Why it matters:** "Every individual is the world" is a pointed redefinition of world models away from physics and toward people — and the deployment-verified brokerage numbers make this an agent-economics story, not a research teaser. Expect privacy and manipulation scrutiny if the pattern spreads.
+*Why it matters:* Plugin creation is the moat layer for agent platforms; DeepSeek is racing to make its harness the place agents extend themselves, and doing it for free against US incumbents.
 
-Source: 42AI comes out of stealth with $62.5M and a world model that can 'predict human behavior' — TechCrunch (Ram Iyer), Nov 2, 2026 — https://techcrunch.com/2026/11/02/42ai-comes-out-of-stealth-with-62-5m-and-a-world-model-that-can-predict-human-behavior/
+Source: Bloomberg via Techmeme (12:40 PM ET) — https://www.techmeme.com/river
+Source: DeepSeek adds creator mode to boost AI agent tools — Investing.com/Reuters, Nov 2, 2026, 12:53 PM ET — https://www.investing.com/news/stock-market-news/deepseek-adds-creator-mode-to-boost-ai-agent-tools-93CH-4992533
 
----
+**Anthropic confirms Claude Code's new game-cloning limits (update on previously reported)** — *Event date: Monday, November 2, 2026 — update on ledger 2026-10-31 `missed:claude-game-clone-block`*
+
+Tom's Hardware (Bruno Ferreira) reports Anthropic has now confirmed it deliberately added limits "to steer it away from recreating someone else's specific game," saying IP infringement violates its usage policy — upgrading the weekend's user-detected "tengu_heron_brook" rule from rumor to vendor-confirmed policy. GamesIndustry.biz followed within the window: Claude Code now refuses to build clones of existing video games. Community pushback centers on false positives — developers report refusals bleeding into legitimate reverse-engineering, security testing, and original genre projects, which is what the earlier (pre-window, once-footnoted) discovery flagged.
+
+*Why it matters:* An officially confirmed content-policy refusal inside a coding agent sets precedent for how far vendors will steer agent behavior beyond legal necessity — and how much collateral damage to legitimate work is acceptable.
+
+Source: Anthropic confirms new Claude Code limits to prevent game cloning — Tom's Hardware, Bruno Ferreira, Nov 2, 2026 — https://www.tomshardware.com/tech-industry/artificial-intelligence/anthropic-confirms-new-claude-code-limits-to-prevent-game-cloning-users-report-opus-5-5-is-also-actively-blocking-reverse-engineering-tasks
+Source: Anthropic adds rule to stop Claude Code recreating existing games — GamesIndustry.biz, Nov 2, 2026 — https://www.gamesindustry.biz/anthropic-adds-rule-to-stop-claude-code-recreating-existing-games
+
+**Launch HN: Momentic (YC W24) — QA agents that catch bugs by using your app** — *Event date: November 2, 2026, 12:05 PM ET*
+
+Momentic launched "Mo," a bug-bash agent harness that explores web/iOS/Android apps without source access, self-organizing a DAG of parallel sub-agents with cooperative resource leases. On its own QA-bench (4 OSS apps, 1,396 human-labeled bugs, 60-minute runs): Mo found 269 bugs at 19.3% recall / 84% precision for $2.67 per bug, vs Codex 86 bugs / $0.80, Claude Code 59 / $4.09, Devin 27 / $3.89. Benchmarks, dataset and harness are public on HF/GitHub.
+
+*Why it matters:* The first apples-to-apples QA-agent benchmark (vs Codex/Claude Code/Devin on identical sandboxes) — recall-first economics for agentic testing.
+
+Source: Launch HN: Momentic (99 pts, posted 12:05 PM ET) — https://news.ycombinator.com/item?id=50339913
 
 ## AI security and governance
 
-### Western startups are surgically uncensoring Chinese open-weight models — and selling that as a product
-**Event date: Monday, Nov 2, 2026 (published morning, surfaced on Techmeme 7:40 AM ET)**
+**OpenAI launches Grid Protectors Program: up to 1,000 MW of curtailment from Georgia campus** — *Event date: Monday, November 2, 2026*
 
-Rest of World reports a growing cottage industry editing DeepSeek, Qwen, Moonshot, Z.AI and Tencent weights for Western enterprise: Tel Aviv-founded Hirundo (CEO Ben Luria) hardens and realigns models against state-aligned bias, cyberattack vulnerabilities and dangerous knowledge; Boston's Lazarus AI produced "ReAligned" Qwen variants by mining leaked censorship guidelines for banned topics and using Gemini Flash answers as the realignment signal — now deployed at about a dozen US companies, per former chief scientist Eric Hartford. The technical justification is stark: CrowdStrike found DeepSeek R1 prompts on politically sensitive topics were up to 50% more likely to yield code with severe security vulnerabilities, and another study saw less secure code when the user self-identified as US government. Hirundo's own analysis says Qwen won't acknowledge Tiananmen 1989, Hong Kong 2019, or Xinjiang camps at all. Meanwhile Airbnb, Uber and Harvey build on Chinese bases, and Europe's OpenEuroLLM sovereign stack is built on Qwen.
+OpenAI announced a national program under which its future US compute campuses are designed to reduce electricity demand when the grid is strained, with arrangements negotiated utility-by-utility. The pilot is the planned Effingham County, Georgia campus: OpenAI says it will pay full infrastructure and electric-service costs, and its Georgia Power agreement includes up to 1,000 MW of flexible demand response — enough, it says, to keep air conditioning running for roughly 700,000 households during extreme heat. The campus is still in development; the company says flexibility "cannot replace investment in new energy supply."
 
-**Why it matters:** Weight editing was an academic exercise; this is commercial on-prem delivery — the open-weight supply chain now has a US "re-manufacturing" layer, which changes both the adoption math for Chinese models in regulated industries and the integrity question (who audits the editors?). It also cuts against abliteration tooling, which Luria says leaves censorship largely intact.
+*Why it matters:* Demand-response commitments are the political answer to the "AI is raising your electric bill" backlash that is now a live electoral issue (21 data-center ballot measures are on Tuesday's ballots); expect peers to be asked to match it.
 
-Source: Startups recalibrate Chinese AI for the West — Rest of World (Rina Chandran, Viola Zhou), Nov 2, 2026 — https://restofworld.org/2026/western-startups-realigning-chinese-ai-models/
-Source: Lazarus AI strips censorship from Alibaba's Qwen models — Silicon Report, Nov 2, 2026 — https://www.siliconreport.com/lazarus-ai-strips-censorship-from-alibaba-s-qwen-models
-
-### Putin orders private data centers to reserve 10% of capacity for the state
-**Event date: Monday, Nov 2, 2026 (decree signed and in force; Meduza post 4:27 PM source-time, Techmeme 11:25 AM ET)**
-
-A decree signed by Vladimir Putin requires owners of non-state data centers to reserve 10% of available space and capacity for keeping Russian information resources running, callable by a government commission — which may, with FSB consent, also authorize using data centers abroad. Owners have 10 days to comply. Context: Ukrainian drones struck Russian data centers belonging to Yandex, Sber and VK in October.
-
-**Why it matters:** First formal forced-sharing of private compute for state continuity — a data-sovereignty trend signal that other states watch, and a new operational-risk line for foreign hardware/softwarers in Russian DCs.
-
-Source: Putin orders private data centers in Russia to reserve 10% of their capacity for the state — Meduza, Nov 2, 2026 — https://meduza.io/en/news/2026/11/02/putin-orders-private-data-center-owners-to-reserve-10-of-capacity-for-the-state
-Source: Putin orders owners of non-state data centres to reserve 10% of capacity — Reuters, Nov 2, 2026 (via search listing) — https://www.reuters.com/technology/putin-orders-private-data-centres-set-aside-10-capacity-support-it-2026-11-02/
+Source: Introducing the Grid Protectors Program — OpenAI, Nov 2, 2026 — https://openai.com/index/grid-protectors-program/
+Source: Techmeme river item (1:20 PM ET) — https://www.techmeme.com/river
 
 ---
 
 ## Also noted
 
-- **llama.cpp builds b12040–b12050** (GitHub, published across 06:54–11:57 ET — cluster straddles the fire boundary): SYCL fast `ggml_sycl_comm_exchange()` on Intel Arc Pro B70s with **+19% tensor-parallel prompt eval, zero PPL change** (#30956); Vulkan small-n split-K selection tuned for RDNA3/RDNA4 (#30146); dmmv template unification (#31325); tests branch merge (#31523). (also-noted) — https://github.com/ggml-org/llama.cpp/releases
-(also-noted) — https://github.com/vllm-project/vllm
-- Ollama quiet — latest remains v0.40.13 (Oct 29).
+- **SUSE cuts ~10% of its ~1,900 staff citing "automation and AI"** — CEO Dirk-Peter van Leeuwen's Nov 2 memo says "the requirement for some existing roles has greatly diminished"; affected staff hear by Nov 4 (The Register, Techmeme 2:15 PM ET) — https://www.theregister.com/software/2026/11/02/suse-to-cut-one-in-ten-employees-because-of-ai/5306950
+- **Tutor Intelligence raises $75M Series B led by a16z** (total $117M) for robot foundation models and pay-by-the-hour warehouse robots "from $14 an hour" (Forbes, John Werner, Nov 2) — https://www.forbes.com/sites/johnwerner/2026/11/02/tutor-intelligence-why-not-just-teach-the-robots-ourselves/
+- **Show HN: Subvocal (YC F26) silent-speech glasses** — RF sensing of silent mouthing decoded by foundation models; 500 pre-order units at $200 off, shipping Q1 2027 (HN front page, 415 pts, posted 12:16 PM ET) — https://news.ycombinator.com/item?id=50340088
 
-## Just missed the window
+## Just missed the window (first footnote only)
 
-- **LongCat-2.5 (Meituan)**: 1.6T-param / ~48B-active MoE, native multimodal via RVQ discrete visual tokens, large-scale long-horizon agentic RL, W4A4 inference on domestic accelerators, API available with HF/GitHub weights "coming soon". Vendor blog is dated 2026-11-1 (some aggregators say Nov 2), so the disclosure predates the window; it hit HN front page at 10:00 AM ET this morning (story_50337716). (missed:) — https://longcat.ai/blog/longcat-2.5/
-- **VicOne: 28 zero-days across Google/NVIDIA/Meta robotics software in <2 days of AI-assisted research** (The Robot Report, dated Nov 1 — sponsored post; 75% in dev/train/sim tooling; remote-stop defeat demo). (missed:) — https://www.therobotreport.com/28-zero-day-findings-in-less-than-two-days-what-ai-speed-discovery-means-for-robotics/
+- **Oracle files to sell $20B in stock + bonds for AI buildout** (ORCL -5%+; WSJ broke at ~10:15 AM ET, pre-window; CNBC/HN coverage at 3:27 PM ET in-window) — https://www.cnbc.com/2026/11/02/oracle-files-to-sell-20-billion-in-new-stock-bonds-to-finance-ai-buildout.html
+- **NYT sources detail Anthropic's compute spree** (3.5 GW+ expected capacity in 2026, diversifying beyond Nvidia to Amazon/Google/AMD chips; 10:20 AM ET, pre-window) — https://www.nytimes.com/2026/11/02/business/anthropic-compute-deal-nvidia.html
 
 ## Coverage notes
 
-- **Verified: 7 reported items** (3 leads, 4 also-noted incl. 2 repo-river items) plus 2 "Just missed the window" footnotes (first-time only, ledger-tagged `missed:`). Every included URL fetched; leads read in full.
-- **Ledger dedupe: 5 candidates suppressed as already reported** — Wired/KeLing deepfake-network investigation (in-window re-coverage at 6:35 AM; reported 11-02 07:00 fire), OpenAI ChatGPT Chat/Work tab merge email (Techmeme 9:25 AM; reported 11-01), GDPx benchmark launch (12:20 AM; reported 11-02 07:00), YC Labs multi-agent games write-up (2:45 AM; reported 10-30), Anthropic S-1 Japan tranche (5:40 AM; reported 11-02 07:00). Two ledger events (Marvell–Lumentum talks, Anthropic S-1) qualified as material **updates**, not suppressions.
-- **Dead ends (two-strike honored):** guessed Rest of World slug 404'd (recovered via exact-headline search); guessed Reuters Putin slug 404'd (recovered via Meduza). HN "AI agent performed mouse brain surgery" (07:50 ET post) traced to Oct 29–30 WIRED/decoder disclosures — out of window, not footnoted (not "just" missed). Microsoft Mage-VL-Cowork 4B computer-use open weights = Oct 29 arXiv/page — out of window. GPT-Rosalind-6 system-card addendum = Oct 30 — out of window.
-- **Indexes checked:** Techmeme river, HN front page (Algolia), The Open Weights index, HuggingFace trending, GitHub release rivers (llama.cpp atom, vLLM releases+merged-PR search, Ollama atom). No index down.
-- Thin agent-tools morning: no in-window framework GA found beyond 42AI; searches surfaced only stale BUILD/RC material.
+- **Verified: 9 qualifying items** (4 leads, incl. 1 ledger-update reclassification; 5 also-noted) + 2 just-missed footnotes (each tagged first-and-only appearance).
+- **Ledger dedupe:** 7 candidates suppressed as already reported — vLLM v0.33.0 (10:11Z), llama.cpp b12040–b12050, Marvell–Lumentum definitive deal, Putin DC-reserve decree, Anthropic amended S-1 (Q3/$895.4B), Wired KeLing deepfake network, and a freenode.net "Ubuntu CVE-2026-98432" story colliding with the already-footnoted Linode/Akamai CVE-2026-98432.
+- **Dead ends:** freenode.net's Ubuntu-CVE piece (unreliable mirror-site source + CVE-ID collision — two-strike logged); Bloomberg and WSJ original paywalls (Reuters-syndicated Investing.com and CNBC copies cited instead); shattered.io "Riemann 13.1B HF release" (SEO-spam domain, excluded).
+- **Indexes used:** Techmeme river, HN Algolia (in-window, ≥25 pts, 19 hits), GitHub release atoms (llama.cpp, vLLM, Ollama, SGLang, OpenClaw). vLLM/Ollama/SGLang/OpenClaw: no in-window releases.
+- Window-derived from system clock once (17:00 EST fire per now_et.py); no boundary stretching.
