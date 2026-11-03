@@ -1,105 +1,78 @@
-# AI News Briefing — Monday Night/Morning Edition, Nov 3 2026
+# AI News Briefing — November 3, 2026, 5:00 PM ET Edition
 
-**Window: 2026-11-03 07:00 → 12:02 EST (previous fire 07:00 → now; new items only)**
+**Window:** Nov 3, 2026 12:00 PM → 5:09 PM ET (previous fire → this fire). New items only; ledger-deduped.
 
 ## TL;DR
 
-- **CrowdStrike buys its way into AI-agent security**: definitive agreements for Fiddler AI (~$400M) and Dreadnode (~$95M), announced Tuesday at Fal.Con Europe, plus a runtime "AI Kill Switch" for stopping any agent — both products GA in Q4 FY27.
-- **Google flips K-12 AI to opt-in — and says schools that block AI entirely will lose Google Search**; the same post rolls Guided Learning into Search and Classroom (Nov 3).
-- **The Astra "weight-space programming" result is under dispute**: spaCy co-founder Matthew Honnibal's Nov 3 post — 640+ points on HN — argues the viral MIT demo's headline Qwen improvement never touches raw weights; it writes Python instead.
-- Inference-stack churn: 23 vLLM merges in-window (XPress speculative decoding, MRV2 ReplaySSM, FP8/NVFP4 weight-cache fast-restart), three llama.cpp builds (b12072–b12074), and Yandex open-sourced FLAMIA microscaling attention kernels for Blackwell.
-
----
+- **AMD's data center business nearly doubled** year-over-year to a record $8.5B on Instinct GPU and agentic-AI CPU demand; Q4 guide $17B beats estimates, stock +8% after hours.
+- **Anthropic open-sourced FlashProve**, a zkSNARK provable-inference prototype that cryptographically proves a response came from committed model weights — 110 tok/s proofs on a single H100 for a 400B MoE.
+- **CrowdStrike's AI Kill Switch went GA** in Falcon Guardian, with a GA Falcon AI Gateway and a Claude Cowork integration (update on this morning's Fiddler/Dreadnode acquisitions).
+- **Apple opened Siri AI to all developers** via App Intents and new "skills" in the iOS 27.3 betas.
+- **Reuters: US officials held up export licenses** for US chipmaking equipment SK Hynix needs at Dalian, complicating its ~$45B Marcy, NY NAND plan.
 
 ## Models and local inference
 
-**Honnibal: the "Astra can read and write weights to improve Qwen" post is misleading** — *event date Nov 3, 2026* (Update on previously reported: ledger `weight-space-programming`, Nov 2)
+**AMD Q3: data center revenue up 97% to a record $8.5B as agentic AI lifts server CPUs** — Event date: Nov 3 (after close).
+AMD reported Q3 FY26 adjusted EPS of $2.09 (vs $1.95 est.) on revenue of $13.38B (vs $13.09B est., +45% YoY), with the Data Center segment nearly doubling to $8.5B on record Instinct GPU and EPYC CPU sales — now 64% of total revenue, up from 47% a year ago. Q4 guidance of ~$17B beats the $16.2B consensus; the stock jumped ~8% after hours. Lisa Su tied server CPU strength directly to agentic apps like Meta's Muse — "Adoption is just starting, and we expect demand to grow sharply as agents are deployed more broadly" — and Meta said its Helios rack-scale systems (AMD's answer to Grace Blackwell/Vera Rubin) are up and running alongside Microsoft, Anthropic, OpenAI and Oracle deployments.
+*Why it matters:* This is the clearest earnings-level proof yet that the agentic-AI CPU pull-through is real, and Helios getting live hyperscaler racks gives the market a second rack-scale option heading into 2027 supply negotiations. It lands days after Intel's -29% implosion, splitting the "AI overspend" narrative rather than confirming it.
+Source: CNBC (Katie Tarasov), Nov 3, 4:17 PM EST — https://www.cnbc.com/2026/11/03/amd-amd-q3-earnings-report-2026-.html
+Source: AMD press release, Nov 3 — https://ir.amd.com/news-events/press-releases/detail/1303/amd-reports-third-quarter-2026-financial-results
 
-SpaCy/Explosion co-founder Matthew Honnibal published a detailed critique of the viral MIT CSAIL "Weight-Space Programming" result (GPT-6 Astra editing Qwen3.5-0.8B's weights to lift MATH-500 from 7.9% to 48.1%). His core charge: the "just by looking at the raw weights" setting only appears in experiments 1, 2 and 4, on tiny 17K–172K-parameter networks. Every experiment involving a real language model — including the flagship Qwen math fix — uses Python tools, and the Qwen run also gets to execute the model on up to 50 batches of practice problems. The result still shows Astra can do real ML-engineer work, but it is not evidence of a single "gestalt of the weights" capability. The post hit the HN front page within 21 minutes of the window opening (641 points by noon).
+**Fal doubles its valuation to $16B with $1.3B Series F led by Bessemer; annualized revenue tops $800M** — Event date: Nov 3.
+The San Francisco inference startup that hosts open-source video, image and audio models announced Series E and F simultaneously — $1.65B combined (Sequoia led the earlier round; Nvidia, Sound Ventures and T. Rowe Price joined the F) — valuing Fal at $16B, double April's $8B. Bloomberg reports Fal crossed $800M annualized revenue earlier this year on surging demand to run open-source models. TechCrunch notes peers (Baseten, Fireworks, Modal) are growing fast but running thin gross margins because of compute costs.
+*Why it matters:* Inference on open weights is now a top-tier venture category with revenue to match — the willingness to fund at a 2x-in-six-months multiple says demand for running *other people's models* is outrunning supply, which is the same economics that make self-hosting attractive downstream.
+*Local inference:* Fal's demand spike is explicitly driven by open-source model users; the thin-margin caveat is the argument community quantization and consumer-GPU serving keep in play.
+Source: TechCrunch (Marina Temkin), Nov 3, 11:34 AM PST — https://techcrunch.com/2026/11/03/ai-inference-startup-fal-doubles-its-valuation-to-16b-as-demand-surges/
+Source: Bloomberg, Nov 3, 1:10 PM ET — https://www.bloomberg.com/news/articles/2026-11-03/ai-inference-startup-fal-raises-capital-at-16-billion-valuation
 
-**Why it matters:** the original result reframed frontier models as native weight-editors and raced through every AI feed yesterday; this is the first heavyweight methodological pushback, and it lands on the same day, which is rare for a correction cycle. For practitioners, the practical takeaway shifts from "models can read weights" to "models are now competent gradient-free ML engineers" — still notable, much less mystical.
+**Reuters: US officials hold up chipmaking equipment SK Hynix needs in China, complicating its New York NAND plans** — Event date: Nov 3.
+US officials have held up export-license approval for American chipmaking gear SK Hynix says it needs to expand its Dalian, China plant, according to Reuters sources. SK Hynix argues Dalian NAND output would fund its Solidigm unit's ~$45B, two-fab Marcy, New York buildout (potentially ~$100B over time); Solidigm executives have met Commerce Department officials nearly 10 times since late August. The piece updates Reuters' Oct 14 report that SK Hynix conditioned its US factory on more China equipment approvals — the snag is now the active blocker.
+*Why it matters:* Memory is the choke point of the AI buildout (HBM sold out, NAND pricing spiking). If Washington treats Dalian and Marcy as one negotiation, the timeline for meaningful US NAND capacity — and the memory-cost curve every AI deployer pays — gets longer and less predictable.
+Source: Reuters (Karen Freifeld), Nov 3 — https://www.reuters.com/world/china/sk-hynixs-new-york-chip-plans-hit-snag-over-us-restrictions-china-sources-say-2026-11-03/
 
-**Local inference note:** the disputed artifact is Qwen3.5-0.8B (trivially local); the critique itself is about experiment methodology, not local performance claims.
-
-- Source: The 'Astra can read and write weights to improve Qwen' post is misleading — honnibal.dev, 2026-11-03 — https://honnibal.dev/blog/astra-read-write-misleading
-- Source (community corroboration): HN front page, 641 pts, posted 12:21 UTC — https://news.ycombinator.com/item?id=50351111
-
-**Yandex Research open-sources FLAMIA microscaling attention kernels for Blackwell** — *event date Nov 3, 2026 (HF Daily Papers, Nov 3)*
-
-FLAMIA (FLAsh MIcroscaling Attention) is a FlashAttention-4 fork adding low-precision *training* paths on SM100-class GPUs: MXFP8 (E4M3 with per-32-token power-of-two block scales) in forward and backward, and a mixed path using NVFP4 for QKᵀ plus E4M3 elsewhere, with quantization fused into the CuTe kernels and packed variable-length documents handled natively. Reported speedups: 1.10–1.42x end-to-end on B200/B300 and 1.22–2.01x on the NVFP4 backward pass, with only marginal loss drift on a 1B Llama-style run over 100B FineWeb-Edu tokens. Causal-safety options remove intra-block lookahead dependencies.
-
-**Why it matters:** low-bit attention for training (not just serving) has been the missing piece for MXFP4/NVFP4 stacks; a production-grade reference implementation from Yandex — CUDA 13, cutlass-DSL based — will likely feed the open serving stacks.
-
-**Local inference note:** requires SM100 (B200/B300) — it is data-center Blackwell only, not RTX 50-series; consumer Blackwell kernels remain the open frontier.
-
-- Source: FLAMIA: FLAsh MIcroscaling Attention — Hugging Face Daily Papers, Nov 3 — https://huggingface.co/papers (FLAMIA entry)
-- Source: yandex-research/flamia-blackwell-attention — GitHub — https://github.com/yandex-research/flamia-blackwell-attention
-
----
+**Update on weight-space programming: Simon Willison gets local Qwen 3.8 27B to read raw model weights** — Event date: Nov 3 (update on ledger entry weight-space-programming, Nov 2; also builds on today's Honnibal critique).
+Replicating the "no-tools" half of Takehi/Khattab's Sparks of Weight-Space Programming paper, Willison fed the paper's raw-weight prompts to Qwen 3.8 27B running locally in LM Studio (a 17 GB model on his laptop). It correctly identified Pac-Man (46 min, 43,506 reasoning tokens), Pong (1h05m) and Breakout (52m) from floating-point weights alone — failing only the obscure Freeway — while Kimi K3.1 Pro via OpenRouter solved Breakout in 9m41s. Willison's own take: "I'm not ready to declare that the age of source code is over."
+*Why it matters:* Independent, local-hardware replication separates the paper's two claims — raw-weight *interpretation* (reproduced on a 27B open-weight model, no tools) from the gradient-free *editing* results that drew Honnibal's "misleading" critique this morning. Interpretation at the 27B class is now a replicated result; autonomous weight *editing* remains unreplicated.
+*Local inference:* Entirely local — LM Studio on a laptop, 17 GB model; the caveat is latency (46–65 minute reasoning runs), so this is research-grade, not ops-grade.
+Source: Simon Willison's Weblog, Nov 3, 4:29 PM ET — https://simonwillison.net/2026/Nov/3/qwen-can-interpret-model-weights/
+Source: Hacker News discussion, id 50355251 (396 points) — https://news.ycombinator.com/item?id=50355251
 
 ## Agent tools
 
-**Community reports Codex silently re-enabled "Improve the model for everyone"** — *event date Nov 3, 2026 (Ask HN, 09:53 EST; unverified user report)*
-
-An Ask HN post (85 points by noon) reports that several employees at a company that had deliberately disabled data sharing across Codex/Claude Code found the ChatGPT/Codex training opt-out silently re-enabled, with none of them having re-opted in. The post links the settings page (chatgpt.com/settings/data-controls) and notes a prior similar report. No vendor confirmation as of fire time; treat as an unverified signal.
-
-**Why it matters:** if real, silent re-enabling of a training-data consent toggle on enterprise coding traffic is exactly the class of incident that hardens enterprise skepticism toward hosted agent tooling — and it lands a week after the Gheist/stolen-token campaigns targeting AI-provider keys.
-
-- Source: "OpenAI seems to be silently re-enabling model training on Codex chats" — Hacker News Ask HN, Nov 3 (~85 pts) — https://news.ycombinator.com/item?id=50352757
-
-**vLLM merges 23 PRs in-window; llama.cpp ships b12072–b12074** — *event date Nov 3, 2026 (also-noted)*
-
-In-window vLLM merges (07:00–12:02 EST) include: XPlus/XAccept speculative decoding support with an acceptance estimator, MRV2 (Model Runner V2) Triton ReplaySSM decode planned on-GPU, DeepSeek V4/V4.1-Vision packed multi-image encode passes, "Fast Start" online-FP8 and CUTLASS-NVFP4 weight-cache restarts, batch invariance for ShortConv/LFM2 models, and a KV-offload correctness/async-lookup cluster (SWA null-page offsets, P2P role cleanup, per-request-group lookups). llama.cpp published three builds in-window (b12072 09:58, b12073 10:17, b12074 10:40 EST).
-
-**Local inference note:** the FP8/NVFP4 weight-cache restart path matters for 16GB-class boxes — quantized weights re-warm after sleep without re-quantizing from disk.
-
-- Source: vllm-project/vllm merged PRs (search window 2026-11-03T12:00Z..17:02Z) — GitHub — https://github.com/vllm-project/vllm
-- Source: ggml-org/llama.cpp releases b12072–b12074 — GitHub — https://github.com/ggml-org/llama.cpp/releases
-
-**Frontier models are poor teammates: Collaborative Intelligence Benchmark** — *event date Nov 3, 2026 (also-noted; HF Daily Papers)*
-
-A Stanford/Oxford/MIT team released a 240-task Collaborative Intelligence Benchmark: Gemini 4 Argon leads at 82.2/100, yet even frontier models reach the best team deal in only 14% of negotiation conflicts, pass 45% of emotional-intelligence probes, and accept weaker offers 81% of the time despite asking about teammates' needs 99% of the time; 45% of failures occur *after* the model has recognized the problem.
-
-- Source: "Measuring AI Agents as Teammates with Collaborative Intelligence" — Hugging Face Daily Papers, Nov 3 — https://huggingface.co/papers
-
----
+**Apple opens Siri AI to all developers: App Intents, "skills," and a spring App Store gate** — Event date: Nov 3.
+Apple's developer news post (Nov 3) makes its Siri AI Developer Preview available to any developer in the iOS/iPadOS/macOS/visionOS 27.3 betas: apps expose custom content and actions through App Intents, a new "skills" construct teaches Siri to chain multiple actions into one experience, and Siri AI can surface any entity in the Spotlight semantic index. Apple is rolling the capabilities into Calendar, Files, Mail, Maps, Messages, Notes, Photos, Safari, Shortcuts and more; App Store submissions open in spring, EU availability is still blocked pending talks, and server-side Siri AI features carry daily usage limits that Apple says will eventually be paid.
+*Why it matters:* This is Apple's entry into the agent-platform land grab — OS-level assistant routing for arbitrary third-party apps, with Ternus already describing current Siri as "primarily request-based" and hinting agent-style features next. The EU carve-out and paid server-side tiers are the two strings every Siri AI strategy has to plan around.
+Source: Apple Developer News, Nov 3 — https://developer.apple.com/news/?id=gdk2umrf
+Source: Cult of Mac, Nov 3 — https://www.cultofmac.com/news/ios-27-3-beta-siri-ai-audio-intelligence
 
 ## AI security and governance
 
-**CrowdStrike signs definitive agreements for Fiddler AI and Dreadnode (~$495M combined) and unveils an AI Kill Switch** — *event date Nov 3, 2026*
+**Anthropic releases FlashProve: open-source zkSNARK proofs that a response came from the model it claims to be** — Event date: Nov 3 (Techmeme river 4:10 PM ET; research post on anthropic.com).
+FlashProve is an Apache-2.0 provable-inference prototype built with EPFL, MIT, StarkWare and Succinct: a provider commits to a model and then proves, with a ~19 MB zkSNARK per 1,024-token request, that each response came from those (hidden, 4-bit quantized) weights. The drop includes a Claude-written protocol spec, executable prover plus C++ and formally-verified Lean verifiers, and Lean proofs of the top-level security statements. Anthropic frames uses as anti-router-swap for customers, tamper detection, evaluator assurance, and compliance tooling for AI pacing — with honest limits: greedy-decoding integer model, 1,024-token contexts, MoE-only.
+*Why it matters:* Provable inference was the weakest link in every "verify which model served you" plan; 110 tok/s on one GPU moves it from theoretical to demoable, and the Lean-verifier release answers the "who audits the prover" objection. It also quietly validates Anthropic's RSP roadmap commitment on signing inference traffic.
+Source: Anthropic research post — https://www.anthropic.com/research/provable-inference
+Source: AI Weekly alert — https://aiweekly.co/alerts/anthropic-opens-flashprove-to-prove-replies-match-model-weights
 
-Announced Tuesday at Fal.Con Europe in Barcelona: Fiddler AI (agent observability — pre-deployment eval, reasoning traces, drift and hallucination monitoring; works with LangGraph, Amazon Bedrock, Google ADK) becomes "Falcon Observe"; WSJ pegs Fiddler at ~$400M and Dreadnode (automated AI security testing: 100+ jailbreak/prompt-injection/agent-specific attack strategies, mapped to OWASP LLM Top 10, OWASP ASI01-ASI10, MITRE ATLAS, NIST AI RMF) at ~$95M, mostly cash with vesting stock. Both are slated GA in CrowdStrike's Q4 FY27, with Dreadnode findings feeding Falcon Guardian policy recommendations and SafeMind model-scoring, and the Dreadnode team joining the Cyber Superintelligence Lab. Alongside, CEO George Kurtz introduced an "AI Kill Switch" — "outside the model, at runtime, where an agent can't argue with it, rewrite it, or wait it out."
+**Update on CrowdStrike's AI Kill Switch announcements: the switch is live, Falcon AI Gateway is GA, and Claude Cowork is the first integration** — Event date: Nov 3 (update on ledger entry fiddler-dreadnode-killswitch, reported 12:00 fire).
+At Fal.Con Europe in Barcelona, CrowdStrike moved from this morning's acquisition headlines to product: AI Kill Switch is now available in Falcon Guardian, directing connected gateways to cut off the AI models that drive an agent's decisions; the CrowdStrike-native Falcon AI Gateway is GA and bundled at no extra cost (centralizing model access, policies, credentials and cost controls); and Anthropic's Claude Cowork gets Falcon Guardian protection as the marquee integration. Bernard described it to CNBC as a human-triggered circuit breaker — it cuts model access rather than deleting agent code — with endpoint termination, cloud containment and runtime identity revocation coming. Critics told CNBC a kill switch across multi-system estates remains very hard to implement.
+*Why it matters:* Vendor-defined "rogue agent containment" is now a shipping control plane, and bundling the gateway free with Falcon Guardian is an aggressive land grab for the AI-gateway choke point every agent deployment will need. The Binance and Hugging Face-breach references show how fast the rogue-agent fear is shaping security budgets.
+Source: CrowdStrike blog (Michael Devins), Nov 3 — https://www.crowdstrike.com/en-us/blog/crowdstrike-introduces-ai-kill-switch/
+Source: CNBC (Samantha Subin), Nov 3, 2:35 PM EST — https://www.cnbc.com/2026/11/03/crowdstrike-ai-kill-switch-rogue-agents.html
 
-**Why it matters:** this is the clearest signal yet that agent observability and pre-deployment AI pentesting are being absorbed into EDR-platform distribution — the same consolidation that happened to SIEM — and "kill switch" is becoming a marketed control-plane feature rather than a conference-slide concept. For anyone running agents with credentials, audit-trail + runtime-stop capability is now a procurement checkbox.
+## Also noted
 
-- Source: CrowdStrike to Acquire Dreadnode to Advance AI Trust (press release) — crowdstrike.com, 2026-11-03 — https://www.crowdstrike.com/en-us/press-releases/crowdstrike-to-acquire-dreadnode-advance-ai-trust/
-- Source: CrowdStrike moves to acquire Fiddler and Dreadnode — CyberScoop (Greg Otto), 2026-11-03 — https://cyberscoop.com/crowdstrike-acquires-fiddler-dreadnode-ai-security/
-- Source: CrowdStrike Reportedly Paying $495 Million — SecurityWeek, 2026-11-03 — https://www.securityweek.com/crowdstrike-reportedly-paying-495-million-for-ai-security-firms-fiddler-dreadnode/
+- **llama.cpp shipped 4 in-window builds** (b12076–b12079, 12:22–4:58 PM ET) per the GitHub releases feed — https://github.com/ggml-org/llama.cpp/releases
+- **Show HN: Kairos** — open-source risk/fraud decisioning platform using "System One" decision models plus an MCP server so coding agents can define decision workflows and train model variants; self-host via Docker (19 points, id 50358314) — https://github.com/finic-ai/kairos
+- **Bloomberg Opinion: "The AI Boom May Be Sowing Seeds of Another Financial Crisis"** hit the HN front page (32 points at 4:25 PM ET, id 50358414) — the argument for stronger financial oversight of AI capex keeps climbing into mainstream op-ed territory — https://news.ycombinator.com/item?id=50358414
 
-**Google makes K-12 AI opt-in — and will cut off Search for schools that block AI entirely** — *event date Nov 3, 2026*
+## Just missed the window
 
-Google's education post (VP Chris Phillips) says access to Gemini, Gemini Notebook, Gemini in Classroom and Google Search AI features will be "entirely off for K-12 student accounts until school administrators explicitly turn them on," with specifics to schools in coming months and rollout aimed at early 2027. Same post: Guided Learning (open-ended questioning, step-by-step scaffolding) is now globally in Classroom and will pilot in select US school districts in Search later this month. TechCrunch and NYT report the harder edge: because AI is fused into Search, schools that restrict AI altogether also lose student access to Google Search.
-
-**Why it matters:** bundling search with AI turns a parental-choice debate into a de facto distribution mandate — opt-in by default while making opt-out expensive. Expect this to be the template regulators and districts litigate over in 2027.
-
-- Source: Designing responsible AI for learning — blog.google, 2026-11-03 — https://blog.google/products-and-platforms/products/education/ai-learning-era-updates-2026/
-- Source: Google will let schools disable its AI tools — but not without sacrificing Search — TechCrunch, 2026-11-03 — https://techcrunch.com/2026-11-03/google-will-let-schools-disable-its-ai-tools-but-not-without-sacrificing-search/
-- Source: Google Will Turn Off Search for Schools That Reject A.I. — The New York Times, 2026-11-03 — https://www.nytimes.com/2026-11-03/us/google-search-schools-restrict-ai.html
-
----
-
-## Just missed the window (footnoted once, not reportable)
-
-- **OpenAI appoints ex-Army Secretary Dan Driscoll as Senior Counselor for National Security Modernization** (newly created role; Daybreak follow-on) — openai.com post dated Nov 2, 2026 — https://openai.com/index/dan-driscoll-joins-openai/
-- **Salesforce signs definitive agreement to acquire voice-AI contact-center startup Cresta for a reported $2.7B** — announced Mon Nov 2; in-window re-coverage only (Axios Pro Nov 3) — https://www.axios.com/pro/enterprise-software-deals/2026-11-03/salesforce-cresta-software-deals
-- **Anthropic's amended S-1A (filed Monday) says it "may imminently meet" its RSP threshold for dramatically AI-accelerated progress** and concedes it has "not identified… a significant acceleration until after it has occurred" — first reported ~17:35 ET Monday (outside this window; financial aspects already reported Nov 2 12:00) — https://aiweekly.co/alerts/anthropic-s-1a-claude-may-imminently-hit-rsi-threshold
-
----
+- **Revolut cut AI coding inference costs ~90% by defaulting to self-hosted GLM over Claude Code** — disclosed by David Abitbol at AI Engineer New York late last month (talk predates the window); The Register's detailed write-up landed today at 3:07 PM ET: ~2,000 engineers, GLM-5.1→5.3 on 56 B200s, $0.30/M tokens, NVFP4 + disaggregated prefill/decode, sub-3s TTFT at ~256k context, ~200 tok/s, and the quote "Long context is a scam… 256 [thousand] is really what you need." — https://www.theregister.com/ai-and-ml/2026/11/03/british-fintech-revolut-slashes-ai-coding-costs-10x-by-cutting-out-claude-and-going-self-hosted/5307345
+- **Postman silently auto-installed Codex/Claude plugins and self-approved its own startup hook** — GitHub issue #14370 (opened Oct 25, with Postman's own `auto-existing-upgrade` log lines and installer source showing hook self-approval) spiked to 848 points on HN's front page at 12:22 PM ET today; the disclosure post predates the window — https://github.com/postmanlabs/postman-app-support/issues/14370
 
 ## Coverage notes
 
-- **Verified items this run: 10** (3 lead items, 4 also-noted, 3 first-time "just missed" footnotes), counting one entry per underlying event; every item's citable page was fetched, and lead stories were read in full.
-- **Ledger dedupe: 15 candidates suppressed as already reported**, including the DeepSeek V5/Ascend-950 story, Nvidia's 51% non-Chinese rule, NDRC lifecycle-standards, NCSC 2028 AI-malware warning, SGLang v0.5.23, Ollama v0.40.14, OpenClaw v2026.10.10, vLLM v0.33.0, SemiAnalysis GDPx, Marvell/Lumentum, OpenAI Grid Protectors, Anthropic $1.5T IPO push, OpenAI/Cathedral bug-bounty revamp, the original weight-space post (carried as an Update, not a new item), and the NVIDIA auto-ontology HN re-spike (already footnoted once, so not repeated).
-- Also excluded as pre-window/stale rather than ledger dupes: Drax/Brookfield/Radiant £20B Yorkshire DC (announced UK morning, ~05:20 UTC), Microsoft Mage-VL-Cowork (Oct 30), pydantic-ai v2.65.0 (minor, overnight).
-- Dead ends: The Information's Anthropic-15-person-chip-team piece had no fetchable second outlet (Techmeme original, dropped); Adam Fry's ChatGPT "1.2B WAU" claim surfaced only via Techmeme/X with no resolvable article URL (dropped); guessed AI Weekly alert slug for the chip story 404'd (one strike, dropped).
-- Ollama (v0.40.14 overnight) and SGLang/OpenClaw produced no new in-window releases; GitHub search API and HN Algolia healthy; Techmeme river fetched clean.
+- **Verified: 10 qualifying items** (7 lead-category items incl. 2 marked as updates on previously reported events + 3 also-noted), each from a fetched page with an in-window timestamp; lead stories read in full. 2 "just missed the window" footnotes (first-ever footnotes for those events).
+- **Ledger dedupe:** 5 candidates suppressed as already reported — CrowdStrike kill-switch cluster and weight-space programming (both re-handled as Updates naming their ledger entries), OpenAI/Anthropic midterm "war room" re-coverage (ledger openai-election-ops-center; original Semafor/Politico disclosure Nov 2), plus in-window river re-appearances of Nvidia-51pct-nonchinese and bug-bounty-172k-cathedral (07:00 fire).
+- Sources this run: Techmeme river, HN Algolia front page, CNBC, Reuters, The Register, Anthropic, Apple Developer, CrowdStrike, Simon Willison, TechCrunch, Bloomberg, AMD IR, GitHub releases API, AI Weekly.
+- Dead ends: NYT midterm-security feature 403'd on fetch (and proved to be re-coverage of Nov 2 Semafor/Politico scoops — excluded on both counts); HuggingFace trending page renders card-less, used as a lead index only; AMD IR page cited from search-level retrieval (CNBC carries the same figures).
