@@ -1,78 +1,97 @@
-# AI News Briefing — November 3, 2026, 5:00 PM ET Edition
+# AI News Briefing — Tencent Hy4 hits top open-weight tier; Oracle scraps $7B Tencent chip lease; RTX Pro 5500 orders hit 6M with 1% delivery
 
-**Window:** Nov 3, 2026 12:00 PM → 5:09 PM ET (previous fire → this fire). New items only; ledger-deduped.
+**Window: November 3, 2026 17:00 → November 4, 2026 07:00 ET** (overnight sweep from the previous 17:00 fire; new items only, ledger-deduped)
 
 ## TL;DR
 
-- **AMD's data center business nearly doubled** year-over-year to a record $8.5B on Instinct GPU and agentic-AI CPU demand; Q4 guide $17B beats estimates, stock +8% after hours.
-- **Anthropic open-sourced FlashProve**, a zkSNARK provable-inference prototype that cryptographically proves a response came from committed model weights — 110 tok/s proofs on a single H100 for a 400B MoE.
-- **CrowdStrike's AI Kill Switch went GA** in Falcon Guardian, with a GA Falcon AI Gateway and a Claude Cowork integration (update on this morning's Fiddler/Dreadnode acquisitions).
-- **Apple opened Siri AI to all developers** via App Intents and new "skills" in the iOS 27.3 betas.
-- **Reuters: US officials held up export licenses** for US chipmaking equipment SK Hynix needs at Dalian, complicating its ~$45B Marcy, NY NAND plan.
+- **Tencent released Hy4**, saying its 770B flagship has entered the top tier of open-weight models for the first time — vision and computer-use are new, weights promised "in the coming days," price unchanged at $0.90/$2.70 per million tokens.
+- **Oracle canceled a ~$7B, five-year lease of ~100,000 advanced AI chips to Tencent** in Southeast Asia after pressure from the Trump administration (FT); Reuters could not independently verify.
+- **Chinese AI firms have ordered ~6M Nvidia RTX Pro 5500 cards (~$70B) but expect only ~1% delivery within four months** — a hard supply wall behind the compliant-chip boom (Bloomberg).
+- **Cat Wu, head of product for Claude Code and Cowork, left Anthropic** — the third Claude Code leader exit ahead of the IPO.
+- **vLLM landed 72 merges overnight including day-0 ROCm support for Hy4**; llama.cpp shipped ~14 builds and Ollama cut v0.40.15-rc0.
+
+---
 
 ## Models and local inference
 
-**AMD Q3: data center revenue up 97% to a record $8.5B as agentic AI lifts server CPUs** — Event date: Nov 3 (after close).
-AMD reported Q3 FY26 adjusted EPS of $2.09 (vs $1.95 est.) on revenue of $13.38B (vs $13.09B est., +45% YoY), with the Data Center segment nearly doubling to $8.5B on record Instinct GPU and EPYC CPU sales — now 64% of total revenue, up from 47% a year ago. Q4 guidance of ~$17B beats the $16.2B consensus; the stock jumped ~8% after hours. Lisa Su tied server CPU strength directly to agentic apps like Meta's Muse — "Adoption is just starting, and we expect demand to grow sharply as agents are deployed more broadly" — and Meta said its Helios rack-scale systems (AMD's answer to Grace Blackwell/Vera Rubin) are up and running alongside Microsoft, Anthropic, OpenAI and Oracle deployments.
-*Why it matters:* This is the clearest earnings-level proof yet that the agentic-AI CPU pull-through is real, and Helios getting live hyperscaler racks gives the market a second rack-scale option heading into 2027 supply negotiations. It lands days after Intel's -29% implosion, splitting the "AI overspend" narrative rather than confirming it.
-Source: CNBC (Katie Tarasov), Nov 3, 4:17 PM EST — https://www.cnbc.com/2026/11/03/amd-amd-q3-earnings-report-2026-.html
-Source: AMD press release, Nov 3 — https://ir.amd.com/news-events/press-releases/detail/1303/amd-reports-third-quarter-2026-financial-results
+### Tencent releases Hy4, claiming first entry into the top open-weight tier
+**Event date: November 4, 2026 (overnight ET).** Tencent announced Hy4, its latest-generation LLM at 770B parameters — a 2.6× jump over Hy3's 295B — and said it now ranks "among the world's leading open-source AI models." The release adds visual understanding (charts, fine-grained image analysis, visual math reasoning) and computer-use for the first time, with specialized training on Blender, CAD, Unreal, Unity and Godot; Tencent cites +19.1% on GameDev and +9.8% on GameLogic versus Hy4 Preview, hallucination rate cut from 12.95% to 7.2%, and a blind 579-task financial evaluation where Hy4 scored 3.04 versus DeepSeek-V4.1-Flash-1017's 2.97, Kimi K3.1 Pro's 2.68 and GLM-5.3's 2.68. Model weights and system cards are promised "in the coming days" with cybersecurity/biosafety review already run by Xuanwu and Keen labs (offensive-exploit data excluded from training). API pricing is unchanged from Preview: ~US$0.90/M input, US$2.70/M output, US$0.045/M cached; a cheaper Hy4 Flash is coming.
+**Why it matters:** If the GA weights land as Apache-style open weights like the August Hy4-preview (770B-A49B, 1M context), Tencent finally has a credible answer to DeepSeek V4.1-Flash and Kimi in the self-hostable tier — with enterprise co-design (WorkBuddy 83.18 avg / 96.15% pass) as the differentiator.
+Tencent's own API at $0.90/$2.70 undercuts most Western hosted equivalents.
+- Source: Tencent official announcement (November 4, 2026) — https://www.tencent.com/tencent-launches-hy4-joining-the-ranks-of-the-worlds-leading-open-source-ai-models/
+- Source: SCMP, "Tencent unveils Hy4 as open-weight AI race with DeepSeek, Z.ai, Alibaba heats" (November 4, 2026) — https://www.scmp.com/tech/big-tech/article/3373227/tencent-unveils-hy4-open-weight-ai-race-deepseek-zai-alibaba-heats
 
-**Fal doubles its valuation to $16B with $1.3B Series F led by Bessemer; annualized revenue tops $800M** — Event date: Nov 3.
-The San Francisco inference startup that hosts open-source video, image and audio models announced Series E and F simultaneously — $1.65B combined (Sequoia led the earlier round; Nvidia, Sound Ventures and T. Rowe Price joined the F) — valuing Fal at $16B, double April's $8B. Bloomberg reports Fal crossed $800M annualized revenue earlier this year on surging demand to run open-source models. TechCrunch notes peers (Baseten, Fireworks, Modal) are growing fast but running thin gross margins because of compute costs.
-*Why it matters:* Inference on open weights is now a top-tier venture category with revenue to match — the willingness to fund at a 2x-in-six-months multiple says demand for running *other people's models* is outrunning supply, which is the same economics that make self-hosting attractive downstream.
-*Local inference:* Fal's demand spike is explicitly driven by open-source model users; the thin-margin caveat is the argument community quantization and consumer-GPU serving keep in play.
-Source: TechCrunch (Marina Temkin), Nov 3, 11:34 AM PST — https://techcrunch.com/2026/11/03/ai-inference-startup-fal-doubles-its-valuation-to-16b-as-demand-surges/
-Source: Bloomberg, Nov 3, 1:10 PM ET — https://www.bloomberg.com/news/articles/2026-11-03/ai-inference-startup-fal-raises-capital-at-16-billion-valuation
+### Update (ledger 2026-10-20 RTX-PRO-5500-3M): Chinese RTX Pro 5500 backlog now ~6M cards / ~$70B — with ~1% expected to arrive in four months
+**Event date: November 4, 2026 (Bloomberg, 3:14 AM UTC).** Bloomberg reports Alibaba, Tencent, ByteDance and other Chinese AI/cloud firms have ordered about 6 million Nvidia RTX Pro 5500 cards in total — roughly a $70B orderbook — but expect to receive only tens of thousands of units (about 1%) within the next four months as Nvidia struggles to ramp production. This materially sharpens the October 20 report (3M+ orders, $35B+) that this job already covered: the demand number has doubled and the delivery reality is now quantified.
+**Why it matters:** The "compliant chip" workaround (export-legal Blackwell workstation cards rented/bought into China) is demand-capped by supply, which reinforces the rental-market workarounds Oracle just exited and keeps pressure on domestic Chinese silicon (see the Ascend 950 line, already in the ledger).
+**Local inference:** The same Blackwell silicon is the desktop-class card local-inference buyers are queuing for worldwide; a 1%-fill rate on 6M units signals continued tight consumer/pro Blackwell supply into 2027.
+- Source: Bloomberg, "Nvidia China Clients to Get 1% of $70 Billion RTX Chips Ordered" (November 4, 2026, 3:14 AM UTC) — https://www.bloomberg.com/news/articles/2026-11-04/nvidia-china-clients-to-get-1-of-70-billion-rtx-chips-ordered
 
-**Reuters: US officials hold up chipmaking equipment SK Hynix needs in China, complicating its New York NAND plans** — Event date: Nov 3.
-US officials have held up export-license approval for American chipmaking gear SK Hynix says it needs to expand its Dalian, China plant, according to Reuters sources. SK Hynix argues Dalian NAND output would fund its Solidigm unit's ~$45B, two-fab Marcy, New York buildout (potentially ~$100B over time); Solidigm executives have met Commerce Department officials nearly 10 times since late August. The piece updates Reuters' Oct 14 report that SK Hynix conditioned its US factory on more China equipment approvals — the snag is now the active blocker.
-*Why it matters:* Memory is the choke point of the AI buildout (HBM sold out, NAND pricing spiking). If Washington treats Dalian and Marcy as one negotiation, the timeline for meaningful US NAND capacity — and the memory-cost curve every AI deployer pays — gets longer and less predictable.
-Source: Reuters (Karen Freifeld), Nov 3 — https://www.reuters.com/world/china/sk-hynixs-new-york-chip-plans-hit-snag-over-us-restrictions-china-sources-say-2026-11-03/
+### Overnight engine merges: vLLM 72 merges (day-0 Hy4 ROCm), llama.cpp b12084–b12102, Ollama v0.40.15-rc0
+**Event dates: November 3 22:00 → November 4 12:00 UTC (all timestamps verified via GitHub API).** vLLM merged 72 PRs in-window, highlights: `[ROCm][HY4] Use breakable graphs without torch.compile` (#64763) — day-0 ROCm plumbing for the Hy4 launch — Muse Open specialized GB300 decode at 1.5× (#64077), DFlash2 candidate-edge scoring fused into a Triton kernel (#64916), a KV-offload cluster (extensible-KV UMA sizing #65413, Mooncake committed-block registration #65331), a large Rust-frontend conformance wave (#65369–#65377, #65619), MiniMax-M3.1 NVFP4 indexer top-k on ROCm (#65087), and Kimi-K3 B200 AgentX aggregated Mooncake preset (#65529). llama.cpp shipped ~14 builds (b12084 23:53Z → b12102 09:12Z); Ollama tagged v0.40.15-rc0 at 22:52Z November 3. No -specific fixes in this window.
+**Why it matters:** Same-day vLLM support for a major Chinese open-weight launch has become table stakes — and the GB300/Blackwell decode work tracks directly to next-gen local nodes.
+- Source: vLLM merged-PR search (merged 2026-11-03T22:00Z..2026-11-04T12:00Z) — https://github.com/vllm-project/vllm
+- Source: llama.cpp releases — https://github.com/ggml-org/llama.cpp/releases ; Ollama releases — https://github.com/ollama/ollama/releases
 
-**Update on weight-space programming: Simon Willison gets local Qwen 3.8 27B to read raw model weights** — Event date: Nov 3 (update on ledger entry weight-space-programming, Nov 2; also builds on today's Honnibal critique).
-Replicating the "no-tools" half of Takehi/Khattab's Sparks of Weight-Space Programming paper, Willison fed the paper's raw-weight prompts to Qwen 3.8 27B running locally in LM Studio (a 17 GB model on his laptop). It correctly identified Pac-Man (46 min, 43,506 reasoning tokens), Pong (1h05m) and Breakout (52m) from floating-point weights alone — failing only the obscure Freeway — while Kimi K3.1 Pro via OpenRouter solved Breakout in 9m41s. Willison's own take: "I'm not ready to declare that the age of source code is over."
-*Why it matters:* Independent, local-hardware replication separates the paper's two claims — raw-weight *interpretation* (reproduced on a 27B open-weight model, no tools) from the gradient-free *editing* results that drew Honnibal's "misleading" critique this morning. Interpretation at the 27B class is now a replicated result; autonomous weight *editing* remains unreplicated.
-*Local inference:* Entirely local — LM Studio on a laptop, 17 GB model; the caveat is latency (46–65 minute reasoning runs), so this is research-grade, not ops-grade.
-Source: Simon Willison's Weblog, Nov 3, 4:29 PM ET — https://simonwillison.net/2026/Nov/3/qwen-can-interpret-model-weights/
-Source: Hacker News discussion, id 50355251 (396 points) — https://news.ycombinator.com/item?id=50355251
+### Hugging Face Daily Papers (Nov 4): agent-focused batch
+**Event date: November 4, 2026.** Trending on the Hub this morning: "Axion 1.0: Open Agent Foundation Models, Simplified" (open agent foundation models), "SpecPilot" (UC Berkeley, autonomous algorithm discovery for speculative decoding), "Switch-SWE" (SJTU, do coding agents hold focus across unfinished tasks?), and "You don't need long context" — worth a skim for agent and spec-decode practitioners.
+- Source: HF Daily Papers, November 4, 2026 — https://huggingface.co/papers/date/2026-11-04
+
+---
 
 ## Agent tools
 
-**Apple opens Siri AI to all developers: App Intents, "skills," and a spring App Store gate** — Event date: Nov 3.
-Apple's developer news post (Nov 3) makes its Siri AI Developer Preview available to any developer in the iOS/iPadOS/macOS/visionOS 27.3 betas: apps expose custom content and actions through App Intents, a new "skills" construct teaches Siri to chain multiple actions into one experience, and Siri AI can surface any entity in the Spotlight semantic index. Apple is rolling the capabilities into Calendar, Files, Mail, Maps, Messages, Notes, Photos, Safari, Shortcuts and more; App Store submissions open in spring, EU availability is still blocked pending talks, and server-side Siri AI features carry daily usage limits that Apple says will eventually be paid.
-*Why it matters:* This is Apple's entry into the agent-platform land grab — OS-level assistant routing for arbitrary third-party apps, with Ternus already describing current Siri as "primarily request-based" and hinting agent-style features next. The EU carve-out and paid server-side tiers are the two strings every Siri AI strategy has to plan around.
-Source: Apple Developer News, Nov 3 — https://developer.apple.com/news/?id=gdk2umrf
-Source: Cult of Mac, Nov 3 — https://www.cultofmac.com/news/ios-27-3-beta-siri-ai-audio-intelligence
+### Cat Wu, head of product for Claude Code and Cowork, leaves Anthropic
+**Event date: November 3, 2026 (X post at 21:33 UTC — 5:33 PM ET, in-window).** Cat Wu — one of the most public faces of Claude Code since joining two years ago and co-leading its product rise alongside Boris Cherny — announced "Friday was my last day at Anthropic," giving no reason and no next role. She is the third Claude Code product leader to exit recently (after Thariq Shihipar and Anthony Morris per prior coverage), landing just as Anthropic's IPO (S-1 on file, Nasdaq "ANT") approaches.
+**Why it matters:** Three product-lead departures from the company's flagship agent franchise in a month, on the eve of an IPO, is a signal worth watching on execution continuity — Business Insider frames the exits against Claude Code's revenue surge.
+- Source: Business Insider, "Claude Code Leader Cat Wu Exits Anthropic Before Big IPO" (November 3, 2026) — https://www.businessinsider.com/claude-code-leader-cat-wu-exits-anthropic-before-big-ipo-2026-11
+- Source: Unite.AI, "Cat Wu Steps Down as Claude Code Product Chief After Two Years" (November 3, 2026) — https://www.unite.ai/cat-wu-steps-down-as-claude-code-product-chief-after-two-years/
+
+### Traversal raises $120M Series B at $1B to build a "superintelligent AI SRE"
+**Event date: November 3, 2026 (Business Wire, 5:00 PM ET).** Traversal — causal-ML researchers from MIT, Berkeley, Cornell and Columbia — closed $120M at a $1B valuation, co-led by Kleiner Perkins, Redpoint and Khosla, with Sequoia, Battery and Amex Ventures participating (total raised: $173M). Its agents autonomously diagnose, remediate and prevent production incidents — the "outer loop" between writing code and keeping it running.
+**Why it matters:** Agent tooling money is rotating from coding to production operations; a unicorn AI-SRE validates the long-running-agent stack (message threads, KV-offload, persistent memory — all recent vLLM/Anthropic territory) as the substrate ops agents run on.
+- Source: Business Wire via Yahoo Finance, "Traversal Raises $120M with a $1 Billion Valuation…" (November 3, 2026) — https://finance.yahoo.com/technology/ai/articles/traversal-raises-120m-1-billion-170000526.html
+- Source: SiliconANGLE (November 3, 2026) — https://siliconangle.com/2026/11/03/autonomous-site-reliability-engineering-startup-traversal-bags-120m-in-funding-at-a-1b-valuation/
+
+### GitHub degradation hits PRs, Git operations, Issues and Actions — resolved
+**Event date: November 4, 2026 (investigating 04:49 ET; resolved 06:50 ET).** GitHub took a multi-hour degradation affecting Git Operations, API Requests, Issues, Pull Requests and Actions, resolved with an RCA promised. Hit the HN front page (95 points) during the morning commit rush.
+- Source: GitHub Status, incident smtdswd1h2w4 (November 4, 2026, 09:49–11:50 UTC) — https://www.githubstatus.com/incidents/smtdswd1h2w4
+
+---
 
 ## AI security and governance
 
-**Anthropic releases FlashProve: open-source zkSNARK proofs that a response came from the model it claims to be** — Event date: Nov 3 (Techmeme river 4:10 PM ET; research post on anthropic.com).
-FlashProve is an Apache-2.0 provable-inference prototype built with EPFL, MIT, StarkWare and Succinct: a provider commits to a model and then proves, with a ~19 MB zkSNARK per 1,024-token request, that each response came from those (hidden, 4-bit quantized) weights. The drop includes a Claude-written protocol spec, executable prover plus C++ and formally-verified Lean verifiers, and Lean proofs of the top-level security statements. Anthropic frames uses as anti-router-swap for customers, tamper detection, evaluator assurance, and compliance tooling for AI pacing — with honest limits: greedy-decoding integer model, 1,024-token contexts, MoE-only.
-*Why it matters:* Provable inference was the weakest link in every "verify which model served you" plan; 110 tok/s on one GPU moves it from theoretical to demoable, and the Lean-verifier release answers the "who audits the prover" objection. It also quietly validates Anthropic's RSP roadmap commitment on signing inference traffic.
-Source: Anthropic research post — https://www.anthropic.com/research/provable-inference
-Source: AI Weekly alert — https://aiweekly.co/alerts/anthropic-opens-flashprove-to-prove-replies-match-model-weights
+### Oracle scraps $7B, five-year Tencent AI-chip lease under Trump-administration pressure
+**Event date: November 4, 2026 (FT report; TNW and Business Times published in-window).** Oracle walked away from a ~$7B, five-year contract to lease Tencent access to ~100,000 advanced AI chips across Oracle's Southeast Asia data centers — Tencent's largest overseas compute deal — after US officials raised concerns; pressure also came from Beijing, with Guangdong officials urging Tencent to favor domestic chips. Reuters could not independently verify; Oracle, Tencent and the White House didn't respond. Context: it follows the FT's report that Nvidia told cloud partners to cap Chinese business below 51% of capacity, and Oracle itself recently priced a $20B funding round at up to 8.65% while its shares have roughly halved over a year.
+**Why it matters:** Cloud rental was the last export-control-safe path for Chinese labs to reach frontier-class compute; with the 51% rule and now this cancellation, the sanctioned-compute gap widens — which in turn pushes Chinese labs toward Ascend (this job reported DeepSeek V5's Ascend-950 native pre-training last night) and keeps open-weight Chinese models flowing as the alternative export.
+- Source: TNW, "Oracle cancels $7B Tencent AI chip lease under US pressure, FT reports" (November 4, 2026) — https://thenextweb.com/news/oracle-cancels-tencent-ai-chip-lease
+- Source: The Business Times (Singapore), "Oracle scraps US$7 billion deal to lease chips to Tencent" (November 4, 2026, 14:47 SGT) — https://www.businesstimes.com.sg/companies-markets/oracle-scraps-us7-billion-deal-lease-chips-tencent-under-trump-pressure-ft-reports
 
-**Update on CrowdStrike's AI Kill Switch announcements: the switch is live, Falcon AI Gateway is GA, and Claude Cowork is the first integration** — Event date: Nov 3 (update on ledger entry fiddler-dreadnode-killswitch, reported 12:00 fire).
-At Fal.Con Europe in Barcelona, CrowdStrike moved from this morning's acquisition headlines to product: AI Kill Switch is now available in Falcon Guardian, directing connected gateways to cut off the AI models that drive an agent's decisions; the CrowdStrike-native Falcon AI Gateway is GA and bundled at no extra cost (centralizing model access, policies, credentials and cost controls); and Anthropic's Claude Cowork gets Falcon Guardian protection as the marquee integration. Bernard described it to CNBC as a human-triggered circuit breaker — it cuts model access rather than deleting agent code — with endpoint termination, cloud containment and runtime identity revocation coming. Critics told CNBC a kill switch across multi-system estates remains very hard to implement.
-*Why it matters:* Vendor-defined "rogue agent containment" is now a shipping control plane, and bundling the gateway free with Falcon Guardian is an aggressive land grab for the AI-gateway choke point every agent deployment will need. The Binance and Hugging Face-breach references show how fast the rogue-agent fear is shaping security budgets.
-Source: CrowdStrike blog (Michael Devins), Nov 3 — https://www.crowdstrike.com/en-us/blog/crowdstrike-introduces-ai-kill-switch/
-Source: CNBC (Samantha Subin), Nov 3, 2:35 PM EST — https://www.cnbc.com/2026/11/03/crowdstrike-ai-kill-switch-rogue-agents.html
+### Meta raises $15B in five-part dollar bond sale — $58B of orders — to bankroll AI capex
+**Event date: November 3, 2026 (pricing Tuesday evening ET).** Meta sold $15B of investment-grade US dollar bonds in five tranches (incl. $3.25B of 2031 notes at 5.85% and $3.25B of 2033s at 6.25%), drawing up to $58B in orders (~3.9×), the largest slice of its $20B+ cross-border offering, funding the $135–145B capex year.
+**Why it matters:** Deep AI capex is now moving from equity-linked structures into plain IG debt at 6%-plus coupons — a durable signal on how the buildout is being financed (this job has tracked Meta's Class C stock and the neocloud bond shutout).
+- Source: Reuters via AOL, "Meta raises $15 billion in five-part US bond sale to fund AI expansion" (November 3, 2026) — https://www.aol.com/articles/meta-raises-15-billion-five-225011000.html
+- Source: Bloomberg, "Meta Raises $15 Billion as Elevated Bond Yields Stoke Demand" (November 3, 2026) — https://www.bloomberg.com/news/articles/2026-11-03/meta-kicks-off-debt-offering-in-push-to-fund-ai-investments
 
-## Also noted
+### Update (ledger 2026-11-03 ai-learning-era-updates-2026): Google walks back the "ban AI and lose Search" edge
+**Event date: November 3, 2026 (evening response).** After backlash — including criticism from Sen. Bernie Sanders and NYC Mayor-elect Zohran Mamdani — Google clarified that Gemini, Gemini Notebook and Search will each be opt-in independently for K-12 student accounts from early 2027: schools can enable plain Search without any Gemini product. VP for education Chris Phillips: search and AI "deeply integrated" still stands for feature design, but the punitive framing was softened.
+**Why it matters:** Corrects the job's earlier midday item: the off-by-default policy holds, but the "lose Search entirely" consequence Google initially floated was retracted within hours — a case study in AI-policy backlash speed.
+- Source: CNBC, "Google responds to outrage over removing search in schools that ban AI" (November 3, 2026) — https://www.cnbc.com/2026/11/03/google-responds-to-outrage-over-removing-search-in-schools-that-ban-ai.html
 
-- **llama.cpp shipped 4 in-window builds** (b12076–b12079, 12:22–4:58 PM ET) per the GitHub releases feed — https://github.com/ggml-org/llama.cpp/releases
-- **Show HN: Kairos** — open-source risk/fraud decisioning platform using "System One" decision models plus an MCP server so coding agents can define decision workflows and train model variants; self-host via Docker (19 points, id 50358314) — https://github.com/finic-ai/kairos
-- **Bloomberg Opinion: "The AI Boom May Be Sowing Seeds of Another Financial Crisis"** hit the HN front page (32 points at 4:25 PM ET, id 50358414) — the argument for stronger financial oversight of AI capex keeps climbing into mainstream op-ed territory — https://news.ycombinator.com/item?id=50358414
+### Google extends voluntary buyouts to Canada, France, Germany, Japan and Switzerland
+**Event date: November 4, 2026 (Reuters exclusive).** Google confirmed it began offering voluntary exit packages in June to employees in five more countries — one month's salary per year of service, capped at 12 months — as Alphabet manages costs against heavy AI spend; Cloud and DeepMind staff were excluded. Follows Microsoft's ~60K-employee buyout (ledger, Oct 26).
+- Source: Reuters, "EXCLUSIVE: Google extends voluntary buyout offers to employees in several countries" (November 4, 2026) — https://www.reuters.com/business/media-telecom/google-extends-voluntary-buyout-offers-employees-several-countries-2026-11-04/
 
-## Just missed the window
+---
 
-- **Revolut cut AI coding inference costs ~90% by defaulting to self-hosted GLM over Claude Code** — disclosed by David Abitbol at AI Engineer New York late last month (talk predates the window); The Register's detailed write-up landed today at 3:07 PM ET: ~2,000 engineers, GLM-5.1→5.3 on 56 B200s, $0.30/M tokens, NVFP4 + disaggregated prefill/decode, sub-3s TTFT at ~256k context, ~200 tok/s, and the quote "Long context is a scam… 256 [thousand] is really what you need." — https://www.theregister.com/ai-and-ml/2026/11/03/british-fintech-revolut-slashes-ai-coding-costs-10x-by-cutting-out-claude-and-going-self-hosted/5307345
-- **Postman silently auto-installed Codex/Claude plugins and self-approved its own startup hook** — GitHub issue #14370 (opened Oct 25, with Postman's own `auto-existing-upgrade` log lines and installer source showing hook self-approval) spiked to 848 points on HN's front page at 12:22 PM ET today; the disclosure post predates the window — https://github.com/postmanlabs/postman-app-support/issues/14370
+## Just missed the window (footnoted once)
+
+Surged to the HN front page this morning (story 50362905).
+- **Anthropic's Message Threads public beta** (announced **November 2**, missed by prior runs): Messages API threads send only new messages after the first full request — ~35% median time-to-first-token cut on 500K–1M-token requests, encrypted in-memory threads expiring after 5 minutes idle; live on Claude Platform, AWS, Microsoft Foundry and Google Cloud; beta header `message-threads-2026-08-12`. — https://claude.com/resources/articles/message-threads
 
 ## Coverage notes
 
-- **Verified: 10 qualifying items** (7 lead-category items incl. 2 marked as updates on previously reported events + 3 also-noted), each from a fetched page with an in-window timestamp; lead stories read in full. 2 "just missed the window" footnotes (first-ever footnotes for those events).
-- **Ledger dedupe:** 5 candidates suppressed as already reported — CrowdStrike kill-switch cluster and weight-space programming (both re-handled as Updates naming their ledger entries), OpenAI/Anthropic midterm "war room" re-coverage (ledger openai-election-ops-center; original Semafor/Politico disclosure Nov 2), plus in-window river re-appearances of Nvidia-51pct-nonchinese and bug-bounty-172k-cathedral (07:00 fire).
-- Sources this run: Techmeme river, HN Algolia front page, CNBC, Reuters, The Register, Anthropic, Apple Developer, CrowdStrike, Simon Willison, TechCrunch, Bloomberg, AMD IR, GitHub releases API, AI Weekly.
-- Dead ends: NYT midterm-security feature 403'd on fetch (and proved to be re-coverage of Nov 2 Semafor/Politico scoops — excluded on both counts); HuggingFace trending page renders card-less, used as a lead index only; AMD IR page cited from search-level retrieval (CNBC carries the same figures).
+- **Verified: 12 qualifying items** (10 new + 2 "Update on previously reported"), counting each milestone once; 2 first-time "Just missed" footnotes; 4 lead stories read in full. All in-window timestamps confirmed by fetched pages or GitHub API.
+- **Ledger dedupe: 9 candidates suppressed as already reported** — Anthropic FlashProve (river, reported Nov 3 17:00), CrowdStrike AI Kill Switch/Falcon Gateway GA (reported Nov 3 17:00), fal $1.65B (reported Nov 3), OpenAI bug-bounty/Cathedral sprint + Nvidia 51% rule + AMD-vs-Intel x86-takeover (all reported Nov 2–3; AMD/Intel item derived from already-reported earnings), Revolut-GLM and Driscoll hire (both previously footnoted as `missed:`), OpenAI "compute campuses" rebrand (reported Nov 1).
+- Dead ends (two-strike rule): The Information's "Nvidia soft power" feature (river 19:20 ET, paywalled, no fetchable copy); SemiAnalysis' SpaceX ~13GW 2027 revision (river-only, URL unresolved); MarkTechPost Letterpress-1 slug 404s; Bloomberg's Meta bond piece paywalled (Reuters/AOL copy cited instead); Supermicro Q1 +298% (16:45 ET Nov 3, minutes pre-window).
+- Sources used: Techmeme river, HN Algolia (in-window query), The Decoder, Tencent/SCMP/Bloomberg/Reuters/FT-via-TNW/CNBC/Business Times/Business Insider/Business Wire/SiliconANGLE/GitHub API/HF Papers — 12+ distinct outlets across indexes and multi-angle search.
