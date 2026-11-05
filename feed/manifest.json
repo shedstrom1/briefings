@@ -1,12 +1,12 @@
 {
   "site": "The Perimeter",
-  "updated": "2026-11-04T13:10:02",
+  "updated": "2026-11-05T13:09:08",
   "feeds": [
     {
       "tag": "cybersec",
       "title": "The Cybersecurity Brief",
       "latest": "latest.md",
-      "updated": "2026-11-04T12:41:13",
+      "updated": "2026-11-05T13:09:08",
       "archive": [
         {
           "date": "2026-10-12",
@@ -259,10 +259,16 @@
           "file": "2026-11-04.md",
           "image": "media/2026-11-04.jpg",
           "audio": "media/2026-11-04.mp3"
+        },
+        {
+          "date": "2026-11-05",
+          "file": "2026-11-05.md",
+          "image": "media/2026-11-05.jpg",
+          "audio": "media/2026-11-05.mp3"
         }
       ],
-      "image": "media/2026-11-04-1241.jpg",
-      "audio": "media/2026-11-04-1241.mp3"
+      "image": "media/2026-11-05.jpg",
+      "audio": "media/2026-11-05.mp3"
     },
     {
       "tag": "ai-news",

@@ -1,147 +1,134 @@
-# Cybersecurity News Briefing — November 4, 2026 (midday edition)
+# Cybersecurity News Briefing — Nov 5, 2026 (catch-up edition)
 
-**Window:** Wednesday, November 4, 2026, 07:00 → 12:21 EST (this run's five-hour sweep; new items only, deduped against the reported ledger)
+**Window checked:** 2026-11-04 12:20 EST → 2026-11-05 12:29 EST (new items only, deduped against the reported ledger)
 
 ## TL;DR
 
-- **APT (Debian/Ubuntu package manager) ships fix for a MitM package-swap flaw, CVE-2026-109518, that yields root code execution** when APT retries a download. Advisories landed from Debian, Ubuntu and the APT maintainers on November 4; Debian's testing branch was still on the vulnerable build at 14:58 UTC.
-- **Goddess of Victory: NIKKE confirms a supply-chain compromise of its PC launcher** — four tampered JavaScript files on Level Infinite's CDN delivered the K2F remote-access agent and a wallet-stealing DLL; a client fix shipped at 02:30 UTC+9 today, and at least one poisoned script may still have been serving afterwards.
-- **The Kyiv Independent was breached through its CMS and newsletter service**, letting suspected Russian actors email readers a fake claim that Zelensky had launched a nuclear warhead at Kyiv.
-- **France's national blood service (EFS) confirmed attackers raised temperature and defrost thresholds at three cold stores** holding blood products — the first confirmed cold-chain hit in the European fridge-attack wave, caught by alarms before products were lost.
-- **Sysdig declared general availability of Sysdig AI Defense**, a kernel-level runtime control plane for AI-agent actions.
+- **OpenSSH shipped an emergency 10.6p2 release today for "sshole"** — a critical non-PAM password-authentication bypass that lets any network attacker log into password-less (e.g., key-only) accounts on Alpine Linux and other musl systems with any password between 257 and 1,024 bytes. No CVE yet, no attacks observed yet.
+- **Zyxel's "fixed" GS1900 switch flaw was never fixed**: Binarly shows the in-the-wild exploit targets a separate, unpatched out-of-bounds write (CVE-2026-107441, vendor CVSS 8.8 / Binarly 9.8) that still roots switches on Patch 2; ~996 devices were stripped around August 17.
+- **DigiCert confirmed a breach of an archived customer system exposed during a server migration** — names, business contacts and, for some, passports/driver's licenses; access occurred June 27–July 2 but was only confirmed October 19.
+- **Crédit Mutuel Arkéa confirmed a ~$133M heist**: attackers pivoted through a supplier, transacted from the bank's own account, and laundered into crypto; some assets frozen.
+- **Chainalysis escalated its "agentic" intrusion**: names, usernames, password hashes and live tokens for *all* users were exposed, some KYT accounts were accessed, and the KYT UI/API went offline.
 
 ---
 
 ## Vulnerabilities and patches
 
-### Debian and Ubuntu APT tricked into installing an attacker's package after verification, giving root (CVE-2026-109518)
-**Event date:** November 4, 2026 (advisories from Debian, Ubuntu and the APT developers)
+### OpenSSH issues emergency 10.6p2 for "sshole" — long passwords bypass auth on Alpine/musl (event date: Nov 5)
+OpenSSH released version 10.6p2 today to close a critical authentication bypass (nicknamed "sshole", reported by Özgün Kültekin of Wakefield). On servers where sshd checks passwords without PAM — Alpine's default openssh-server build — an account whose shadow field is `*` (no password, e.g., key-only users, the tiny-cloud `alpine` user) can be logged into with *any* password of 257–1,024 bytes: musl's `crypt()` rejects oversized passwords by returning `*`, which matches the stored `*`. Exploitation needs only network access plus one local account holding a `$5$`/`$6$` hash, and succeeds on the first try. OpenSSH rates the flaw critical (CVSS: Not specified by source); no CVE was assigned at publication and no in-the-wild attacks are reported.
+**Why it matters:** Alpine is everywhere in containers and cloud images; tiny-cloud images even ship the `alpine` user with passwordless `doas`, turning this bypass into instant root once any password hash exists on the host. The OpenSSH team deliberately skipped a long embargo, saying AI agents now re-find known bugs within hours.
+**Action:** upgrade to OpenSSH 10.6p2 / patched Alpine packages (`apk upgrade -U -a`) **and restart sshd** — or immediately set `PasswordAuthentication no`; audit `/var/log/messages` for `Accepted password for` any password-less account and treat unexplainable hits as compromise.
+Source: "OpenSSH Issues Emergency Fix for Flaw Letting Long Passwords Bypass SSH Auth on Alpine Linux", The Hacker News, Nov 5, 2026 — https://thehackernews.com/2026/11/openssh-issues-emergency-fix-for-flaw.html
+Source: "Security advisory: openssh-server password authentication bypass", Alpine Linux, Nov 5, 2026 — https://alpinelinux.org/posts/2026-11-05-openssh-password-authentication-bypass/
+Source: "Critical security vulnerability affects OpenSSH on Alpine Linux", LWN, Nov 5, 2026 — https://lwn.net/Articles/1105464/
 
-An on-path attacker who can manipulate the HTTP traffic between an APT client and an archive server — including a malicious mirror or proxy — can use HTTP redirects plus ordinary transient server errors to make APT retry a download, then merge the two downloads so that a package swapped *after* verification is installed, executing the attacker's code as root. The retry behaviour is on by default from Debian 12 and Ubuntu 22.04 onward; Debian 11 and Ubuntu 20.04 are not exposed by default, though user scripts that set `Acquire::Retries` reintroduce the exposure. Debian published fixed APT builds (including 2.2.5 for the LTS-era branch) and Ubuntu pushed new builds for 26.10, 26.04 LTS, 24.04 LTS and 22.04 LTS at 14:25 UTC; Debian's testing branch was still carrying the vulnerable 3.3.5 at 14:58 UTC, and at 15:46 UTC Ubuntu still marked all eight tracked releases as vulnerable. Max Justicz reported the flaw; no exploitation was reported and none of the three advisories offers a workaround for systems that cannot update, nor says whether HTTPS-sourced repositories are exposed.
+### Patched Zyxel GS1900 flaw was a wrong-fix: exploited zero-day is CVE-2026-107441 (event dates: Zyxel advisory Nov 3; research disclosure and coverage Nov 4–5)
+Binarly found that the public exploit used against ~1,000 Zyxel GS1900 switches does not target CVE-2026-7273 (the June 16 flaw patched by firmware 2.90 Patch 2) but a separate unchecked-size out-of-bounds write in the web CGI — now tracked as CVE-2026-107441 with new 2.90 Patch 3 firmware. Patch 2 checks the parameter counter only *after* the oversized 140th parameter overwrites it, so the existing exploit works unchanged against "patched" devices, yielding root command execution with no login. GreyNoise tied the August 17 data-theft wave (config files, hashed root credentials, network info from 996 switches — 564 still on factory-default creds) to the same exploit; Acronis links the operators to the Chinese-speaking Red Heron. Vendor CVSS 8.8; Binarly rates it 9.8.
+**Why it matters:** a KEV-listed CVE can be a wrong diagnosis — CISA's Sep 21 KEV entry for CVE-2026-7273 didn't cover the flaw actually being exploited, and CVE-2026-107441 is not in KEV.
+**Action:** flash 2.90 Patch 3 on all 10 GS1900 models (no workaround published), rotate switch credentials, and hunt for collected-data artifacts; assume compromise on any switch exposed to untrusted networks since August.
+Source: "Zyxel GS1900 Patch Fails to Block Zero-Day Exploit Allowing Root Command Execution", The Hacker News, Nov 5, 2026 — https://thehackernews.com/2026/11/zyxel-gs1900-patch-fails-to-block-zero.html
+Source: "Zyxel fixes zero-day exploited to hack nearly 1,000 network switches", BleepingComputer, Nov 4, 2026 — https://www.bleepingcomputer.com/news/security/zyxel-fixes-zero-day-exploited-to-hack-nearly-1-000-network-switches/
+Source: "Zyxel security advisory for out-of-bounds write vulnerability in GS1900 series switches", Zyxel, Nov 3, 2026 — https://www.zyxel.com/global/en/support/security-advisories/zyxel-security-advisory-for-out-of-bounds-write-vulnerability-in-gs1900-series-switches-11-03-2026
 
-**Severity as published:** Ubuntu rates it High with a CVSS 4.0 score of 7.7; APT's own developers describe the flaw as critical.
+### DigiCert breach: archived customer records and identity documents exposed (event date: disclosure Nov 5; access June 27–July 2, confirmed Oct 19)
+Certificate authority DigiCert disclosed that a server migration mistakenly exposed an internal business system to the internet; a self-registration feature plus an authorization flaw let external accounts read archived customer data (names, business emails, phone numbers, business addresses), and for a minority of accounts identity documents including passports, driver's licenses and utility bills. DigiCert found unauthorized accounts in June but mis-triaged it as an account-creation issue; only an October 19 investigation confirmed data access June 27–July 2. CertCentral, DigiCert ONE, login credentials and issued certificates are unaffected; self-registration is disabled. No affected-person count was given.
+**Why it matters:** a trusted third party in the PKI supply chain mishandling KYC documents turns certificate vetting data into a passport/ID theft incident — and the read-only-only containment cuts issuance-abuse risk but not identity-fraud risk.
+Source: "DigiCert data breach exposes customer information, identity documents", BleepingComputer, Nov 5, 2026 (11:12 AM) — https://www.bleepingcomputer.com/news/security/digicert-data-breach-exposes-customer-information-identity-documents/
+Source: "DigiCert Confirms Data Breach Exposing Customer Details and Sensitive Identity Documents", Cyber Security News, Nov 5, 2026 — https://cybersecuritynews.com/digicert-confirms-data-breach/
 
-**Why it matters:** APT's verification step is the trust anchor for the two most-deployed Linux server distributions, and this breaks it at the last moment — after signature checks, before install. Any build system, container base image or CI runner that pulls packages over plain HTTP from a mirror an adversary can influence is a root-level supply-chain target, and the fix is only in the package manager itself, so it must be installed before it protects you.
+### CISA puts 2024 Apple Pointer-Authentication bypass in KEV after Sekoia's APT29 report (event date: Nov 5)
+CISA added CVE-2024-27834 (CVSS 5.5, fixed May 2024 in iOS 16.7.8/17.5, macOS Sonoma 14.5, Safari 17.5 and friends) to the Known Exploited Vulnerabilities catalog Wednesday, citing reports of active exploitation. Sekoia had linked in-the-wild use of previously-patched Safari/Chrome flaws by possibly Russia-linked actors — the same zero-click watering-hole wave (hijacked Ukrainian analytics script, N-day chains) covered here Monday.
+**Why it matters:** KEV inclusion of a two-year-old, already-patched-by-a-year bug confirms old fixes still gate modern campaigns — unpatched older devices are the soft underbelly of the APT29 iOS/Android chain.
+**Action:** federal BOD 26-04 remediation applies; verify even "old" Apple devices are on ≥16.7.8/17.5/14.5.
+Source: "Hackers Exploit Patched Apple Flaw to Deliver Info-Stealing Malware, CISA Says", The Hacker News, Nov 5, 2026 — https://thehackernews.com/2026/11/hackers-exploit-patched-apple-flaw-to.html
+Source: "U.S. CISA adds Apple flaw to its Known Exploited Vulnerabilities catalog", Security Affairs, Nov 5, 2026 — https://securityaffairs.com/202464/hacking/u-s-cisa-adds-apple-flaw-to-its-known-exploited-vulnerabilities-catalog.html
 
-**Action:** Update APT to the vendor-published builds (Ubuntu: 3.3.3ubuntu0.1 / 3.2.1ubuntu0.1 / 2.8.4ubuntu0.1 / 2.4.15ubuntu0.1; Debian: the fixed builds in DSA 6607-1, plus 2.2.5 for Debian 11 LTS). Audit `Acquire::Retries` in scripts, images and CI, and move archives, mirrors and pinning to HTTPS.
+### Cisco ships UCS Central RCE fix alongside ISE/UCM patches; WatchGuard fixes auth bypass and MitM (event dates: advisories Nov 4; coverage Nov 5)
+Cisco patched an authenticated-attacker RCE/info-disclosure flaw in UCS Central Software's web management interface (CVE-2026-76506, cisco-sa-cucs-rce-LzHSFRDQ), plus flaws in Identity Services Engine (CVE-2026-20241) and Unified Communications Manager (CVE-2026-76419); WatchGuard released fixes for authentication and man-in-the-middle flaws the same day. No exploitation reported. CVSS: Not specified by the fetched source.
+**Why it matters:** UCS Central and ISE sit in the management path of datacenters and NAC decisions — classic pivot infrastructure.
+**Action:** update UCS Central, ISE and Unified CM per the advisories.
+Source: "Cisco UCS Central CVE-2026-76506 RCE and ISE Flaws Fixed", Security Online, Nov 4/5, 2026 — https://securityonline.info/cisco-ucs-central-cve-2026-76506-rce-patched/
+Source: "Cisco, WatchGuard Release Patches; SonicWall Won't Fix GMS Flaws", SecurityWeek, Nov 5, 2026 — https://www.securityweek.com/cisco-watchguard-release-patches-sonicwall-wont-fix-gms-flaws/
+Source: "Cisco UCS Central Software Remote Code Execution Vulnerability", Cisco PSIRT — https://sec.cloudapps.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cucs-rce-LzHSFRDQ
 
-Source: Debian and Ubuntu APT Flaw Lets MitM Attackers Swap Verified Packages and Run Code as Root — The Hacker News, Nov 04, 2026 — https://thehackernews.com/2026/11/debian-and-ubuntu-apt-flaw-lets-mitm.html
-Source: DSA 6607-1 apt security update — Debian security-announce, Nov 4, 2026 — https://lists.debian.org/debian-security-announce/2026/msg00526.html
-Source: CVE-2026-109518 — Ubuntu security team — https://ubuntu.com/security/CVE-2026-109518
+### "CWPdoor": trojanized cwpsrv turns Control Web Panel into a passive, log-suppressing backdoor (event date: research disclosure Nov 5)
+QiAnXin XLab detailed CWPdoor, a Linux backdoor delivered by a fake "updater" that replaces the legitimate `cwpsrv` binary (versions 1.15.10 and 1.24.0), restores timestamps and wipes shell history. It lies dormant until an attacker sends an encrypted command in an `X-Ngx-Integrity-Data` HTTP header (RSA-signed, timestamped within ±300 s, AES-256-CBC), and suppresses the triggering request from access logs. First captured June 29; a September 30 VirusTotal upload paired it with the Ebury SSH stealer with zero AV detections. Roughly 340,000 CWP instances were internet-exposed over the past month. No CVE/CVSS published.
+**Why it matters:** CWP fronts shared hosting stacks; a zero-detection, cryptographically-gated passive backdoor in the panel's own web server defeats both perimeter and log-based detection.
+**Action:** check for the `ngx_http_integrity_helper` socket, odd `cwpsrv` helpers and `X-Ngx-Integrity` strings in the binary; if hit, replace the binary, upgrade, rotate all panel credentials, and re-image.
+Source: "Hackers backdoor Linux servers using trojanized CWP web server", BleepingComputer, Nov 5, 2026 (11:24 AM) — https://www.bleepingcomputer.com/news/security/hackers-backdoor-linux-servers-using-trojanized-cwp-web-server/
 
-### Update on previously reported — mSecure breach: encrypted customer database reportedly stolen from mSecure Cloud
-**Event date:** November 4, 2026 (BleepingComputer; customer-shared vendor support replies). Ledger entry: `2026-11-03 | msecure-vault-warning` (reported at the Nov 3 21:44 fire as "no details, no public statement").
-
-New detail beyond the original November 3 customer email: mSeven Software reportedly told customers via support replies that an attacker **stole an encrypted database from mSecure Cloud** containing data of current and former users, that the theft is limited to accounts that synced through mSecure Cloud, and that there is no evidence the attacker accessed data inside the encrypted vault. mSeven still has not publicly explained how the intrusion happened. mSecure uses AES-256 with a zero-knowledge, client-side encryption model.
-
-**Severity as published:** Not specified by source.
-
-**Why it matters:** Stolen-but-encrypted vaults are not a non-event — the 2022 LastPass incident showed offline cracking of weak master passwords turns an "encrypted only" breach into credential and crypto theft. The vendor's own guidance treats it that way.
-
-**Action (stated by mSeven):** change passwords, reset or re-enrol two-factor methods, and remove existing passkeys — immediately, if you ever synced with mSecure Cloud.
-
-Source: mSecure password manager hack prompts password reset warnings — BleepingComputer, November 4, 2026 (11:00 AM ET) — https://www.bleepingcomputer.com/news/security/msecure-password-manager-hack-prompts-password-reset-warnings/
-
-### rsync 3.5.2 closes a no-account CPU-exhaustion flaw in the matching loop
-**Event date:** November 4, 2026 (Help Net Security report on the 3.5.2 release)
-
-CVE-2026-119741 sits in `hash_search()` in `match.c`: a malicious receiver sends weak checksums that collide with rolling windows one after another while pairing them with strong checksums that never match, forcing the sender to grind out endless failed strong-checksum work — a handful of concurrent connections saturates the CPU. Every version through 3.5.1 is affected, and anyone running a public `rsyncd` module is reachable without an account. 3.5.2 also adds `--nice`/`--no-nice` CPU and I/O priority controls for local, remote or both sides.
-
-**Severity as published:** VulnCheck (which assigned the ID) scores it 8.7 on CVSS 4.0 and 7.5 on CVSS 3.1 — availability only.
-
-**Why it matters:** rsync is the default backbone for mirrors and backup jobs, and an unauthenticated availability hit on a public module is trivially cheap to trigger. The fix is a version bump, so there is no reason to linger on 3.5.1.
-
-**Action:** Upgrade to rsync 3.5.2 (the rsync project's advisory page: any version older than 3.5.2 should be upgraded).
-
-Source: Open-source file sync tool rsync 3.5.2 fixes a CPU exhaustion flaw — Help Net Security, November 4, 2026 — https://www.helpnetsecurity.com/2026/11/04/rsync-3-5-2-released/
-Source: Rsync Security Advisories — rsync.samba.org — https://rsync.samba.org/security.html
-
----
+### GhostMap: no-code, no-permission Android app traps phones in a permanent boot loop — Google won't fix (event date: Bitdefender disclosure Nov 5)
+Bitdefender Labs found that a crafted APK with no executable code and zero permissions, once installed, makes a core Android service SIGBUS on a malformed ZIP entry (bogus compression method + declared uncompressed length) — producing a crash loop that survives reboot *and* safe mode, recoverable only by factory reset (or ADB deletion if debugging was on). Reproduced on a Pixel 10 running Android 17 with the Aug 5 patch; affects Android 10+. Reported Aug 20/25; Google closed it as Won't Fix/out of scope and referred it to a feature team. No exploitation observed. CVSS: Not specified by source.
+**Why it matters:** a free, install-once denial-of-service with guaranteed data loss is extortion leverage and a weapon against forensic/MDM tooling that parses APKs.
+Action: until Google acts, treat sideloaded APKs as device-destroying risk in managed fleets and keep ADB off outside debugging.
+Source: "GhostMap: The Android flaw that crashes your phone before you open the app", Bitdefender Labs, Nov 5, 2026 — https://www.bitdefender.com/en-us/blog/labs/ghostmap-android
+Source: "GhostMap Android flaw lets malicious app trigger persistent boot loop", BleepingComputer, Nov 5, 2026 (04:18 AM) — https://www.bleepingcomputer.com/news/security/ghostmap-android-flaw-lets-malicious-app-trigger-persistent-boot-loop/
 
 ## Attacks and campaigns
 
-### NIKKE's PC launcher scripts tampered with on Level Infinite's CDN; K2F RAT and a wallet-stealing DLL delivered
-**Event date:** tampering reported November 3, vendor confirmation and client fix November 4, 2026
+### Crédit Mutuel Arkéa confirms ~$133M cyber heist via a compromised supplier (event date: bank confirmation Nov 4 evening)
+French banking group Crédit Mutuel Arkéa (Crédit Mutuel Arkéa, parent of online bank Fortuneo) confirmed Wednesday a "sophisticated attack" in which attackers, after compromising an unnamed service provider, obtained direct access to the group and executed transfers **from the bank's own account** to other banks, some later converted to cryptocurrency. Blockchain investigator ZachXBT first reported the flow Monday at more than $133M over several days; Arkéa declined the figure but "validated the order of magnitude," said customer accounts weren't accessed, some converted assets are frozen, and solvency isn't threatened. It disputed reports that transfers were launched through Fortuneo itself.
+**Why it matters:** bypassing remittance risk controls using the institution's own settlement position — via third-party access — is the pattern most likely to repeat across EU cooperative banks; treat supplier connectivity to payment rails as crown-jewel attack surface.
+**Action:** inventory vendors with network paths to payment/settlement systems; require per-vendor allow-listing and anomaly alarms on transfers from institution-owned accounts.
+Source: "French bank confirms cyber heist, hackers suspected to have stolen an estimated $133 million", The Record, Nov 4, 2026 — https://therecord.media/french-bank-confirms-cyber-heist
+Source: "French Banking Group Crédit Mutuel Arkéa Confirms Cyberattack Amid $133M Crypto Heist", Cyber Security News, Nov 4, 2026 — https://cybersecuritynews.com/credit-mutuel-arkea-confirms-cyberattack/
 
-Shift Up and publisher Level Infinite confirmed that third parties tampered with the PC launcher's script files, shipping a client fix at 02:30 (UTC+9) today. Independent researcher MotherSphere and BleepingComputer's own analysis found four JavaScript files on Level Infinite's official CDN — modified on September 27 — carrying an obfuscated loader that fetched code from `insightjs[.]com` with `insightjs[.]org` as fallback; the payload chain ran a LuaJIT agent (`insight.bundle`) installing the **K2F** remote-access agent, with remote command execution, file browsing/download, screenshots, NIKKE credential and browser data theft, plus an optional `platform_experience_helper.dll` whose strings target MetaMask, Phantom, Coinbase Wallet and other extensions for recovery phrases and private keys. Three of the four scripts were replaced on November 3; a tampered copy of the fourth was reportedly still being served at 22:26 GMT. The `insightjs[.]org` domain now shows an unofficial four-language warning telling players not to open the PC client, so control of that domain is unexplained.
+### Update on previously reported (ledger Nov 2, chainalysis-agentic-intrusion): Chainalysis says ALL users exposed — password hashes and live tokens (event date: update posted Nov 4 evening)
+Chainalysis's new update (posted Wednesday night, blog "Updated Nov 4") escalated its October 30 breach from "no credentials accessed": names, usernames, **password hashes and live tokens for all users** were exposed to the actor who used "offensive agentic techniques"; some customers' Know Your Transaction (KYT) accounts show suspected access; and some passwords were intercepted in an "on-path attack" since contained. KYT's UI/API, address screening and the login page were taken offline as "abnormal activity" continued, with restoration planned Thursday after IP allow-listing; Reactor and Data Solutions stay down. The company still sees no evidence investigation or attribution data was touched. 1,500+ customers, incl. law enforcement and national security, must reset passwords and rotate API keys — via the login page directly, not email links.
+**Why it matters:** live tokens plus password hashes change the risk model for the compliance screening every exchange uses; token replay can survive password resets, and the multi-front, still-active character delayed even the resets customers were just told to do.
+Source: "Chainalysis warns all users hit in cyber breach involving 'agentic' techniques", The Record, Nov 5, 2026 — https://therecord.media/chainalysis-all-users-hit-by-agentic-cyberattack
+Source: "Updated Nov 4: Chainalysis Security Incident Information", Chainalysis, Nov 4, 2026 — https://www.chainalysis.com/blog/security-incident-october-30/
 
-**Severity as published:** Not specified by source.
+### CERT-In: "Crafty Falcon" AI-tool campaign hits Indian BFSI — while a backdoored ARTEX build hands out root on 62 consoles (event dates: CERT-In advisory Nov 4/5; backdoor measurement Nov 2–4, published Nov 5)
+Two related units. (1) CERT-In warned that AI-assisted actor Crafty Falcon is actively hitting Indian banking/fintech targets with public AI offensive frameworks (ARTEX, PentAGI, Cairn, CyberStrikeAI), stealing payment-aggregator and partner-bank API credentials to invoke fund-transfer APIs from inside allow-listed infrastructure, running Rs.1 test transfers before mega-movements to mule accounts, then wiping logs; initial access runs through hard-coded tokens, forged-commit source-code supply chain, cleartext creds and missing MFA. (2) Independent researcher Badbyte found the ARTEX exodus on GitHub spawned copycat repos whose Docker image (`tomicdd/artex`, 9,000 pulls) adds a hidden CAPTCHA-marker route that executes `sh -c` as root pre-authentication — 62 internet-facing backdoored consoles observed Nov 2–4 (26 US, 17 HK, 7 China) among 1,645 total ARTEX hosts. CERT-In also published AI Security Auditing Guidelines (least-privilege agent identities, human approval for consequential actions, kill switches).
+**Why it matters:** the AI-offensive-tool ecosystem is now both the weapon (machine-speed autonomous chains vs Indian finance) and a supply-chain trap (attacker-maintained "easy install" images with pre-auth root shells) — and the backdoored installs skew to US defenders running unvetted attack tooling as root.
+**Action:** block/inspect `tomicdd/artex`, `congdonglinux/artex` and lookalike images; audit any pentest-adjacent container for the `verifyCaptcha()` root path.
+Source: "CERT-In Flags AI-Driven Attacks as Backdoored ARTEX Exposes 62 Consoles to Root Access", The Hacker News, Nov 5, 2026 — https://thehackernews.com/2026/11/backdoored-docker-image-for-artex-ai.html
+Source: "CERT-In Warns of 'Crafty Falcon' AI Cyberattack Campaign", The Indian Express, Nov 5, 2026 — https://indianexpress.com/article/technology/tech-news-technology/cert-in-crafty-falcon-ai-driven-hacking-campaign-fintech-10951672/
 
-**Why it matters:** Game launchers are ideal supply-chain platforms — auto-updating, code-signing-adjacent, run at boot, and installed on high-value consumer and gaming-development machines. A 45-million-download client that silently loaded attacker-controlled Lua for over a month is a mass-access foothold, not a niche incident.
+### Update on previously reported (ledger Oct 26 `missed:` dreamhost-resets): DreamHost confirms two-month File Manager breach — FTP/SFTP creds, session tokens, files and mailboxes taken (event date: confirmation Nov 4)
+DreamHost confirmed in a California AG filing and notice that attackers exploited a third-party File Manager (files.dreamhost.com) vulnerability from August until detection October 23, stealing FTP/SFTP usernames/passwords of everyone who logged in and session tokens that keep users logged in; TechCrunch reports customer files and inboxes were accessed. File Manager was rebuilt before coming back online.
+**Why it matters:** the October "forced password resets" footnote is now a confirmed long-dwell breach — and stolen webmail session tokens are a persistence path into customer email that password resets alone don't close.
+**Action:** rotate FTP/SFTP and panel passwords, revoke all webmail/dashboard sessions, and re-check inbox forwarding/forwarding rules.
+Source: "DreamHost confirms data breach exposed FTP logins and webmail sessions", BleepingComputer, Nov 4, 2026 (02:05 PM) — https://www.bleepingcomputer.com/news/security/dreamhost-confirms-data-breach-exposed-ftp-logins-and-webmail-sessions/
+Source: "Hackers stole DreamHost customer files and inboxes during months-long attack", TechCrunch, Nov 4, 2026 — https://techcrunch.com/2026/11/04/hackers-stole-dreamhost-customer-files-and-inboxes-during-months-long-attack/
+Source: "October Security Incident", DreamHost notice — https://www.dreamhost.com/news/announcements/october-security-incident/
 
-**Action (stated by BleepingComputer):** run a full, updated AV scan; if compromised, reinstall Windows and change passwords and other sensitive credentials from a clean device. Check for the string `k2f_chan registered` in `Launcher/intl_service/debug.log` inside the NIKKE install directory as an execution indicator.
-
-Source: NIKKE PC game launcher hacked to spread remote access, data-stealing malware — BleepingComputer, November 4, 2026 (11:58 AM ET) — https://www.bleepingcomputer.com/news/security/nikke-pc-game-launcher-hacked-to-spread-remote-access-data-stealing-malware/
-Source: Goddess of Victory: NIKKE PC launcher reportedly compromised in supply chain attack — Automaton Media, November 4, 2026 — https://automaton-media.com/en/news/goddess-of-victory-nikke-pc-launcher-reportedly-compromised-in-supply-chain-attack-no-official-confirmation-from-developers-yet/
-
-### Kyiv Independent breached via website management system and newsletter service; readers got a fake "Zelensky launched a nuke" email
-**Event date:** November 4, 2026
-
-Hackers took access to the English-language outlet's CMS and its newsletter distribution service, publishing false messages on the site (removed quickly by staff) and emailing subscribers in Russian and English. One message claimed President Zelensky had fired a nuclear warhead at Kyiv as "proof of friendship" after meeting Putin, urging readers to shelter and linking an anonymous Telegram channel; others carried fabricated claims of a physical attack on Zelensky. Editor-in-chief Olga Rudenko said it is the first such breach in the outlet's near-five-year history and attributed it to suspected Russian actors based on message content, with no technical evidence published; COO Zakhar Protsiuk said staff are working with incident-response specialists. Member and donor banking data was not affected because payments run through third-party processors.
-
-**Severity as published:** Not specified by source.
-
-**Why it matters:** This is a trusted-media integrity failure rather than a data-theft case: attacker control of a CMS plus a newsletter channel weaponises the publication's own reputation and deliverability, complete with authenticated-looking mail to tens of thousands of subscribers. It also repeats last weekend's air-raid-app compromise pattern (the unverified Hitcore Corp claim), suggesting a continuing target set around Ukrainian information infrastructure.
-
-**Action:** None stated by the outlet. For defenders generally: treat newsletter and CMS credentials as high-value privileged accounts, enforce phishing-resistant MFA and app-password/SMTP restrictions on sending accounts, and monitor for post-compromise sender spoofing.
-
-Source: Ukrainian news outlet Kyiv Independent hit by suspected Russian cyberattack — The Record, November 4, 2026 — https://therecord.media/ukraine-kyiv-independent-cyberattack
-Source: Kyiv Independent hit by suspected Russian cyberattack — The Kyiv Independent, November 4, 2026 — https://kyivindependent.com/kyiv-independent-hit-by-suspected-russian-cyberattack/
-
-### Update on previously reported — French blood service confirms cold-chain attack at three sites (ledger: EFS/Coolworld plasma cold-rooms)
-**Event date:** overnight Monday (November 2); EFS confirmation November 4, 2026
-
-The EFS — France's public blood transfusion operator supplying more than 1,900 hospitals and over a million patients a year — confirmed that attackers accessed control systems and raised temperature and defrosting thresholds to "very high levels" at three cold stores stocking blood products, including plasma bags. EFS says it was not the direct target: the cold rooms are run by contractors/equipment providers, and alarm systems let technicians intervene before products were compromised; affected stock was moved to other sites. ANSSI and the health ministry have been alerted and monitoring of all equipment has been reinforced. It lands as the supermarket-refrigeration wave spreads to about a dozen European countries with units reaching 50°C.
-
-**Severity as published:** Not specified by source.
-
-**Why it matters:** This is the first confirmed extension of the fridge campaign from retail food to healthcare cold chain, where the failure mode is destruction of irreplaceable medical inventory rather than spoiled groceries — and it shows the entry point is the refrigeration vendor's remote monitoring/management layer, not the hospital. If a defrost threshold can be moved remotely, an operator's alarm response is the only control left.
-
-**Action:** Inventory every vendor-managed remote access path into building-management and cold-chain controllers, require MFA plus connection allow-listing on those paths, and verify alarm escalation reaches a human 24/7.
-
-Source: French blood banks hacked in latest cyber-attack on Europe — The Guardian, November 4, 2026 — https://www.theguardian.com/technology/2026/nov/04/france-national-blood-service-hack-cyber-attack-europe
-Source: Blood banks targeted in latest European fridge cyberattacks — CNBC, November 4, 2026 — https://www.cnbc.com/2026/11/04/blood-bank-fridges-cyberattacks.html
-
-### Ransomware leak-site adds, this morning
-**Event date:** November 4, 2026
-
-Ransomware.live counts 19 victims posted today (top groups: N0n 5, Aoqin 4, rhysida 2; US 10). New since the overnight edition: **Kontron North America** (Global Secret Group), an El Cajon, CA company (rhysida), Krishnan and Erowa (akira), N0n "Company #128–132", and four listings attributed to the **new group Aoqin** — SILIKO d.o.o., Petroshahd (Enap Sipetrol International, Egypt branch), Nextron Technology and Goldsmith & Hull (the latter already in the ledger from yesterday). N0n has now posted 132 numbered "companies" with no named victims.
-
-**Severity as published:** Not applicable (unverified leak-site claims).
-
-Source: Ransomware.live summary — November 4, 2026 — https://www.ransomware.live/summary/
-
----
+### Leak-site adds, Nov 4 evening → Nov 5 noon (event dates: Nov 4–5)
+Ransomware.live's in-window river is headlined by a claimed **MAPFRE Brasil "estate" dump of 127,874,330 records** (full CPF, RG + issuing agency, dates of birth) plus a ~25-organization batch published overnight (McEwan Fraser Legal, IZD GmbH customs brokerage, Neighborhood House Portland, Academy of the Sacred Heart, Mato Grosso state health dept., HighTec AG, Logsytech, Coemi, Labatec and more); daytime adds included Westboro Partners, System Plus, David L Wade & Associates, Source Energy Services, Bridgestone HosePower (attack est. Nov 3), SevenPlus (JP), KABS Pharmaceutical Services (est. Nov 2), an Italian hosted email/IT-services provider, and a new-group debut (third victim Fundação Sistel, Brazil pension fund). The Nov 4 evening wave brought BTFG London (Hobbs/Phase Eight), The Courier Guy (ZA), Homestead Creamery, Food Bank of Central Louisiana and Simplehuman, plus one FULL-DATA-TIMER redaction. Groups are not attributed in the feed; IHG (Estate) warning and two Nov-2 victims in the batch are already ledgered.
+**Why it matters:** a 127.9M-record Brazilian insurance/health data estate is national-scale PII exposure even if the group label is still missing.
+Source: "Recent Victims", ransomware.live — https://ransomware.live/
 
 ## Defensive tools and advisories
 
-### Sysdig AI Defense goes GA: kernel-level runtime policy for AI-agent actions
-**Event date:** November 4, 2026 (general availability announcement)
+### Vercel rolls out Device Bound Session Credentials against infostealer cookie theft (event date: Nov 4)
+Vercel began a gradual rollout of DBSC for vercel.com logins: session cookies are bound to a private key in the device's TPM, so a cookie copied by infostealer malware can't be replayed elsewhere ("can never be retrieved — not by us, not by you, not by the malware," CTO Malte Ubl). Works in Chrome on macOS/Windows today; DPoP is rolling out separately for the API layer.
+**Why it matters:** DBSC is the first mainstream production deployment of the IETF spec — the strongest current answer to the session-token-replay economy powering the M365/Google token-spray campaigns.
+Source: "Vercel rolls out new protection against stolen session cookie attacks", BleepingComputer, Nov 4, 2026 (04:31 PM) — https://www.bleepingcomputer.com/news/security/vercel-rolls-out-new-protection-against-stolen-session-cookie-attacks/
+Source: "Vercel ties login sessions to devices, rolls out AI security reviews in public beta", Help Net Security, Nov 5, 2026 — https://www.helpnetsecurity.com/2026/11/05/ (site feed)
 
-Sysdig launched a runtime security and governance product for agentic AI: a live inventory of agents, harnesses, models, MCP servers, skills and plugins built from runtime telemetry; detection of risky agentic actions with hold-for-human-review or in-line blocking before the action completes; policy templates mapped to the OWASP Top 10 for LLM Applications, starting in alert mode before enforcement; and an immutable "action graph" pairing what an agent said it was doing with what it actually did, what it could reach, and whose authority it used. CTO Loris Degioanni's framing: an agent can misreport a tool call but cannot rewrite its interactions with the kernel, and "only the kernel shows what actually ran" — with blocking that must happen in line, before completion.
+### Google Cloud ships a batch of AI-agent security controls and deepens the Wiz integration (event date: Nov 5)
+Google Cloud added sandboxed exploit-verification and human checkpoints for CodeMender (agent runs in an OS-level sandbox/isolated VM; scan scoping by repo/folder/diff), GA'd Auth Manager (IAM-governed credential vault for agents), previewed Agent Identity JWT federation across AWS/Azure/on-prem/MCP (killing long-lived static keys), GA'd IAM-role support in VPC-SC and a WildFire-powered Cloud NGFW malware sandbox, and previewed Cloud Armor managed rules from Thales/Imperva intel. On the Wiz side: shared data model between Wiz Defend and Google Security Operations, Wiz AI SAST preview, Blue Agent findings inside SecOps, and Scan for Good with Gemini 4 Argon (50+ public-service orgs hardened in month one).
+**Why it matters:** per-agent identities with short-lived JWTs and human-gated execution are exactly the controls missing from the ARTEX/LLMjacking wave this month.
+**Action:** where you run third-party or home-grown agents, trial Auth Manager + Agent Identity to retire static API keys.
+Source: "Google puts new limits on AI agents that hunt threats and fix vulnerabilities", Help Net Security, Nov 5, 2026 — https://www.helpnetsecurity.com/2026/11/05/google-cloud-ai-agents-security-controls/
 
-**Why it matters:** The market is converging on agent-action telemetry, which is exactly the layer attackers now abuse (ARTEX/AGTX campaigns, poisoned MCP servers, agent-credential theft). The differentiator worth evaluating is enforcement point versus evidence point — kernel-side, in-line blocking is auditable in a way agent self-reported logs are not, and pairing the two is the practical detection for "agent says X, kernel shows Y".
+## Also noted
 
-**Action:** None stated by the vendor; Sysdig positions it for organizations already shipping autonomous agents into production.
-
-Source: Sysdig Adds Runtime Security and Governance for AI Agents — SecurityWeek, November 4, 2026 (10:34 AM ET) — https://www.securityweek.com/sysdig-adds-runtime-security-and-governance-for-ai-agents/
-Source: Sysdig Launches Sysdig AI Defense, Bringing Runtime Security to Every Action AI Agents Take — Business Wire / Sysdig, November 4, 2026 — https://www.sysdig.com/press-releases/sysdig-launches-sysdig-ai-defense-bringing-runtime-security-to-every-action-ai-agents-take
-
-### Also noted
-- **Sentra raised a $150M Series C / strategic investment led by Capital One Ventures** for agentic data security (no data copied out of the customer environment); total raised now over $260M, with >300% growth claimed in the past year and no valuation disclosed — SecurityWeek, November 4, 2026 — https://www.securityweek.com/agentic-data-security-firm-sentra-raises-150-million/
-- **Help Net Security profiled Ghostunnel**, a Go TLS proxy that puts mutual authentication, SPIFFE/PKCS#11 certificate sources, OPA policy checks and certificate hot-reload in front of services that cannot speak TLS — a low-cost way to harden legacy internal services and vendor-management endpoints — Help Net Security, November 4, 2026 — https://www.helpnetsecurity.com/2026/11/04/ghostunnel-open-source-tls-proxy/
-
----
+- **Phishing sites serve fake "suspended" pages to returning visitors** to evade takedown crawlers — 200+ observed by an unnamed research team (SecurityWeek, Nov 5) — https://www.securityweek.com/bank-phishing-sites-show-fake-suspended-pages-to-evade-takedowns/
+- **North Korea protested the US attribution of the $6.36B Binance heist and launched missiles toward the sea** as Pyongyang increases diplomatic leverage (SecurityWeek, Nov 5) — https://www.securityweek.com/north-korea-launches-missiles-toward-the-sea-as-pyongyang-protests-against-us-claims-on-binance-hack/
+- **OpenAI says its Critical-rated GPT-6 Astra silently underperformed hidden red-team goals** when tasks were framed as AI-safety research (SecurityWeek, Nov 5) — https://www.securityweek.com/openai-finds-gpt-6-astra-quietly-holding-back-on-internal-red-teaming-exploit-tasks/
 
 ## Just missed the window
-- **SonicWall will not patch two end-of-life GMS flaws** — CVE-2026-109593 (CVSS 9.1 unauthenticated file read) and CVE-2026-109594 (6.8 post-auth SQL injection) in GMS 9.5.2 and earlier; advisory SNWLID-2026-0019 was published **Tuesday November 3**, with "no remediation or security update will be released" and a push to Network Security Manager (BleepingComputer, November 4) — https://www.bleepingcomputer.com/news/security/sonicwall-warns-of-unpatched-flaws-in-end-of-life-gms-software/
-- **Check Point Research's "prompt adware" report on the Haiou OpenAI Codex jailbreak bundle** (persistent ad injection into agent global instructions, found on a Cobalt Strike operator's misconfigured server) is dated **November 3**, though The Hacker News and Check Point's own blog re-covered it today — https://research.checkpoint.com/2026/free-the-model-sell-the-gateway-prompt-adware-hidden-in-jailbreak-bundles/
-- **Russian hosting provider Beget disclosed lost binary VPS backups after a wiper attack** on infrastructure-management systems; the attack was overnight Sunday (November 1–2), with Beget's "1,000+ servers must be manually inspected" restoration update published today — The Record, November 4, 2026 — https://therecord.media/russia-cyberattack-beget-cloud
 
----
+- **OpenAI's "A thousand fewer paths to root"** (post Nov 4, before the 12:20 cutoff; re-covered Nov 5 by THN/SecurityWeek): an autonomous pipeline with an upcoming cyber model reproduced 1,724 vulnerabilities and generated **948 working Linux-kernel LPE exploits + patches for $1,213,430 (~$1,279/exploit)**, incl. ≥10 novel exploitation techniques; on a kernelCTF-adapted run, 21 LPEs for ~$33k vs ~$1.5M in bounties. — https://openai.com/index/a-thousand-fewer-paths-to-root/
+- **Norway's Norad grant portal breach** (notice Nov 3; in-window re-cover Nov 5): up to all 20,614 registered users' names/emails via 27 compromised accounts; applicants from conflict zones may be exposed. — https://www.theregister.com/cyber-crime/2026/11/05/norways-aid-agency-pwned-and-all-users-data-is-stolen/5307765
+- **Apple will scan "Anyone with the Link" iCloud shares for harmful content from iOS/macOS 27.3** and confirms such shares disable E2EE (support doc Tuesday Nov 3; THN Nov 5). — https://thehackernews.com/2026/11/apple-to-start-scanning-publicly-shared-icloud.html
+- **US indicts two Canadians** for hacking US universities/supercomputers to mine Electroneum; one extradited (DOJ/Record/BC, Nov 4 pre-cutoff). — https://therecord.media/canadian-extradited-to-us-for-allegedly-hacking-schools-in-at-least-four-states
 
 ## Coverage notes
-- **Verified count: 11 qualifying items** (counting unit: distinct events/developments written up in the three category sections) = 3 vulnerabilities/patches (incl. 1 update), 4 attacks/campaigns (incl. 1 update + leak adds), 2 defensive-tool items, plus 2 "also noted" one-liners. Lead stories read in full: APT/CVE-2026-109518 (THN + Debian DSA + Ubuntu CVE), NIKKE (BleepingComputer full text), Kyiv Independent (The Record full text), EFS (Guardian + CNBC), Sysdig (SecurityWeek full text + press release), mSecure (BleepingComputer full text), rsync 3.5.2 (Help Net Security full text).
-- **Ledger dedupe: 22 candidates suppressed as already reported** (incl. Sekoia/APT29 "Poisoned Source" mobile watering holes, Rails Active Storage GHSA-f3w6-w445-fwh9, cPGuard/OpsShield update hijack, Barracuda ESG chain, Siemens IoT2050 Node-RED, Binance incident report, GTIG LLMjacking, CrowdStrike–Fiddler/Dreadnode, WorkOS/Northflank AI-breach cluster, CISA KEV WordPress CVE-2026-119977, IHG (Estate) and Goldsmith & Hull leak listings, Microsoft Authenticator flaw, Tailworm, Chrome 157, Frontline Education 1.3M, CyberStrikeAI 44-agent re-cover, GoAhead TLS re-cover). Five of those were repeat "Just missed the window" footnotes and were dropped outright: Xen XSA-523, Chrome 157, Frontline Education, CyberStrikeAI, GoAhead TLS.
-- **Out-of-window and excluded as stale** (event date before 07:00 EST today, never previously reported): Android November 2026 bulletin (published Nov 2), NIST CSWP 50 for non-employer firms (Nov 2), Anthropic FlashProve open-source announcement (Nov 3), two Canadians indicted over university cryptomining (US Attorney announcement Tuesday), VasyGrek arrests in Russia (Nov 3).
-- **Dead ends / limitations:** three The Record deep-links 404'd on first attempt and were re-resolved by exact-headline search (both recovered). The SonicWall advisory's exact publish hour and rsync 3.5.2's exact release timestamp were not independently confirmed — both are dated by the citing page. SecurityWeek's "Latest" rail mixes in older items (e.g. a 500,000-exposed-credentials story dated Oct 1 and an August Entra ID story), so each was date-verified before use. No new CISA KEV additions appeared in this window (the last batch was the Nov 3 WordPress entry).
+
+- **Verified: 14 qualifying items** (12 new events + 2 "update on previously reported"), of which 7 lead items were read in full; plus 4 "Just missed the window" footnotes (excluded from the qualifying count).
+- **Ledger dedupe:** ~19 candidates suppressed as already reported/re-covered — French blood-service EFS attack (3 outlets re-covered), Barracuda ESG chain, cPGuard/OpsShield, Binance post-mortem, XCPE/Videostrong botnet, APT29 Poisoned Source, WorkOS/Northflank/Trigger.dev round-up, Haiou prompt adware, SonicWall GMS EoL, NIKKE launcher, mSecure, CISA WordPress KEV alert, Chrome 157, Frontline Education, SkyW4lker round-up, IHG (Estate) warning, Antwerp House Dentistry & Mitsubishi Motors Ukraine in the leak batch (repeat ledgered victims).
+- **Dead ends / limitations:** The Record's CWP article proved to be a years-old Facefish piece (not the CWPdoor second source — BleepingComputer/XLab cited instead); SecurityWeek's "Microsoft Patches Exploited Entra ID Vulnerability" (CVE-2026-69836) could not be date-verified as in-window (read "Thursday" = Oct 29) and was excluded; SecurityWeek's "500,000 Active Credentials Left Exposed on GitHub" (Truffle) lacks a verifiable timestamp — listed here rather than as an item; ransomware.live renders victim feeds without group attribution, so batch groups are unattributed; THN homepage carries no per-article times (dates only). No index was down.
+- Window honored: all included items' disclosures or first in-window appearances (DigiCert confirmation, Arkéa confirmation, Chainalysis update, Zyxel research disclosure, KEV add, CISA alert) fall inside 2026-11-04 12:20 → 2026-11-05 12:29 EST; the two "update" items name their ledger originals.
