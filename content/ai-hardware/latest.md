@@ -1,75 +1,150 @@
-# AI Hardware & Local Models Brief — RustingStrata doubles Flash-Next speed on 12GB; llama.cpp v0.9.0 ships GA
+# AI Hardware & Local Models Brief — November 6, 2026 (07:45 ET Edition)
 
-**Window: 2026-11-04 07:45 → 12:45 EST** (previous fire → this fire; new items only, ledger-deduped)
+**Window: 2026-11-05 17:45 EST → 2026-11-06 07:46 ET** (previous fire → now; new items only)
 
 ## TL;DR
 
-- **RustingStrata**, a pure-Rust (no ggml) inference engine for Qwen GGUFs, posted a benchmark showing Qwen3.8-Flash-Next IQ2_XS at ~36 tok/s decode on a 12GB RTX 3060 — roughly double the original Strata — and Qwen3.6-35B-A3B at 118 tok/s vs llama.cpp's 68.
-- **llama.cpp v0.9.0 went GA** at 08:08 EST with OCP FP8 E4M3 quantization, the flash_attn_ext_rows unified-KV op, and day-0 architecture support for Clover, Limite, Metis-1.6 and Mistral Large 4.
-- A clean **2x RTX 5090 vs 2x RTX PRO 6000 vs 2x PRO 6000 Max-Q** showdown started on r/LocalLLaMA — same GB202 silicon, 32GB vs 96GB, 575/600/300 W — on a common Threadripper PRO host.
-- **mradermacher's morning quant wave**: day-0 i1 GGUFs of Qwen3.5-4B-Salieri (coding/agent DPO), Qwen3.5-4B-DeepThought-STEM (multi-teacher reasoning distill) and a Saudi-dialect Gemma-4-E4B-Arabic merge.
-- Just outside the window: **SambaNova × Supermicro's 10,000-SN50 RDU inference-rack deal** (announced Nov 3) and **Kimi-K3.1-Pro weights already sitting on Hugging Face since Nov 2** per the Hub's own timestamps.
+- **Thinking Machines released Inkling 2 Small** — a 594B-total / 17B-active MoE scoring 31 on the Artificial Analysis Intelligence Index (up from 13), with full **Apache 2.0 weights promised "next week"** after external red-teaming. It is the highest-scoring would-be open-weights model developed outside China.
+- **Microsoft's Foundry Local now runs Qwen3.8-27B for agentic coding on-device**, claiming **35-135% higher decode throughput than llama.cpp** on an RTX 5090 and DGX Spark, with INT4 at ~18 GB (24 GB cards → 64K context; 32 GB+ → 262K).
+- **llama.cpp shipped b12140 → b12167 overnight** — MoE LRFU/MQ hybrid cache, Vulkan ReBAR detection, OpenCL q6_k multi-column tiled GEMV for speculative verification, CUDA 13.5 release builds.
+- **vLLM added day-0 Liquid AI LFM3-Text and LFM3-VL support**; **SGLang added ERNIE 5.5 Flash support** plus a Kimi-K3.1 DSA decode series.
+- **Community quant ladder (day-0, in-window):** mradermacher pushed VIGOR-27B, Muse-Glimmer-30B-2026-Knowledge, SDRL-Qwen3-32B, OPO-8B and StoryGen-12B-It i1 GGUFs.
 
-## Inference software and benchmarks
+---
 
-**Rust inference engine RustingStrata runs Qwen3.8-Flash-Next twice as fast as Strata on a 12GB card** — event date Nov 4 (12:29:24 EST post, Showcase flair).
-A community developer released RustingStrata, an inference engine for Qwen GGUF models written in pure Rust with no ggml dependency; CUDA kernels are compiled at startup via NVRTC and the same kernels run on Vulkan. On a 12GB RTX 3060 + Ryzen 7600X with 32GB RAM, Qwen3.8-Flash-Next IQ2_XS decodes at ~36 tok/s (CUDA) and prefill averages ~370 tok/s (up to ~610), versus 19-22 tok/s decode and 140-146 tok/s prefill for the reference engine, niko1221's Strata — with greedy output matching Strata's argmax at every checked position. Against llama.cpp it reports 118 vs 68 tok/s decode on Qwen3.6-35B-A3B Q2_K_XL (11.7 GiB, expert-offloaded), ~92 vs 44 tok/s on Qwen3-Next-80B IQ1_S with most experts on CPU, and ~209 tok/s on an AMD RX 7900 XT via Vulkan. It ships an OpenAI-compatible server with tool calling and a self-tuning calibrate command; Vulkan requires shaderFloat64 + subgroup size 32, ruling out Intel Arc and older AMD.
-**Why it matters:** Flash-Next's MoE-plus-DeltaNet architecture has been a moat for specialist engines; a from-scratch Rust rewrite beating both the specialist (Strata) and the generalist (llama.cpp) on the same 12GB hardware resets the baseline for sub-16GB MoE serving and shows NVRTC-compiled kernels as a viable alternative to ggml's prebuilt kernels.
-**Local inference:** targets exactly the 12-16GB VRAM class (RTX 3060 12GB / 5060 Ti 16GB territory) with CPU-side expert residency; AMD works via Vulkan (shaderFloat64 + subgroup 32 required), Intel Arc does not.
-Source: r/LocalLLaMA (Serious_Scarcity7818), Nov 4 2026, 12:29 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xnu9iv/rust_inference_engine_for_qwen_models_on_a_12_gb/
+## Model releases
 
-**llama.cpp v0.9.0 tagged GA — first major release of the 0.9 line** — event date Nov 4 (GitHub release published 13:08:55 UTC = 08:08 EST). *Update on the previously reported b12096–b12109 commit wave (this morning's edition); the GA tag and release notes are the new development.*
-The release formalizes OCP FP8 E4M3 tensor quantization (new ftype, saturating mode), the `flash_attn_ext_rows` op that restores non-unified-KV prefill performance for multi-sequence inference, a batched tensor-copy API, and day-0 architecture support for Clover-35B-A3B-Preview (AR mode), Limite 1B "Violetto", Metis-1.6 (hybrid Mamba-2/GQA with LatentMoE) and Mistral Large 4. ggml moves to v0.29.0, adding initial NCCL-based multi-node tensor parallelism, SVE CPU kernels, SYCL DPAS flash attention on quantized KV, fused MoE MMQ in CUDA, and Hexagon ops including the lightning indexer. Audio expands with Chatterbox TTS, Nemotron 3.5 Transcribe (40-language speaker-attributed ASR) and predefined Pocket TTS voices; Gemma 4 E2B/E4B get major prefill optimizations.
-**Why it matters:** v0.9.0 lands the two things homelab operators have been waiting on — a standards-based FP8 format and multi-node TP in mainline — plus native Mistral Large 4 support, which makes the ~1T MoE loadable in the llama.cpp ecosystem before quants fully mature.
-**Local inference:** FP8 E4M3 + flash_attn_ext_rows benefit 16-24GB cards running quantized KV; multi-node TP opens two-box clusters (e.g. 2x5060 Ti rigs over NCCL) without leaving llama.cpp.
-Source: ggml-org GitHub release, Nov 4 2026, 08:08 EST — https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0
+### **Thinking Machines ships Inkling 2 Small: 594B/17B-active MoE, Apache 2.0 weights promised next week**
+**Event date: November 5, 2026** (post dated Nov 5; surfaced on Hacker News at 2026-11-06T00:00:24Z and r/LocalLLaMA at 03:50Z, both inside the window)
+
+Inkling 2 Small is the lab's second-generation model: a sparse Mixture-of-Experts with **594B total and 17B active parameters**, 48 decoder-only layers, each token routing to **8 of 384 experts**, image input via a **292M-parameter Perception-Encoder-based vision tower**, and variable reasoning effort. It scores **31 on the Artificial Analysis Intelligence Index v5.0.1**, up 18 points from Inkling Small, and matches Gemini 3.8 Flash (high) while beating Xiaomi's MiMo-V2.6-Pro. Thinking Machines says it will publish full weights under **Apache 2.0 "next week"**, after external safety testing and red-teaming, per its "safe path to open weights" policy; until then it is Tinker-only (closed) at **$0.30 / $1.00 per 1M input/output tokens** ($0.03 cached). Best reported results: SWE-Bench Pro v2 (Hard) 86.3%, JobBench 70.5%, EnterpriseBench-CoreCraft 71.8%, PerceptionBench 64.7%; weakest: Terminal-Bench 4.0 at 13.1%. Notably, pre-training ran **natively in NVFP4 — 8.4T tokens in 68 hours on GB300 NVL72 racks**, followed by a single joint RL run of 1,075 steps / 17M+ rollouts over 9 days on 2,048 GPUs.
+
+**Why it matters:** This is the most consequential Western open-weights commitment of the quarter. A 17B-active / 384-expert MoE is exactly the shape the local ecosystem is built for — high quality per decoded FLOP, and expert offloading is the whole game for consumer rigs. That the checkpoint is NVFP4/MXFP8-native (per MarkTechPost) means Blackwell cards get the cheapest path, and the community quant machine (Unsloth, mradermacher, bartowski) will have i1/UD tiers within hours of the drop.
+
+**Local inference:** Nothing here lands on a 16 GB card. At 594B total, an FP4 checkpoint is ~300 GB of weights — realistic local targets are **2-4× 96-128 GB cards, a 128 GB DGX Spark / Ryzen AI Max+ 395 box with expert offload, or a multi-GPU Strata/Basalt-class rig**; the 17B active footprint is what keeps decode tolerable. The lab discloses no self-hosting hardware. Watch for the Apache-2.0 drop next week; the day-0 quants will be the story.
+
+Sources:
+- Introducing Inkling 2 Small — Thinking Machines Lab, Nov 5, 2026 — https://thinkingmachines.ai/news/inkling-2-small/
+- Thinking Machines Inkling 2 Small: the highest scoring open weights model outside of China — Artificial Analysis, Nov 5, 2026 — https://artificialanalysis.ai/articles/thinking-machines-releases-inkling-2-small-highest-scoring-open-weights-model-outside-of-chinia-upon-weights-release-it
+- Thinking Machines Releases Inkling 2 Small, a 594B MoE With 17B Active — MarkTechPost, Nov 5, 2026 — https://www.marktechpost.com/2026/11/05/thinking-machines-inkling-2-small-release/
+- HN discussion (226 points) — https://news.ycombinator.com/item?id=50386338
+
+---
 
 ## AI hardware and silicon
 
-**2x RTX 5090 vs 2x RTX PRO 6000 vs 2x PRO 6000 Max-Q: a controlled GB202 inference showdown begins** — event date Nov 4 (12:22:39 EST post).
-A r/LocalLLaMA builder with all three dual-slot cards launched a same-machine comparison: identical Threadripper PRO 9975WX host, WRX90E-SAGE SE board, 128GB ECC, one 1700W PSU, cards swapped pairwise. Spec spread: 5090 (21,760 cores, 32GB, 575W) vs PRO 6000 (24,064 cores, 96GB ECC GDDR7, 600W, 2.62GHz boost) vs PRO 6000 Max-Q (same 96GB, 300W, 2.28GHz), all at the same 1.79 TB/s. First protocol: Qwen3.8-27B FP8 and NVFP4 at tensor-parallel 2, baseline plus MTP and DFlash2, with power draw logged; the 5090s run both stock and with the P2P driver unlock. One early datapoint from the author: the 600W PRO 6000 needs roughly 425W to match the Max-Q's performance, and the Max-Q (blower) stays cool.
-**Why it matters:** the 3TB-class RTX PRO 6000 is becoming the aspirational single-node local card, but this is the first apples-to-apples test of whether the 600W variant earns a 2x power premium over the 300W Max-Q — a direct price/perf and thermal guide for anyone speccing a dual-Blackwell inference box.
-**Local inference:** directly informs 64-192GB two-card workstation builds (Qwen3.8-27B FP8/NVFP4 TP2, DGX Spark alternative pricing); power and slot-cooling are the differentiators, not bandwidth.
-Source: r/LocalLLaMA (Street-Buyer-2428), Nov 4 2026, 12:22 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xnu36y/2x_rtx_5090_vs_2x_rtx_pro_6000_vs_2x_rtx_pro_6000/
+### **RTX 5070 Ti 16GB hits twice MSRP at US retail as the memory crunch works down the stack**
+**Event date: continuing price state, re-reported this morning** (VideoCardz "Just Posted", Nov 6, 2026; verified tracker snapshot dated Nov 2, 2026)
+
+The GeForce RTX 5070 Ti — the card NVIDIA and ASUS have spent this year insisting is *not* discontinued — is now clearing **$1,500 at US retailers**, roughly **twice its $749 MSRP**. The tracked PNY RTX 5070 Ti OC Triple-Fan (16 GB GDDR7) went **$1,189.99 (Oct 9) → $1,300 (Oct 24) → $1,574.95 (Nov 2)**, a +32.3% move in three weeks and **+71.2% from its $919.96 July low**; used eBay sits at $1,399. Same-morning context from the same tracker: RTX 5080 $2,174.68, RTX 5090 $7,999.95, RTX PRO 6000 Blackwell $17,690, RX 7900 XTX $1,820.99.
+
+**Why it matters:** The 16 GB GDDR7 5070 Ti is the budget-king entry point for serious local inference, and it has now decoupled completely from MSRP — the same pattern that already consumed the 5090 and 5080. With GDDR7 and DDR5 both squeezed by HBM allocation, there is no sign of relief before 2027, so the value calculus for local builds keeps sliding toward 16 GB Ada/Blackwell refreshes, Arc Pro B60/B65, and unified-memory boxes.
+
+**Local inference:** 16 GB GDDR7 at ~$1,575 makes a single-card Qwen3.8-27B-class build (~Q4_K_M) cost roughly what a 32 GB Arc Pro B65 did at launch — for a **16 GB card**, the entry tier for 27B Q4 with a small KV budget. This run's own reference class (RTX 5060 Ti 16GB) is tracked at $649.99, i.e. still the rational buy while the 5070 Ti drifts.
+
+Sources:
+- RTX 5070 Ti Price Tracker – November 2026 — videocardprices.com (price as of Nov 2, 2026) — https://videocardprices.com/card/nvidia-rtx-5070-ti/
+
+---
+
+## Inference software and benchmarks
+
+### **Microsoft Foundry Local puts Qwen3.8-27B agentic coding on-device, claims 35-135% over llama.cpp**
+**Event date: November 5, 2026** (blog dated "November 5th, 2026"; r/LocalLLaMA thread 2026-11-06T03:50Z)
+
+Microsoft's Foundry Local blog announces agentic coding powered by **Qwen3.8-27B** (quoted at Terminal Bench 2.1 73.0, SWE-bench Pro 61.7, NL2Repo-Bench 42.3, DeepSWE 1.1 42.2), built on **ONNX Runtime** with **DFlash2 speculative decoding**, CUDA graph fusions and kernels tuned specifically for **NVIDIA's SM121 architecture (DGX Spark)**, INT4 weight handling, KV-cache quantization, embedding memory sharing, CPU offload, prefix caching and continuous batching. Headline result: **faster generation than llama.cpp at every tested prompt length on both an RTX 5090 (32 GB) and a DGX Spark (128 GB unified memory)**, with the gap widening beyond 131K tokens; the r/LocalLLaMA thread quantifies the claim as **35-135% decode (tok/s) improvements**. Requires Foundry Local CLI 0.13.0+ and hooks into GitHub Copilot via BYOK. Microsoft's own commenters pushed back, arguing llama.cpp was likely not tuned to a matching draft length and that the int4 kernel work may not transfer.
+
+**Why it matters:** A vendor-optimized ONNX stack beating llama.cpp at long context is the kind of shift that changes which runtime you actually run for repo-scale agent work — and it is the first big official benchmark framed around SM121, i.e. the Spark. It also validates Qwen3.8-27B as *the* default local coding model. The caveat is real: llama.cpp's own DFlash2 work (already merged) closes much of that gap when configured correctly, so treat the numbers as tuned-runtime-vs-default-runtime until independent runs land.
+
+**Local inference:** **~18 GB at INT4 → any 24 GB+ card (3090/4090/5080 class) at up to 64K context; 32 GB+ (5090, Spark) unlocks the full 262K.** Sub-24 GB cards including the 16 GB 5060 Ti are outside the stated support envelope, though INT4 with CPU offload is what the community already does there. Mac and AMD GPU support is promised.
+
+Sources:
+- Bring Agentic Coding On-Device with Foundry Local — Microsoft Foundry Blog, Baiju Meswani & Emma, Nov 5, 2026 — https://devblogs.microsoft.com/foundry/foundry-local-agentic-coding-qwen3-8-27b/
+- Community thread with the 35-135% decode figure and llama.cpp methodology critique — r/LocalLLaMA, Nov 6, 2026 — https://www.reddit.com/r/LocalLLaMA/comments/1xp4lv5/bring_agentic_coding_ondevice_with_foundry_local/
+
+### **llama.cpp b12140 → b12167: MoE hybrid cache, Vulkan ReBAR detection, OpenCL spec-verify GEMV**
+**Event date: November 5-6, 2026** (commits 2026-11-05T23:16Z → 2026-11-06T10:02Z; b12167 published 09:45:44Z)
+
+Twelve merges landed inside the window. The substantive ones: **`moe-cache`: LRFU/MQ-like hybrid cache, ClassLRU (#31233)** — a frequency/recency policy for which experts stay resident; **`vulkan`: detect ReBAR support, avoid BAR allocations if unavailable (#31658)**; **`opencl`: q6_k multi-column tiled GEMV for speculative verification (#31763)** plus repeat op for f16/i32/i16/bf16 (#31782); **`hexagon`: implement set_tensor_n and improve repacking/tiling robustness (#31744)**; **`webgpu`: batched tensor API (#31473)**; **CI: bump CUDA 13 release builds to 13.5 (#31788)**; **CUDA: fix Maxwell build (#31787)**; and a security hardening change restricting the HF token to huggingface.co hosts (#31730).
+
+**Why it matters:** The MoE cache policy is the piece that determines how much of a 384-expert model you can actually keep on-GPU, which is precisely the bottleneck Inkling 2 Small will expose next week. Vulkan ReBAR detection fixes real allocation failures on older/laptop cards, and moving release CI to CUDA 13.5 means official Windows/Linux builds start exercising the Vera Rubin-era toolchain.
+
+**Local inference:** Directly relevant to **16-24 GB cards running MoE quants** (Qwen3.8-Flash-Next, DeepSeek-V4.1-Flash, GLM-5.3-Flash) and to **Hexagon NPU** and **Vulkan/AMD** users; no VRAM class is left out.
+
+Sources:
+- llama.cpp releases b12167 — GitHub, published 2026-11-06T09:45:44Z — https://github.com/ggml-org/llama.cpp/releases/tag/b12167
+- moe-cache LRFU/MQ hybrid cache — https://github.com/ggml-org/llama.cpp/pull/31233
+- vulkan ReBAR detection — https://github.com/ggml-org/llama.cpp/pull/31658
+- opencl q6_k multi-column tiled GEMV (spec verification) — https://github.com/ggml-org/llama.cpp/pull/31763
+
+### **vLLM in-window: day-0 Liquid AI LFM3-Text / LFM3-VL, SM120 NVFP4 GEMM fix, MiniMax-M3.1 ROCm tuning wave**
+**Event date: November 5-6, 2026** (60 merged commits, 2026-11-05T22:45Z → 2026-11-06T12:39Z)
+
+The overnight wave added **LFM3-Text (#65826)** and **LFM3-VL (#65827)** as first-class models, an **SM120 NVFP4 CUTLASS GEMM with the bias folded into the epilogue (#61821)**, a **MiniMax-M3.1 ROCm series** (MXFP8 activation-quant fused post-attention #65937-adjacent, retuned dot_scaled GEMM tiles for M=17-256 #65530, per-XCD NVFP4 sparse decode splits #65481, opt-in parallel decode top-k #65267, DSpark drafter monokernel #65386), **AITER bumped to v0.1.28.post1 (#65937)**, **FlashInfer upgraded to 0.7.3 (#65930)**, a **Kimi-K3.1-Pro TPU serving recipe via vllm-torchtpu (#65725)**, data-parallel multimodal encoder for **Gemma-4** (#60314), and a KV-sharing fast-prefill hang fix.
+
+**Why it matters:** Day-0 support for a vendor's edge model family is how a small model becomes runnable everywhere — LFM3's 1.7B/2B class is the phone/Jetson/mini-PC tier, and vLLM support means OpenAI-compatible serving for it. The MiniMax-M3.1 ROCm block is the clearest signal that AMD's MI300-series inference stack is being actively perf-tuned for open MoEs.
+
+**Local inference:** LFM3-Text/VL targets **sub-8 GB (Jetson Orin Nano, laptops, NPUs)**; the SM120 NVFP4 work targets **RTX 50 / RTX PRO Blackwell desktop cards**.
+
+Sources:
+- Add LFM3-Text — vLLM, 2026-11-06T05:39:42Z — https://github.com/vllm-project/vllm/pull/65826
+- Add LFM3-VL — vLLM, 2026-11-06T08:56:07Z — https://github.com/vllm-project/vllm/pull/65827
+- SM120 NVFP4 CUTLASS GEMM epilogue bias — https://github.com/vllm-project/vllm/pull/61821
+
+### **SGLang in-window: ERNIE 5.5 Flash support, Kimi-K3.1 DSA decode series, Gemma-4 per-layer attention**
+**Event date: November 6, 2026** (merged 2026-11-06T08:22Z → 12:01Z)
+
+SGLang merged **model support for ERNIE 5.5 Flash (#48547)**, a **Kimi-K3.1 block** — opt-in TensorRT-LLM DSA backend (#48714), shared-expert TP spanning interleaved prefill CP (#48713), and a DSA decode context-parallelism runtime (#48721) — plus **Gemma-4 per-layer attention backend (#44399)**, a **MiniMax sparse decode indexer running on Hopper at TP4/TP8 (#46597)**, re-landed `moe_finalize_fuse_shared` JIT, HiCache L3 prefetch limit fix (#48522), and housekeeping that **drops flash-attn-4 from default dependencies (#48829)**.
+
+**Why it matters:** Day-0 serving support for Baidu's 280B-A14B hybrid (reported by this brief on Nov 5) is what turns a checkpoint into a deployable model, and the Kimi-K3.1 DSA series is the clearest evidence yet that sparse-attention decode — not dense attention — is where the MoE serving race has moved. Dropping flash-attn-4 from defaults lowers install friction considerably for consumer-GPU users.
+
+**Local inference:** The DSA and sparse-indexer work targets **datacenter Hopper/Blackwell (TP4/TP8)**, while the flash-attn-4 dependency change and Gemma-4 backend help **single-card RTX 40/50 and MI300** installs.
+
+Sources:
+- Support ERNIE 5.5 Flash — SGLang, 2026-11-06T08:22:25Z — https://github.com/sgl-project/sglang/pull/48547
+- kimi-k3.1: DSA decode context parallelism runtime — 2026-11-06T08:35:24Z — https://github.com/sgl-project/sglang/pull/48721
+- gemma4: per-layer attention backend — 2026-11-06T12:01:28Z — https://github.com/sgl-project/sglang/pull/44399
+
+---
 
 ## Community spins and quantizations
 
-**mradermacher ships day-0 i1 imatrix GGUFs of Qwen3.5-4B-Salieri, the Open-SWE-traces coding/agent DPO model** — event date Nov 4 (11:03:19 EST upload).
-Full imatrix quant ladder (i1 variants) of Jitheswar/Qwen3.5-4B-Salieri, a Qwen3.5-4B fine-tune aimed at coding agents: SWE/tool-calling DPO on nvidia/Open-SWE-Traces, multilingual (en/zh), Apache-2.0, with Unsloth-derived dynamic quant tags. A companion plain GGUF (no imatrix) also went up.
-**Why it matters:** 4B agent-capable models are the sweet spot for cheap parallel tool-calling sidecars, and Salieri's NVIDIA-trace DPO recipe is one of the few open SWE-trace fine-tunes with quants the same morning it surfaced.
-**Local inference:** Qwen3.5-4B class — Q8_0 sits near 4GB, IQ1/IQ2 tiers well under 2GB; runs on any 4-8GB GPU or CPU.
-Source: Hugging Face, Nov 4 2026, 11:03 EST — https://huggingface.co/mradermacher/Qwen3.5-4B-Salieri-i1-GGUF
+### **mradermacher day-0 i1 ladder: VIGOR-27B, Muse-Glimmer-30B-2026-Knowledge, SDRL-Qwen3-32B, OPO-8B, StoryGen-12B-It**
+**Event date: November 6, 2026** (repo creations 2026-11-06T07:35Z → 12:23Z)
 
-**Qwen3.5-4B-DeepThought-STEM GGUFs: multi-teacher reasoning distill with a drug-discovery twist** — event date Nov 4 (09:40:40 EST upload).
-Quants of xtools-at/Qwen3.5-4B-DeepThought-STEM, a LoRA-derived reasoning fine-tune trained on a stacked dataset list spanning Claude-Haiku-5.5 high-reasoning trace inversion, Xiaomi-MiMo-2.6-Pro, ChatGPT-6.1-Terra, GPT-5.6-Luna and GLM-5.1 reasoning traces, plus synthetic pharmaceutical-formulation "red pill" reasoning sets for STEM rigor; heretic/uncensored variant, Apache-2.0, unsloth-quantized.
-**Why it matters:** the recipe is a snapshot of which closed-model reasoning traces the community is distilling this month, and the math/science (drug-discovery formulation) focus is a niche most 4B reasoning spins skip.
-**Local inference:** 4B dense — fits any 6GB+ card at Q4_K_M, near-instant on 8-16GB GPUs.
-Source: Hugging Face, Nov 4 2026, 09:40 EST — https://huggingface.co/mradermacher/Qwen3.5-4B-DeepThought-STEM-GGUF
+Five in-window imatrix (i1) GGUF drops, each with its own card link:
+- **VIGOR-27B-i1-GGUF** (12:23Z) — imatrix quants of the 27B VIGOR visual-safety/guardrail family.
+- **Muse-Glimmer-30B-2026-Knowledge-i1-GGUF** (10:12Z) — a **2026-news knowledge-update spin built with Muse Spark Open**, dataset OfflineBase/Muse-Glimmer-30B-2026-Knowledge-Data, "other" license.
+- **SDRL-Qwen3-32B-i1-GGUF** (08:09Z) — Apache-2.0 **RL-trained optimization/operations-research solver** (gurobi meta-solver) on Qwen3-32B.
+- **OPO-8B-i1-GGUF** (07:35Z) — qwen3_vl **visual-reasoning RL + tool-use** 8B.
+- **StoryGen-12B-It-i1-GGUF** (11:15Z) — Gemma-licensed storytelling/creative merge, unsloth-built.
+- Also: **agentmujo-qwen3.5-9b-bos-i1-GGUF** (09:10Z) — Bosnian function-calling/agentic LoRA merge (ROCm-tagged).
 
-**Gemma-4-E4B-Arabic-It i1 quants: Saudi-dialect Arabic reasoning merge goes GGUF** — event date Nov 4 (12:09:25 EST upload).
-i1 imatrix GGUFs of noman-asif/Gemma-4-E4B-Arabic-It, a dense Gemma-4 E4B tuned with RSLORA + trust-region DPO and ties-merging on Arabic-Reasoning-Instruct-120k and Arabic-Preference-DPO-20k (Saudi dialect focus, ar/en), Apache-2.0.
-**Why it matters:** regional-dialect Arabic reasoning models remain badly underserved in GGUF form; day-0 quant coverage is what makes them usable on local hardware.
-**Local inference:** Gemma-4 E4B effective-params class — ~3-5GB at imatrix Q4/Q3 tiers; comfortable on 8GB cards and Apple Silicon.
-Source: Hugging Face, Nov 4 2026, 12:09 EST — https://huggingface.co/mradermacher/Gemma-4-E4B-Arabic-It-i1-GGUF
+**Why it matters:** Two of these are genuinely useful rather than noise: the Muse-Glimmer 2026-Knowledge spin is the community's answer to stale cutoffs on a 30B-A3B class model, and SDRL-Qwen3-32B is a rare open RL model for combinatorial-optimization tool use. The 32B/30B tier is the sweet spot for 16-24 GB cards with expert/token offload.
+
+**Local inference:** **8B → any 8-12 GB card; 12B → 12-16 GB; 27-32B → 16-24 GB at i1 Q2/Q3 tiers (or 32 GB comfortably), with CPU/DDR5 offload for the Q4+ rungs.** All are GGUF, so llama.cpp/Strata/KTransformers and llama-swap-class loaders apply.
+
+Sources:
+- VIGOR-27B-i1-GGUF — mradermacher, Hugging Face, created 2026-11-06T12:23:24Z — https://huggingface.co/mradermacher/VIGOR-27B-i1-GGUF
+- Muse-Glimmer-30B-2026-Knowledge-i1-GGUF — created 2026-11-06T10:12:38Z — https://huggingface.co/mradermacher/Muse-Glimmer-30B-2026-Knowledge-i1-GGUF
+- SDRL-Qwen3-32B-i1-GGUF — created 2026-11-06T08:09:21Z — https://huggingface.co/mradermacher/SDRL-Qwen3-32B-i1-GGUF
+- OPO-8B-i1-GGUF — created 2026-11-06T07:35:33Z — https://huggingface.co/mradermacher/OPO-8B-i1-GGUF
+- StoryGen-12B-It-i1-GGUF — created 2026-11-06T11:15:37Z — https://huggingface.co/mradermacher/StoryGen-12B-It-i1-GGUF
+
+---
 
 ## Also noted
 
-- **mradermacher merge-quants, morning batch**: Mero-Artemis-31B-v1-heretic-2 (mergekit heretic/abliterated roleplay merge, Apache-2.0, 08:32 EST — https://huggingface.co/mradermacher/Mero-Artemis-31B-v1-heretic-2-GGUF) and Lunar-Trace-31B / -i1 (Cyclone-Labs roleplay/storytelling merge, 10:16 & 11:28 EST — https://huggingface.co/mradermacher/Lunar-Trace-31B-i1-GGUF).
-- **VIGOR-mini-i1** — i1 quants of prithivMLmods' 4B-class multimodal visual-safety classifier (moderation guardrail, JSON output, MTP), the cheap local alternative to API moderation, 11:47 EST — https://huggingface.co/mradermacher/VIGOR-mini-i1-GGUF
-- **LFM3-Omni-2B runs fully offline on an iPhone 18 Pro Max at ~80 tok/s** using custom WebGPU kernels inside a React Native app — on-device omni inference without llama.cpp, 12:08 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xntou1/lfm3omni2b_running_fully_offline_on_my_iphone_18/
-- **"I removed 85% of Gemma's weights (and it is mostly fine)"** — pruning Gemma-4-26B-A4B MoE to 15% of original size retains 92% label agreement with the full model on a narrow classification task (about the same agreement as the 12B has with the 26B), 08:53 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xnoqyy/i_removed_85_of_gemmas_weights_and_it_is_mostly/
-- **MOSS-Transcribe-Diarize 0.9B passes a long-gap speaker-continuity test**: 23:39 of a public commission meeting diarized locally on an M5 Ultra Mac Studio in 229s, 309 segments, all six speakers re-identified under the same labels across a 17-19 minute gap (follow-up to the Oct 22 model report), 12:26 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xnu74b/testing_whether_speaker_labels_survive_a_17minute/
-- **Paper — "Think Less, Locally"**: local preference learning for reasoning compression, trimming chain-of-thought that continues past sufficient information to cut local inference cost, 10:38 EST — https://www.reddit.com/r/LocalLLaMA/comments/1xnrcfw/paper_think_less_locally_local_preference/
+- **CCORE GLB-3D-Coder dataset released**: 3,918 rendered-and-tested Three.js/GLB examples across 40 domains, the training set behind the 4B Three.js scene generator (follow-on to the model reported Nov 5). — https://www.reddit.com/r/LocalLLaMA/comments/1xozbe6/ccore_glb3dcoder_dataset_is_here_3918_rendered/
+- **Unsloth and bartowski had no in-window uploads** (last-modified sweeps top out at Nov 4 and Nov 3 respectively) — the day-0 quant pressure on Inkling 2 Small has not started yet.
+- **Ollama / TensorRT-LLM produced no in-window releases**: latest Ollama is v0.40.15 (Nov 3), latest TensorRT-LLM is v1.4.0rc2 (Oct 28).
 
 ## Just missed the window
 
-- **SambaNova × Supermicro strategic collaboration — 10,000 SN50 RDU chips** for disaggregated inference racks (GPUs do prefill, RDUs do decode; Supermicro builds/sells/supports; NeoClouds/sovereign clouds first). SambaNova's own press release is dated **Nov 3** (San Jose); only the syndicated HPCwire copy carries a Nov 4 stamp and an HN post landed at 12:15 EST — event date governs, so it footnotes here (first and only time). https://sambanova.ai/press/sambanova-and-supermicro-partnership — https://www.hpcwire.com/off-the-wire/sambanova-and-supermicro-to-build-ai-inference-systems-combining-rdus-and-gpus/
-- **Kimi-K3.1-Pro weights are already downloadable** — the moonshotai/Kimi-K3.1-Pro Hub repo (2.8T-class, 1M ctx, image-text-to-text, 8-bit compressed-tensors) carries Hugging Face createdAt **and** lastModified of Nov 2, 04:13:51 UTC, i.e. the drop landed early relative to Moonshot's "by November 4" promise (announced Oct 23, already in the ledger); the community "Kimi-K3.1-Pro is now open-weights" wave peaked this morning (10:44 EST post). Out-of-window by the Hub's own timestamps — footnote only; no major quantizer has shipped GGUFs yet, so expect that to be the next story. https://huggingface.co/moonshotai/Kimi-K3.1-Pro
-- **oMLX 0.7.4.dev1** (Apple Silicon inference server with SSD KV cache) published 05:13 EST — just pre-window — including a fast-Mac-as-prefill-accelerator mode, LFM3/d1 decision-model support, and Bonsai 1/2-bit prefill at +262% (362 tok/s). https://github.com/jundot/omlx/releases
+- **ServeTheHome's Supermicro Super AI Station review** (GB300 DGX Station in a convertible tower/5U chassis: Grace 72-core + **252 GB HBM3E @ 7.1 TB/s**, 496 GB LPDDR5X, 2×400 Gbps ConnectX-8, first 80 Plus **Titanium** 1.6 kW DGX Station) published **16:15 EST**, 90 minutes before the window opened — https://www.servethehome.com/supermicro-super-ai-station-review-the-ai-server-that-doubles-as-a-workstation/
 
 ## Coverage notes
 
-- **Verified: 13 qualifying events** (6 lead items + 7 "also noted" one-liners; counting unit = distinct in-window events, one per underlying development; the llama.cpp v0.9.0 entry is an update on a reported item, not a new one). Three "just missed the window" footnotes added, each tagged once in the ledger.
-- **Ledger dedupe:** 9+ candidates suppressed as already reported — TinyWebUI, Maya 4x3090 bench, 3090 weight-editing replication and Tencent Hy4 re-coverage (all reported by this morning's 07:45 run), Sipeed MaixStation/Axera AX8860P (a ~2-week-old Tom's Hardware story recirculating on Reddit — excluded, not "just missed"), MOSS AMA highlights (Oct 30 event), Kimi-K3.1-Pro API-placement question (Oct 23 ledger), bartowski's Nov 3 uploads (out of window), Strata opinion post.
-- **Dead ends / limitations:** VideoCardz's feed blocked the fetch (Cloudflare wall) — one strike, abandoned per two-strike rule; reddit `.rss` returned 403 through the page extractor (worked around via the reddit-reading skill script + arctic-shift timestamp archive); ServeTheHome, The Register AI/ML and the vLLM/SGLang/Ollama/TensorRT-LLM release feeds carried nothing new in the 07:45→12:45 window; web_search indexes were stale for a 5-hour window, so discovery leaned on river/index sources (HN Algolia window query, GitHub release atoms, HF lastModified APIs, r/LocalLLaMA new-listing).
-- Kimi-K3.1-Pro placement relies on the Hub's machine timestamps (Nov 2 04:13:51 UTC) over the community's "today" framing; if Moonshot gated→un gated the repo without bumping lastModified, the placement could shift — flagged honestly rather than stretched across the window boundary.
+- **Verified items in this edition: 8** (counting unit: distinct underlying events — 1 model release, 1 hardware-price state, 4 inference-software items, 1 community quant cluster, 1 also-noted dataset), plus 1 "just missed" footnote. Lead stories read in full: Inkling 2 Small (primary + Artificial Analysis + MarkTechPost), Foundry Local (primary blog + community thread).
+- **Ledger dedupe: 14 candidates suppressed** as already reported — CUDA 13.5 GA, RTX PRO 5500 Blackwell $17,999, ASUS Ascent QN10 Snapdragon X2 mini PC, FurMark 2.11 RTX Spark support, SGLang v0.5.23, vLLM v0.33.0/v0.33.0rc3, llama.cpp b11840-b12094 and b12119-b12128 lines, Ollama v0.40.14/15, TensorRT-LLM v1.4.0rc2, LiquidAI LFM3 base weights, the Nov 5 mradermacher quant ladder, Kimi-K3.1-Pro quant wave, and AMD Q3 2026 earnings (re-covered this morning as "Lisa Su: we are a data center first company" — same Nov 3 event). One repeat "Just missed" footnote (BOSGAME M5 Max 192GB, Nov 4) was suppressed as already footnoted-eligible; ServeTheHome Super AI Station is footnoted for the first time.
+- **Dead ends / limitations:** VideoCardz article deep-links for the RTX 5070 Ti 2×-MSRP and ASRock RX 7900 XT/XTX bricked-VBIOS stories could not be resolved (both slugs redirect to the homepage) — the 5070 Ti claim is therefore sourced to a dated price tracker instead, and the bricked-VBIOS story is dropped for lack of a fetchable page. TechPowerUp's news index is behind a bot check. The r/LocalLLaMA "Qwen 4 is stealth announced" cluster is rumor/speculation with no verified artifact (multiple sources confirm no Qwen 4 release date as of Nov 5), so it is excluded per the new-items-only rule. GitHub's API was the load-bearing timestamped river for the four runtime items.
