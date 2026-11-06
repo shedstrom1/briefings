@@ -1,94 +1,76 @@
-# AI News Briefing — November 6, 2026 (07:00 ET edition)
+# AI News Briefing — Friday, November 6, 2026 (12:00 ET Edition)
 
-**Window:** 2026-11-05 17:00 ET → 2026-11-06 07:00 ET (fires daily 07:00/12:00/17:00 America/New_York). New items only; the ledger gate was applied before and after research.
+**Window:** 2026-11-06 07:00 → 12:01 EST (previous fire → now). New items only; events disclosed before 07:00 EST appear only in footnotes.
 
 ## TL;DR
-
-- **Thinking Machines launched Inkling 2 Small** — a 594B-total/17B-active MoE scoring 31 on the Artificial Analysis Intelligence Index, available now on Tinker with closed weights and a promised Apache-2.0 open-weight release "next week"; AA says it would become the highest-scoring open-weights model developed outside China.
-- **Claude Code was sending your email address to every website it browsed** in the User-Agent header; the GitHub bug report hit 1,200+ HN points overnight and Anthropic's mitigation is a new `cc-plugin-privacy` plugin shipped in v2.1.317.
-- **NVIDIA's new open-source NVKE (NVIDIA Kubernetes Engine) surfaced** — a preview management plane for running managed-style Kubernetes on your own NVIDIA GPU bare metal, up on HN's front page overnight.
-- **Post-midterm AI market rout:** a $2.5 trillion Nasdaq wipeout on Democratic data-center-scrutiny fears rolled into Friday's Asian/European sessions, with chipmakers down double digits.
-- **Update on Anthropic's IPO (ledger anthropic-s1-ant):** WSJ reports major investors are now skeptical the week-before-Thanksgiving listing can proceed at the expected ~$1.5T.
+- **Qwen 4 is officially teased.** Alibaba's official Qwen account posted "Qwhen? Qsoon!" at 07:00:18 EST with a Zhuangzi "great fish" poster — the first official Qwen 4 signal; no weights or date yet, and the community expects the Qwen4-27B/Max/Plus/Flash lineup next.
+- **The EU's first-ever move against a recommendation algorithm landed today:** the European Commission preliminarily found TikTok's "For You" feed violates the DSA by trapping users in harmful "rabbit holes," with fines up to 6% of global revenue possible.
+- **TSMC is weighing a push into 3D DRAM at Nvidia's request** (The Information), the latest twist in the AI memory shortage.
+- **A Democratic Congress is lining up tougher scrutiny of Nvidia** on chip exports and circular financing, with Elizabeth Warren a top contender to chair Senate Banking (Bloomberg).
+- **Inference-stack churn:** vLLM took 20 in-window merges (LFM3-Audio support, GLM-5.3 FP8 MoE TMA kernels up to 1.6x); llama.cpp shipped b12170–b12176 including an invalid-UTF-8 crash fix.
 
 ---
 
 ## Models and local inference
 
-### Thinking Machines releases Inkling 2 Small — closed now, Apache-2.0 weights "next week"
-**Event date:** November 5, 2026 (evening ET — HN/Reddit community launches landed 19:00–23:00 UTC Nov 5/06; the prior 12:30 and 17:00 fires did not cover it).
+**Alibaba officially teases Qwen 4 — "Qwhen? Qsoon!"** — Event date: Friday, Nov 6, 07:00:18 EST.
+The official @Alibaba_Qwen X account published a teaser post at 07:00:18 EST (12:00:18 UTC) reading "Qwhen? Qsoon!" alongside an artwork panel referencing the Zhuangzi parable of the giant fish Kun (whose Chinese pronunciation puns on "Qwen") transforming into the bird Peng — literally birds flying in the shape of a fish. The r/LocalLLaMA front page erupted (two separate threads in the day's top posts), with community screenshots of an accompanying announcement referencing Qwen 4 sizes and future "Qwen 4.5 and Qwen 5" scale. No weights, model card, or release date exist yet — this is a confirmed-not-yet-released status as of the window close. Context: trackers reported (FlexAI, Oct 29) a planned early-November lineup of Qwen4-Max, Plus, Flash and 27B, and Alibaba's CTO was reported to have targeted the week of Nov 2.
+*Why it matters:* the Qwen open-weight family is the default engine of the consumer-GPU scene; an imminent Qwen 4 is the highest-impact pending release for local inference, and an official teaser — after the quiet Apsara (Sept 22) naming of a Qwen4-27B — means download-prep time, not speculation time.
+Source: X — @Alibaba_Qwen "Qwhen? Qsoon!" teaser, https://x.com/Alibaba_Qwen/status/2118674834632978755 (posted 2026-11-06 12:00:18 UTC, timestamp verified via post-ID decode)
+Source: Reddit — r/LocalLLaMA "Qwen 4 is stealth announced," https://www.reddit.com/r/LocalLLaMA/comments/1xpbjku/qwen_4_is_stealth_announced/ (Nov 6, day-top)
+Background: FlexAI — "Qwen4 Release Date and Models," https://flex.ai/blog/qwen4-release-date-and-models (Oct 29)
 
-The second-generation Inkling is a sparse MoE with 594B total / 17B active parameters, accepts text and images (292M-param Perception-Encoder vision stack, no audio), and supports variable reasoning effort. It scores 31 on the AA Intelligence Index v5 — up 18 points from Inkling Small — with big agentic gains: AutomationBench-AA 5%→46%, FrontierCode 2.0 5%→25%, HLE-Diamond 12%→29%; AA-Briefcase jumps 615 Elo to 1527, beating Claude Sonnet 5.5 (medium). It launched first-party on Tinker at $0.30/$1.00 per 1M in/out tokens (~$1.18 per Index task), and Thinking Machines says full weights go Apache-2.0 next week once external safety testing and red-teaming complete. Notably, the demo included the model autonomously training Qwen3.5-4B on Tinker for time-series forecasting — 4.5 hours, $426 in spend, >2x the forecasting score.
+**TSMC weighs 3D DRAM manufacturing at Nvidia's request** — Event date: Friday, Nov 6 (The Information, 10:05 EST on the Techmeme river).
+The Information reports, citing two people with direct knowledge, that TSMC has begun formulating plans to manufacture advanced memory — specifically vertically stacked "3D DRAM" — at the request of its biggest customer, Nvidia. The push is led by TSMC vice president Hsu Kuo-chin and is weighing building new fabs versus acquiring and converting existing plants; production timelines remain unclear. TSMC and Nvidia did not immediately respond to Reuters' requests. TSMC shares rose on the report.
+*Why it matters:* it extends the ledger's HBM/flash squeeze (Samsung's HBM sold out through next year; hyperscaler demand quintupled flash prices) into logic-manufacturing territory — the world's most advanced fab entering the memory business reshapes the supply picture that sets GPU and laptop prices, including the DRAM floor Altman already called "quite terrible" for home PCs.
+Source: The Information (via Techmeme river, Nov 6 10:05 AM ET), https://techmeme.com/river
+Source: Reuters summary via piqmarkets — "TSMC weighs 3D DRAM memory production at Nvidia's request," https://piqmarkets.com/story/tsmc-weighs-3d-dram-memory-production-at-nvidia-s-request-the-information-reports (Nov 6)
+Source: Yahoo Finance — "TSMC rises on report of potential push into advanced memory," https://finance.yahoo.com/technology/ai/articles/tsmc-rises-report-potential-push-151300006.html (Nov 6)
 
-**Why it matters:** This is the strongest US/UK-lab open-weights candidate since MiniMax M3.1 Flash if the license date holds — AA frames the pending weights as the highest-scoring open-weights model from outside China (ahead of Mistral Large 4's open release trajectory). Its 17B-active MoE shape is exactly the profile the llama.cpp/vLLM/SGLang expert-offload work targets.
-
-Source: Introducing Inkling 2 Small — Thinking Machines Lab, Nov 5, 2026 — https://thinkingmachines.ai/news/inkling-2-small/
-Source: Thinking Machines Inkling 2 Small: the highest scoring open weights model outside of China — Artificial Analysis, Nov 5, 2026 — https://artificialanalysis.ai/articles/thinking-machines-releases-inkling-2-small-highest-scoring-open-weights-model-outside-of-chinia-upon-weights-release-it
-Source: HN front page (215 pts) — https://news.ycombinator.com/item?id=50386338
-
-### NVIDIA's NVKE: an open-source management plane for self-hosted GPU Kubernetes (preview)
-**Event date:** November 6, 2026 (repo push 09:44 UTC Nov 6; HN front-page spike 03:16 UTC Nov 6).
-
-NVKE (dsx-ai-factory/nvke, Apache-2.0, "Copyright NVIDIA") is a self-hosting factory for Kubernetes on your own NVIDIA GPU metal: a seed cluster stands up a management plane, which then provisions isolated workload clusters — each with its own control plane, etcd and node pools — through the NVIDIA Infra Controller (NICo), with SPIFFE/SPIRE TPM node attestation and a companion build-artifact project (NVKR). It is explicitly preview: API auth is off by default, plain HTTP, no management-plane upgrade/backup path.
-
-The preview caveats matter: it is an evaluation platform today, not production.
-
-Source: dsx-ai-factory/nvke (README, Apache-2.0) — https://github.com/dsx-ai-factory/nvke
-Source: NVIDIA Kubernetes Engine Enters Preview — news.lavx.hu, Nov 6 2026 04:05 UTC — https://news.lavx.hu/article/nvidia-kubernetes-engine-enters-preview-a-management-plane-for-gpu-kubernetes-clusters
-Source: HN (86 pts) — https://news.ycombinator.com/item?id=50387738
-
-**Also noted (Models and local inference):**
-- vLLM merged 63 PRs in-window (Nov 5 22:00 → Nov 6 12:00 UTC), headline adds day-0 **LFM3-Text and LFM3-VL** model support (#65826/#65827), **Kimi-K3.1-Pro TPU serving** via vllm-torchtpu (#65725), a MiniMax-M3.1 ROCm retune cluster and FlashInfer 0.7.3 — https://github.com/vllm-project/vllm
-- Community 6-engine Qwen3.8-27B benchmark on a single RTX 5090 (TTFT/prefill/decode + quality at 64K/128K/256K, GGUF vs NInfer formats): NInfer led speculative and concurrent throughput, llama.cpp kept the highest plain single-request decode; rankings reshuffle sharply at long context — Reddit r/LocalLLaMA, Nov 5 23:39 UTC — https://www.reddit.com/r/LocalLLaMA/comments/1xoxx4a/qwen3827b_benchmark_6_inference_engines_gguf_vs/
+**vLLM takes 20 in-window merges; llama.cpp ships b12170–b12176** — Event date: Friday, Nov 6, 07:00–12:00 EST (GitHub).
+vLLM merged 20 PRs inside the window, headlined by LFM3-Audio model support (#65828), expanded FP8 MoE TMA kernels for GLM-5.3 on sm100 claiming 1.03–1.60x kernel gains (#65746), fused GDN MTP speculative decoding supporting DSpark K=8 and using idle SMs at small batch sizes (#65874), a standalone-draft-model prefill-as-decode fix (#65804), and a security PR raising patched runtime and test-dependency floors (#63574). llama.cpp tagged seven builds (b12170–b12176) whose master commits fix a crash on invalid UTF-8 in prompts or files (#31563) plus CI/test hardening. SGLang (v0.5.23, Nov 2), Ollama (v0.40.15, Nov 3) and OpenClaw (v2026.11.1, Nov 5) were quiet in-window — all already reported.
+*Why it matters:* the spec-decode and FP8-MoE work targets exactly the small-batch, consumer-adjacent serving regime where this reader's fleet lives.
+*Local inference:* DSpark K=8 idle-SM utilization and draft-prefill handling matter for single-GPU rigs; sm100-specific kernels are datacenter-targeted.
+Source: GitHub — vLLM merged PRs (API-verified), https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
+Source: GitHub — llama.cpp releases, https://github.com/ggml-org/llama.cpp/releases (b12170–b12176 published 13:50–16:39 UTC Nov 6)
 
 ## Agent tools
 
-### Claude Code leaked the signed-in user's email to every site it visited via User-Agent
-**Event date:** November 5, 2026 (GitHub issue opened Nov 5; HN #1 post 17:17 ET, 1,221 points).
-
-Issue #107757 documents that Claude Code put the account email address into the `User-Agent` header of outbound web-search requests, broadcasting it to arbitrary third-party sites — no attacker needed, just a normal research prompt. Contributor poteat explained the mechanism: the harness preloads the user's email into model context, and when a site's policy (e.g., Wikipedia's scripted-client etiquette) asks bots to embed a contact email, the agent composed it into the curl. The reporter (on v2.1.318, darwin) said it produced dozens of scam emails a day. Anthropic's response: a built-in `cc-plugin-privacy` plugin, source-available, enabled by default in v2.1.317, that deterministically blocks header substitution — though a commenter on v2.1.318 couldn't see it in `/plugins`, and critics note the email still lives in context by default, so privacy remains a plugin rather than an invariant.
-
-**Why it matters:** This is the archetypal agent-harness data-flow leak — identity material in context becomes identity material on the wire. It's the same class as the OpenCode key-exposure event (ledger 2026-10-18) and should change how everyone configures agent browsing (pin/strip UAs, firewall egress, audit what the harness preloads).
-
-Source: Bug Report: Privacy violation in User-Agent header #107757 — GitHub/anthropics/claude-code, Nov 5, 2026 — https://github.com/anthropics/claude-code/issues/107757
-Source: Claude Code sent your email in User-Agent — StartupHub.ai, Nov 6, 2026 — https://www.startuphub.ai/ai-news/artificial-intelligence/2026/claude-code-sent-your-email-in-user-agent
-Source: HN front page (1,221 pts, 385 comments) — https://news.ycombinator.com/item?id=50385272
+**Nace AI publishes full Drex decision-model technical report in r/LocalLLaMA AMA** — Event date: Friday, Nov 6 (post is the newest listing on r/LocalLLaMA at ~12:00 EST).
+Nace AI's technical staff ran an AMA announcing they "just published a full technical report" on Drex, their family of four open decision models that answer typed questions with per-option probabilities in a single forward pass (no autoregressive decoding): Drex DLM (8B diffusion-LM backbone), Drex v1.5 (9B Gated DeltaNet hybrid), Drex v2.0 (35B MoE, 3B active) and Drex Max (27B dense with vision). Claims: top 3 on OpenRouter and category-top on five Artificial Analysis leaderboards; weights already exist as HF repos with Q8_0 GGUFs and dedicated llama.cpp/Ollama forks. Treat as vendor-reported — the AMA post itself drew an AI-generated-content detector flag in replies, and a commenter challenged the dataset-release claim ("Nothing relevant looking in github or hf").
+*Why it matters:* decision models are the cheap routing/verification layer agents increasingly offload to local hardware; a published training playbook (architecture, datasets, evals, inference) from a top-ranked provider is reusable material.
+*Local inference:* the 8B–35B-A3B tiers with Q8_0 GGUFs are consumer-GPU sized and the stack already ships llama.cpp/Ollama forks.
+Source: Reddit — r/LocalLLaMA AMA, https://www.reddit.com/r/LocalLLaMA/comments/1xphq4u/ama_how_we_trained_a_sota_decision_model_got_top/ (Nov 6)
+Source: GitHub — nace-ai/drex-decision-models, https://github.com/nace-ai/drex-decision-models (family, GGUFs, forks)
 
 ## AI security and governance
 
-### Post-midterm AI rout: $2.5T off the Nasdaq on data-center scrutiny fears
-**Event date:** November 5, 2026 close, extending into the Nov 6 overnight sessions (Guardian live blog Nov 6).
+**EU preliminarily finds TikTok's "For You" algorithm violates the DSA** — Event date: Friday, Nov 6 (Commission press release + The Record, 7:10 AM ET).
+The European Commission issued preliminary findings that TikTok breaches the Digital Services Act through the "rabbit hole effect" of its recommender: the more a user engages, the more the feed serves content around sadness, isolation, self-harm and body image ("SkinnyTok," "what I eat in a day"). Officials called it the first time EU regulators have directly challenged a major platform's engagement-based recommendation system — and, to their knowledge, the first enforcement action of its kind worldwide. The Commission says TikTok's own countermeasures (feed diversification, refresh, "not interested") are ineffective, wants recommendations anchored in explicit user intent rather than implicit dwell-time signals, and analyzed ~20,000 videos with psychologist support. TikTok faces fines up to 6% of global annual revenue if confirmed; this is the Commission's third set of TikTok preliminary findings this year, after February (addictive design) and July (minors' account safety).
+*Why it matters:* regulating the engagement-optimization objective itself — not illegal content — is a new enforcement class that every AI personalization and agent-recommendation system will be measured against, and officials said they are "looking more widely beyond TikTok."
+Source: The Record — Alexander Martin, "EU accuses TikTok of trapping users in harmful 'rabbit holes'," https://therecord.media/eu-accuses-tiktok-of-rabbit-hole-DSA-violation (2026-11-06, full text read)
+Source: European Commission — "Commission preliminarily finds TikTok's 'For You' feed in breach of the DSA for harmful 'rabbit holes' effect," https://digital-strategy.ec.europa.eu/en/news/commission-preliminarily-finds-tiktoks-you-feed-breach-digital-services-act-harmful-rabbit-holes (published 6 November 2026)
 
-Reuters: the Nasdaq Composite fell 5.5% — its deepest one-day drop since April 2025's "Liberation Day" — wiping ~$2.5 trillion from the large-cap Nasdaq 100 as the Democratic midterm sweep raised fears of scrutiny on AI infrastructure and data-center construction; the chipmaker index tumbled 12% to a six-month-plus low and CoreWeave slumped 10% with five-year credit spreads at record highs. The second straight session of AI selling rolled into Friday's Asian and European markets (Guardian live coverage), with The Atlantic framing the election as a referendum on the AI buildout itself.
-
-**Why it matters:** Regulation risk has converted from a long-tail story into a priced one — moratorium candidates won governor's races (see ledger dc-moratorium-15of36) and the sell-off is now the discount rate on neocloud credit, Anthropic's IPO, and NVIDIA's ecosystem financing terms.
-
-Source: Investors wipe $2.5 trillion off Nasdaq as blue tsunami prompts AI fears — Reuters, Nov 5, 2026 — https://www.reuters.com/legal/transactional/ai-data-center-stocks-slip-democratic-sweep-clouds-expansion-plans-2026-11-05/
-Source: Global stocks tumble as AI panic grips markets after Democrats' midterm success — The Guardian (live), Nov 6, 2026 — https://www.theguardian.com/business/live/2026/nov/06/global-stocks-tumble-ai-panic-markets-democrats-midterms-success-jobs-oil-dollar-latest-news-updates
-Source: Silicon Valley's Bad Night — The Atlantic, Nov 6, 2026 — https://www.theatlantic.com/technology/2026/11/americans-really-dont-like-data-centers-elections/689284/
-
-### Update on previously reported (ledger anthropic-s1-ant): investors doubt the $1.5T Anthropic IPO
-**Event date:** November 5, 2026, WSJ updated 23:36 ET.
-
-WSJ: major investors are "increased skeptical" Anthropic's IPO — targeted the week before Thanksgiving, expected to raise up to $100B at ~$1.5T — can proceed at that valuation after the AI selloff; one estimate floated closer to $1 trillion, while others argue October's Q3 disclosure (ledger: Q3 rev $16.96B) softens the blow. This extends the 2026-11-03 ledger entry (anthropic-ipo-1p5t-push) where investors were pushing the low end at $1.5–1.6T; the market event above is what moved the goalposts.
-
-**Why it matters:** A repriced Anthropic float resets comps for every frontier-lab raise and feeds the neocloud credit tightening already visible in the CoreWeave spreads above.
-
-Source: Major Investors Are Skeptical Anthropic IPO Can Achieve $1.5 Trillion Valuation — WSJ, Nov 5 2026 11:36 pm ET — https://www.wsj.com/finance/major-investors-are-skeptical-anthropic-ipo-can-achieve-1-5-trillion-valuation-ca965d8b
-Source: Anthropic's $1.5T valuation under pressure — Seeking Alpha (WSJ pickup), Nov 6, 2026 — https://seekingalpha.com/news/4667757-anthropics-15t-valuation-under-pressure-as-major-investors-signal-skepticism-wsj-reports
-
-**Also noted (AI security and governance):**
-- ING is reportedly the seller of a **$500M data-center loan portfolio** backing Stargate/Cyrusone projects (Bloomberg, Nov 5–6) — https://www.bloomberg.com/news/articles/2026-11-05/mystery-seller-puts-up-500-million-data-center-loans-backing-stargate-cyrusone
+**Democrats promise tougher Nvidia scrutiny on chip exports and circular financing** — Event date: Friday, Nov 6 (Bloomberg, 10:51 AM ET).
+Bloomberg reports that Nvidia faces tougher congressional scrutiny as the incoming Democratic majority prepares to demand answers from CEO Jensen Huang about export-control compliance, with chip-export enforcement and the circular-financing loop (vendor credit funding its own customers) expected to headline hearings; Elizabeth Warren is a top contender to chair Senate Banking. The piece compounds this week's pressure: House GOP chairs already demanded a Nov 18 closed-door Huang briefing over Megaspeed ties, and the post-midterm AI sell-off has politics priced in.
+*Why it matters:* export enforcement scrutiny and circular-financing disclosure are the two levers most likely to reshape the GPU supply and AI-financing stack this reader's work sits on.
+Source: Bloomberg — Maggie Eastland, "Nvidia Faces Congressional Scrutiny Over AI Chip Sales," https://www.bloomberg.com/news/articles/2026-11-06/nvidia-s-ai-chip-exports-emerge-as-target-in-democratic-congress (Nov 6; snippet-level — paywalled)
+Source: Techmeme river (Nov 6 10:51 AM ET), https://techmeme.com/river
 
 ---
 
-## Just missed the window
-
-- **Google's Gemini Omni 1.2 Flash GA** (native 15-second video generation/editing, $0.07/sec 720p — 30% cheaper than 1.1): Google blog + The Verge post at 12:56 pm ET Nov 5, ~4h before window start and inside the 17:00 fire's window but unreported there; footnote-eligible once. (missed: gemini-omni-1-2-flash-ga)
-- **Huawei Qinyun HM650 "100% domestic" desktop** (Kirin X90, HarmonyOS, enterprise/government): announced during China-hours Thursday (≈Wednesday night ET, per SCMP), resurfaced on HN overnight; outside both my window and the prior fires' — footnote-eligible once. (missed: huawei-hm650-desktop)
+## Just missed the window (footnotes — first and only time)
+- **Nvidia makes GPU-location tracking mandatory for Southeast Asia cloud partners** (Bloomberg 06:30 EST, 30 min pre-window; Tom's Hardware re-coverage in-window) — Fleet Intelligence enrollment now required for Nvidia Cloud Partner status, aimed at China-bound smuggling. https://www.tomshardware.com/tech-industry/big-tech/nvidia-tightens-tracking-of-ai-gpus-in-southeast-asia-as-chinese-chip-smuggling-draws-scrutiny-report-claims-cloud-providers-must-join-monitoring-program-to-qualify-for-official-partner-status
+- **Tencent's Hy4-preview Apache-2.0 weights surfaced on Hugging Face** (secondary coverage Nov 5; in-window HF API shows 780B safetensors, SGLang `hy4-preview` docker tag — but repo lastModified dates conflict (Aug 28), so the go-public moment is unverifiable). https://huggingface.co/tencent/Hy4-preview
+- **Baidu released ERNIE-5.5-Flash-Base**, 280B sparse MoE / ~14B active, 33.5T pre-training tokens, 128K context (1M for fine-tune) — disclosed Nov 5 (ernie.baidu.com).
+- **Z.ai chief scientist Jie Tang detailed the GLM-5.5 training pipeline** (32B, 122B, 256B variants) at a lecture — X posts Nov 5 10:52 EST; update on the ledger's Oct 31 GLM-5.5 rumor line.
+- **METR's Ryan Greenblatt pegged AI software-R&D acceleration at ~4.5x, then corrected to 3.8x** (X post Nov 6 01:07 EST, pre-window; follow-on to yesterday's reported 1.9x AECI finding). https://x.com/RyanGreenblatt/status/2118585948015603868
+- **Perplexity rolled out Teammates**, an always-on agent system integrating with Computer for simultaneous multi-role task execution (The Verge, Nov 5 10:15 PM ET).
+- **DOJ launched the "Super Intelligence Task Force"** (justice.gov press release dated Nov 5; surfaced today via AI Weekly) — prosecutorial unit for AI misuse, co-chaired by Associate AG Stanley Woodward; concretizes the administration's Oct 27 "Super Intelligence" renaming. https://www.justice.gov/opa/pr/department-justice-launches-super-intelligence-task-force
+- **Check Point showed ChatGPT's Lockdown Mode was bypassable** on the Electron desktop app via nested sandboxed iframes with popups-to-escape-sandbox permissions, exfiltrating full chat histories; OpenAI quietly removed the permissions Sept 18 (research published Nov 5; gbhackers).
 
 ## Coverage notes
-
-- **Verified: 10 events** (5 lead sections + 5 also-noted one-liners), counted as underlying events; 2 footnotes. Lead stories (Inkling 2 Small, Claude Code leak, NVKE, market rout, IPO update) were read in full from primary pages; every cited URL was fetched this run (WSJ via extractable paywall-lite summary + Seeking Alpha pickup).
-- **Ledger dedupe:** ~6 candidates suppressed as already reported — Delangue "P(doom) close to zero" (ledger 2026-11-05), GPT-6 Cyber re-appearance on tracker sites (ledger 2026-11-05), Kimi K3.1-Pro trending re-coverage (ledger 2026-11-04), MiniMax M3.1-Flash re-coverage (ledger 2026-11-01), weight-space-programming follow-up threads (ledger 2026-11-02/03), Ollama v0.40.14/15 (ledger 2026-11-02/04). No repeat 'Just missed' footnotes (the two above are first-time).
-- Dead ends: Techmeme archive returned 404 for both day pages (logged, not chased); Anthropic "2026 Usage Policy update" turned out to be Oct 8 (stale, dropped); The Hill CAISI article was May (stale, dropped); Claude Haiku 5.5 on Anthropic's newsroom was an Oct 7 page (stale, dropped).
-- Indexes used: HN Algolia (in-window river, corrected epoch), r/LocalLLaMA new-queue (Reddit Atom), GitHub releases/merge searches, llmbenchmark trending, model-release calendars.
+- **Verified and reported: 7 items** (3 leads, 2 governance/industry items, 2 repo/community also-noted), plus 8 first-time "just missed" footnotes. Every in-window item's URL was fetched; lead stories read in full except the paywalled Bloomberg (snippet + Techmeme corroboration, explicitly labeled).
+- **Ledger dedupe: 7 candidates suppressed as already reported** — Gemini Omni 1.2 Flash HN front-page bump (`missed:gemini-omni-1-2-flash-ga`, already footnoted 07:00), Ask HN Ubuntu CVE-2026-98432 delay (repeat of once-footnoted `missed:cve-2026-98432`), NYT Microsoft-60k-buyouts follow (ledger `msft-60k-buyouts`), Microsoft Foundry Local Qwen3.8-27B aiweekly re-syndication (ledger `foundry-local-agentic`, 07:00), Nikkei Asia rout continuation (ledger `nasdaq-2.5t-blue-wave` Nov 6 continuation), "Banks block AI agents" AI News Nov 6 (re-coverage of once-footnoted `missed:axios-banks-ai-agents`), Block second layoff round (off-scope/already-covered adjacent).
+- **Outlets used:** The Record, European Commission, The Information (via Techmeme/Reuters summaries), Bloomberg, Yahoo Finance, GitHub API (llama.cpp/vLLM/SGLang/OpenClaw), Hugging Face API, r/LocalLLaMA, HN Algolia, X (post-ID decode), justice.gov, Techmeme, AI Weekly — well past the ≥5-outlet requirement.
+- **Dead ends:** guessed The Record slug 404'd (recovered via exact-headline search, no extra budget); Hy4-preview HF commit dates self-contradictory (Aug 28 uploads vs Nov 5 press coverage — left as footnote); Qwen4 "sizes" claim rests on community screenshots, stated as such; ByteDance SAE-interprets-MoE paper (AGI Hunt dates akhaliq's post Nov 5) excluded as out-of-window rather than footnoted; execute_code blocked in cron again — all parsing done via scratch script files per skill guidance.
