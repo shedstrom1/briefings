@@ -1,92 +1,94 @@
-# AI News Brief — November 4, 2026 · 12:00 PM ET Edition
+# AI News Briefing — November 6, 2026 (07:00 ET edition)
 
-**Window:** 2026-11-04 07:00 → 12:00 ET (since the 07:00 fire). New items only; ledger dedupe applied.
+**Window:** 2026-11-05 17:00 ET → 2026-11-06 07:00 ET (fires daily 07:00/12:00/17:00 America/New_York). New items only; the ledger gate was applied before and after research.
 
 ## TL;DR
 
-- **Moonshot released Kimi K3.1 Pro open weights** — the 2.8T-total / 104B-active MoE with 1M-token context landed on Hugging Face as promised, with day-0 vLLM and SGLang recipes.
-- **llama.cpp v0.9.0 shipped at 8:08 AM ET** — OCP FP8 E4M3 quantization, a more efficient unified-KV attention op, NCCL multi-node tensor parallelism, and four new architectures including Mistral Large 4.
-- **OpenAI is acquiring Pierre Computer** and folding its Git-based Code Storage into Codex; Pierre's open-source Trees/Diffs/Highlights stay open.
-- **TeraWulf secured a Google credit backstop** for financing behind its ~$19B Anthropic lease in Kentucky, and signed a definitive Fluor EPC contract.
-- **Post-midterm AI politics bit into markets**: CoreWeave's 2031 bonds hit 79.5 cents as Texas governor-elect Hinojosa pushes a data-center moratorium; WIRED showed the UK's £400B AI claim traced to a Google-commissioned report.
+- **Thinking Machines launched Inkling 2 Small** — a 594B-total/17B-active MoE scoring 31 on the Artificial Analysis Intelligence Index, available now on Tinker with closed weights and a promised Apache-2.0 open-weight release "next week"; AA says it would become the highest-scoring open-weights model developed outside China.
+- **Claude Code was sending your email address to every website it browsed** in the User-Agent header; the GitHub bug report hit 1,200+ HN points overnight and Anthropic's mitigation is a new `cc-plugin-privacy` plugin shipped in v2.1.317.
+- **NVIDIA's new open-source NVKE (NVIDIA Kubernetes Engine) surfaced** — a preview management plane for running managed-style Kubernetes on your own NVIDIA GPU bare metal, up on HN's front page overnight.
+- **Post-midterm AI market rout:** a $2.5 trillion Nasdaq wipeout on Democratic data-center-scrutiny fears rolled into Friday's Asian/European sessions, with chipmakers down double digits.
+- **Update on Anthropic's IPO (ledger anthropic-s1-ant):** WSJ reports major investors are now skeptical the week-before-Thanksgiving listing can proceed at the expected ~$1.5T.
 
 ---
 
 ## Models and local inference
 
-**Moonshot AI releases Kimi K3.1 Pro open weights — 2.8T MoE, 1M context, MXFP4 QAT** — *Event date: November 4, 2026 (weights drop; model itself announced Oct 23)*
-The Kimi K3.1 Pro checkpoint is now on Hugging Face under the Kimi K3.1 Pro License, fulfilling the Nov 4 date Moonshot promised at the Oct 23 API launch. Per the model card: 2.8T total / 104B activated parameters, 896 experts (16 selected + 2 shared per token), 93 layers with a 69 KDA + 24 Gated DSA attention composition (Gated DeepSeek Sparse Attention replacing K3's Gated MLA), 1,048,576-token context, MoonViT-V2 vision encoder, and MXFP4 weights / MXFP8 activations via quantization-aware training. Moonshot's tables put it at 65.7 on Terminal-Bench 4.0 (vs 58.2 GPT-6 Astra, 66.4 Opus 5.5), 92.1 BrowseComp, and 1846 GDPval-AA Elo — top-tier for an open-weight model. Moonshot recommends vLLM, SGLang and TokenSpeed; vLLM merged Kimi K3.1 Pro recipes this morning (#65684, plus #65688 adding a pinned-Docker, NVIDIA Rubin VR200 reference).
-*Why it matters:* This is the strongest open-weight agentic coder available for self-hosting, and the QAT-native MXFP4 path plus DSA attention means serving economics land far below dense 3T-class peers.
-Community partitioning already started within the hour (e.g. expert-slice repos appearing on HF); single-GPU quants are weeks away, not hours.
-Sources:
-- Model card — Hugging Face, Nov 4, 2026 — https://huggingface.co/moonshotai/Kimi-K3.1-Pro
-- "Kimi K3.1 Pro model weights are out" — Hacker News front page, posted 10:30 AM ET — https://news.ycombinator.com/item?id=50366999
-- vLLM merged PRs #65684 / #65688 — GitHub, merged 12:00–17:00 UTC Nov 4 — https://github.com/vllm-project/vllm/pull/65688
-- (Update on ledger entry `missed:kimi-k3.1-pro`, Oct 23)
+### Thinking Machines releases Inkling 2 Small — closed now, Apache-2.0 weights "next week"
+**Event date:** November 5, 2026 (evening ET — HN/Reddit community launches landed 19:00–23:00 UTC Nov 5/06; the prior 12:30 and 17:00 fires did not cover it).
 
-**llama.cpp v0.9.0: OCP FP8 E4M3 quantization, unified-KV attention rows, NCCL multi-node TP** — *Event date: November 4, 2026, 08:08 AM ET release*
-The first 0.9-series release lands OCP-standard FP8 E4M3 as a first-class tensor type (`LLAMA_FTYPE_MOSTLY_F8_E4M3`, #27512), a `flash_attn_ext_rows` op that makes the unified KV cache efficient for multi-sequence inference and restores non-unified-KV prefill performance (#29510), and a generic batched tensor-copy API for Metal/CUDA (#30881). Four new architectures (Clover, Limite, Metis-1.6, Mistral Large 4), Chatterbox TTS + Nemotron 3.5 Transcribe + predefined Pocket TTS voices, major Gemma 4 E2B/E4B prefill optimizations, and ggml v0.29.0 with NCCL-based multi-node tensor parallelism round out the release; builds b12109–b12110 shipped the version bump in-window.
-*Why it matters:* FP8 E4M3 is now an ecosystem standard checkpoint rather than a vendor extension — quant tooling, GGUF libraries and server behavior around it will converge fast, and multi-node TP in ggml changes what heterogeneous home clusters can run.
-Sources:
-- GitHub release v0.9.0 — ggml-org/llama.cpp, published 2026-11-04T13:08:06Z (8:08 AM ET) — https://github.com/ggml-org/llama.cpp/releases/tag/v0.9.0
-- Build b12110 (version bump) — GitHub, 2026-11-04T12:52:04Z — https://github.com/ggml-org/llama.cpp/releases/tag/b12110
+The second-generation Inkling is a sparse MoE with 594B total / 17B active parameters, accepts text and images (292M-param Perception-Encoder vision stack, no audio), and supports variable reasoning effort. It scores 31 on the AA Intelligence Index v5 — up 18 points from Inkling Small — with big agentic gains: AutomationBench-AA 5%→46%, FrontierCode 2.0 5%→25%, HLE-Diamond 12%→29%; AA-Briefcase jumps 615 Elo to 1527, beating Claude Sonnet 5.5 (medium). It launched first-party on Tinker at $0.30/$1.00 per 1M in/out tokens (~$1.18 per Index task), and Thinking Machines says full weights go Apache-2.0 next week once external safety testing and red-teaming complete. Notably, the demo included the model autonomously training Qwen3.5-4B on Tinker for time-series forecasting — 4.5 hours, $426 in spend, >2x the forecasting score.
 
----
+**Why it matters:** This is the strongest US/UK-lab open-weights candidate since MiniMax M3.1 Flash if the license date holds — AA frames the pending weights as the highest-scoring open-weights model from outside China (ahead of Mistral Large 4's open release trajectory). Its 17B-active MoE shape is exactly the profile the llama.cpp/vLLM/SGLang expert-offload work targets.
+
+Source: Introducing Inkling 2 Small — Thinking Machines Lab, Nov 5, 2026 — https://thinkingmachines.ai/news/inkling-2-small/
+Source: Thinking Machines Inkling 2 Small: the highest scoring open weights model outside of China — Artificial Analysis, Nov 5, 2026 — https://artificialanalysis.ai/articles/thinking-machines-releases-inkling-2-small-highest-scoring-open-weights-model-outside-of-chinia-upon-weights-release-it
+Source: HN front page (215 pts) — https://news.ycombinator.com/item?id=50386338
+
+### NVIDIA's NVKE: an open-source management plane for self-hosted GPU Kubernetes (preview)
+**Event date:** November 6, 2026 (repo push 09:44 UTC Nov 6; HN front-page spike 03:16 UTC Nov 6).
+
+NVKE (dsx-ai-factory/nvke, Apache-2.0, "Copyright NVIDIA") is a self-hosting factory for Kubernetes on your own NVIDIA GPU metal: a seed cluster stands up a management plane, which then provisions isolated workload clusters — each with its own control plane, etcd and node pools — through the NVIDIA Infra Controller (NICo), with SPIFFE/SPIRE TPM node attestation and a companion build-artifact project (NVKR). It is explicitly preview: API auth is off by default, plain HTTP, no management-plane upgrade/backup path.
+
+The preview caveats matter: it is an evaluation platform today, not production.
+
+Source: dsx-ai-factory/nvke (README, Apache-2.0) — https://github.com/dsx-ai-factory/nvke
+Source: NVIDIA Kubernetes Engine Enters Preview — news.lavx.hu, Nov 6 2026 04:05 UTC — https://news.lavx.hu/article/nvidia-kubernetes-engine-enters-preview-a-management-plane-for-gpu-kubernetes-clusters
+Source: HN (86 pts) — https://news.ycombinator.com/item?id=50387738
+
+**Also noted (Models and local inference):**
+- vLLM merged 63 PRs in-window (Nov 5 22:00 → Nov 6 12:00 UTC), headline adds day-0 **LFM3-Text and LFM3-VL** model support (#65826/#65827), **Kimi-K3.1-Pro TPU serving** via vllm-torchtpu (#65725), a MiniMax-M3.1 ROCm retune cluster and FlashInfer 0.7.3 — https://github.com/vllm-project/vllm
+- Community 6-engine Qwen3.8-27B benchmark on a single RTX 5090 (TTFT/prefill/decode + quality at 64K/128K/256K, GGUF vs NInfer formats): NInfer led speculative and concurrent throughput, llama.cpp kept the highest plain single-request decode; rankings reshuffle sharply at long context — Reddit r/LocalLLaMA, Nov 5 23:39 UTC — https://www.reddit.com/r/LocalLLaMA/comments/1xoxx4a/qwen3827b_benchmark_6_inference_engines_gguf_vs/
 
 ## Agent tools
 
-**OpenAI acquires Pierre Computer; Code Storage folds into Codex** — *Event date: November 4, 2026 (Axios scoop 7:10 AM ET; OpenAI post same morning)*
-OpenAI announced it will acquire Pierre Computer Company, the team behind Git-based Code Storage and the Trees and Diffs libraries already powering file browsing and review in the Codex app. OpenAI's post says it will "set the standard for modern software development" alongside Pando, its in-house Git backend disclosed Nov 2, with Code Storage customers supported through closing; Pierre's open-source projects (Diffs, Trees, DiffsHub, Highlights) remain open-source. Code Storage is already in production at Lovable, Bolt, Amp and others; Axios frames the move as a challenge to GitHub at the source-control layer beneath coding agents. Deal is subject to regulatory approval, terms undisclosed.
-*Why it matters:* Source control is becoming an agent substrate — whoever owns the diff/tree/review layer between agents and repositories owns a chokepoint. This is OpenAI stacking infrastructure beneath Codex rather than just model features.
-Sources:
-- "OpenAI to acquire Pierre Computer Company, Inc." — OpenAI, November 4, 2026 — https://openai.com/index/openai-to-acquire-pierre/
-- Techmeme river, 7:10 AM ET (Axios: Madison Mills) — https://www.techmeme.com/river
-- "Pierre Computer is being acquired by OpenAI" — Hacker News, posted 10:21 AM ET — https://news.ycombinator.com/item?id=50366863
+### Claude Code leaked the signed-in user's email to every site it visited via User-Agent
+**Event date:** November 5, 2026 (GitHub issue opened Nov 5; HN #1 post 17:17 ET, 1,221 points).
 
----
+Issue #107757 documents that Claude Code put the account email address into the `User-Agent` header of outbound web-search requests, broadcasting it to arbitrary third-party sites — no attacker needed, just a normal research prompt. Contributor poteat explained the mechanism: the harness preloads the user's email into model context, and when a site's policy (e.g., Wikipedia's scripted-client etiquette) asks bots to embed a contact email, the agent composed it into the curl. The reporter (on v2.1.318, darwin) said it produced dozens of scam emails a day. Anthropic's response: a built-in `cc-plugin-privacy` plugin, source-available, enabled by default in v2.1.317, that deterministically blocks header substitution — though a commenter on v2.1.318 couldn't see it in `/plugins`, and critics note the email still lives in context by default, so privacy remains a plugin rather than an invariant.
+
+**Why it matters:** This is the archetypal agent-harness data-flow leak — identity material in context becomes identity material on the wire. It's the same class as the OpenCode key-exposure event (ledger 2026-10-18) and should change how everyone configures agent browsing (pin/strip UAs, firewall egress, audit what the harness preloads).
+
+Source: Bug Report: Privacy violation in User-Agent header #107757 — GitHub/anthropics/claude-code, Nov 5, 2026 — https://github.com/anthropics/claude-code/issues/107757
+Source: Claude Code sent your email in User-Agent — StartupHub.ai, Nov 6, 2026 — https://www.startuphub.ai/ai-news/artificial-intelligence/2026/claude-code-sent-your-email-in-user-agent
+Source: HN front page (1,221 pts, 385 comments) — https://news.ycombinator.com/item?id=50385272
 
 ## AI security and governance
 
-**Google backstops TeraWulf's ~$19B Anthropic lease; Fluor EPC locked in** — *Event date: November 4, 2026, 8:15 AM ET filing/PR*
-TeraWulf announced credit support agreements with Google LLC for the debt financing behind ~$19B of contracted 20-year Anthropic leases at its Justified Data Campus in Hawesville, Kentucky — three buildings, ~401 MW critical IT load per the lease terms, with Alphabet's AA+/Aa2 balance sheet now underwriting the project's debt. It also executed a definitive GMP-based EPC agreement with Fluor for three data-center buildings, with phased ready-for-service from late 2027 through Q2 2028.
-*Why it matters:* Hyperscaler-grade credit support for a neocloud landlord is the new shape of AI capacity financing — and it lands the morning after bond markets shut out riskier neoclouds. Counterparty-quality engineering is becoming the bottleneck currency, alongside power.
-Sources:
-- Press release — TeraWulf IR, November 4, 2026 8:15 AM EST — https://investors.terawulf.com/news-events/press-releases/detail/148/terawulf-secures-google-credit-backstop-for-project-financing-in-support-of-19-billion-anthropic-lease-executes-definitive-fluor-epc-agreement
-- "TeraWulf gets credit backstop from Google for Anthropic data center project" — Reuters, Nov 4, 2026 — https://www.reuters.com/technology/terawulf-gets-credit-backstop-google-anthropic-data-center-project-2026-11-04/
+### Post-midterm AI rout: $2.5T off the Nasdaq on data-center scrutiny fears
+**Event date:** November 5, 2026 close, extending into the Nov 6 overnight sessions (Guardian live blog Nov 6).
 
-**Sentra raises $150M led by Capital One Ventures to govern what AI agents can reach** — *Event date: November 4, 2026*
-The agentic-data-security startup announced a $150M strategic round (Series C per SiliconANGLE) led by Capital One Ventures, which takes a board seat, joining Bessemer, Zeev, Standard, Munich Re Ventures and Key1. Sentra's pitch: secure data at rest before agents touch it — classify, enforce least privilege for human and non-human identities, detect anomalous agent access, and reconstruct what an agent "could have reached." The company cites >300% YoY growth and names Lyft as a reference customer.
-*Why it matters:* Every deployed agent is a new non-human identity with inherited, often ungoverned entitlements — the security budget is following the attack surface from endpoint to data layer, and a bank's venture arm taking a board seat says regulated enterprises are buying this now.
-Sources:
-- "Sentra Raises $150 Million for Agentic Data Security" — Sentra (PR Newswire), Wednesday, Nov 4, 2026 — https://sentra.io/news/sentra-raises-150-million-agentic-data-security
-- Techmeme river, 8:15 AM ET (SiliconANGLE: Duncan Riley) — https://www.techmeme.com/river
+Reuters: the Nasdaq Composite fell 5.5% — its deepest one-day drop since April 2025's "Liberation Day" — wiping ~$2.5 trillion from the large-cap Nasdaq 100 as the Democratic midterm sweep raised fears of scrutiny on AI infrastructure and data-center construction; the chipmaker index tumbled 12% to a six-month-plus low and CoreWeave slumped 10% with five-year credit spreads at record highs. The second straight session of AI selling rolled into Friday's Asian and European markets (Guardian live coverage), with The Atlantic framing the election as a referendum on the AI buildout itself.
 
-**CoreWeave bonds hit new lows as data-center politics hit the junk market** — *Event date: November 4, 2026 (Bloomberg, 11:10 AM ET)*
-CoreWeave's unsecured 2031 notes fell to 79.5 cents on the dollar — near the junk market's worst of the day — and 2030/2032 bonds yielded north of 15%, while shares slid 7.2% to $49.85 by 10:24 AM ET. The trigger: Democrat Gina Hinojosa unseating Greg Abbott in Texas on an immediate data-center moratorium pledge, alongside governors-elect Amy Acton (Ohio) and Keisha Lance Bottoms (Georgia) on similar platforms. The Washington Post reports voters in 29+ jurisdictions passed data-center bans or restrictions (out of ~41 measures), and S&P Global counted 145+ US projects delayed or canceled through early August.
-*Why it matters:* This is the first clear repricing of AI-infrastructure credit on democratic backlash — regulation risk used to be a permitting story; now it shows up in debt spreads that fund the buildout. (Republicans still hold the Texas legislature, which may blunt Hinojosa's reach.)
-Sources:
-- "CoreWeave Bonds Hit New Lows as Texas Data Centers in Crosshairs" — Bloomberg, Nov 4, 2026 — https://www.bloomberg.com/news/articles/2026-11-04/coreweave-bonds-hit-new-lows-as-texas-data-centers-in-crosshairs
-- Quartz summary of the Bloomberg report, updated Nov 4, 2026 — https://qz.com/coreweave-bonds-new-lows-texas-governor-data-center-110426
-- Context — Washington Post, Nov 4, 2026 (7:50 AM ET via Techmeme) — https://www.washingtonpost.com/technology/2026/11/04/voters-pass-over-20-ballot-measures-ban-or-restrict-data-centers/
+**Why it matters:** Regulation risk has converted from a long-tail story into a priced one — moratorium candidates won governor's races (see ledger dc-moratorium-15of36) and the sell-off is now the discount rate on neocloud credit, Anthropic's IPO, and NVIDIA's ecosystem financing terms.
 
-**WIRED: the UK's £400B AI windfall claim mainly came from Google** — *Event date: November 4, 2026, 8:49 AM ET publication*
-AI minister Kanishka Narayan told Parliament that AI adoption and data investment could add £55B–£140B to the UK economy by 2030 (central estimate ~£120B) — under a third of the £400B figure officials cited for two years — and disclosed the £400B came solely from a 2023 report commissioned by Google and written by consultancy Public First (now PF Global). WIRED found no earlier recorded instance of the government placing the two numbers side by side or naming Google as the funder; ministers held the lower estimate since at least November 2025 while Skills England kept publishing the old figure.
-*Why it matters:* A G7 government's flagship AI economic rationale was vendor-funded research — expect independent-evaluation demands (the Ada Lovelace Institute made exactly that call) to spread through procurement and regulatory impact assessments.
-Source:
-- "UK Officials Said AI Would Add £400 Billion to the Economy. That Figure Mainly Came From Google" — WIRED (Ben Gartside), Nov 4, 2026 8:49 AM — https://www.wired.com/story/uk-officials-said-ai-would-add-400-billion-to-the-economy-that-figure-mainly-came-from-google/
+Source: Investors wipe $2.5 trillion off Nasdaq as blue tsunami prompts AI fears — Reuters, Nov 5, 2026 — https://www.reuters.com/legal/transactional/ai-data-center-stocks-slip-democratic-sweep-clouds-expansion-plans-2026-11-05/
+Source: Global stocks tumble as AI panic grips markets after Democrats' midterm success — The Guardian (live), Nov 6, 2026 — https://www.theguardian.com/business/live/2026/nov/06/global-stocks-tumble-ai-panic-markets-democrats-midterms-success-jobs-oil-dollar-latest-news-updates
+Source: Silicon Valley's Bad Night — The Atlantic, Nov 6, 2026 — https://www.theatlantic.com/technology/2026/11/americans-really-dont-like-data-centers-elections/689284/
+
+### Update on previously reported (ledger anthropic-s1-ant): investors doubt the $1.5T Anthropic IPO
+**Event date:** November 5, 2026, WSJ updated 23:36 ET.
+
+WSJ: major investors are "increased skeptical" Anthropic's IPO — targeted the week before Thanksgiving, expected to raise up to $100B at ~$1.5T — can proceed at that valuation after the AI selloff; one estimate floated closer to $1 trillion, while others argue October's Q3 disclosure (ledger: Q3 rev $16.96B) softens the blow. This extends the 2026-11-03 ledger entry (anthropic-ipo-1p5t-push) where investors were pushing the low end at $1.5–1.6T; the market event above is what moved the goalposts.
+
+**Why it matters:** A repriced Anthropic float resets comps for every frontier-lab raise and feeds the neocloud credit tightening already visible in the CoreWeave spreads above.
+
+Source: Major Investors Are Skeptical Anthropic IPO Can Achieve $1.5 Trillion Valuation — WSJ, Nov 5 2026 11:36 pm ET — https://www.wsj.com/finance/major-investors-are-skeptical-anthropic-ipo-can-achieve-1-5-trillion-valuation-ca965d8b
+Source: Anthropic's $1.5T valuation under pressure — Seeking Alpha (WSJ pickup), Nov 6, 2026 — https://seekingalpha.com/news/4667757-anthropics-15t-valuation-under-pressure-as-major-investors-signal-skepticism-wsj-reports
+
+**Also noted (AI security and governance):**
+- ING is reportedly the seller of a **$500M data-center loan portfolio** backing Stargate/Cyrusone projects (Bloomberg, Nov 5–6) — https://www.bloomberg.com/news/articles/2026-11-05/mystery-seller-puts-up-500-million-data-center-loans-backing-stargate-cyrusone
 
 ---
 
-## Also noted
-
-- **MCP OAuth hardening pattern**: Stream Vessel published a per-user trusted-redirect-URI design for MCP servers, citing a May 2026 study finding 95.8% of 119 tested MCP servers accept arbitrary redirect URIs from anonymous registrants (one-click token theft); ships a checklist and a shipped mitigation — https://streamvessel.com/blog/mcp-trusted-redirect-uris (Nov 4, HN 15:30 UTC)
-
 ## Just missed the window
 
-- **Tell HN: Gemini trains on personal-subscriber chat history** — the reminder post (419 pts; "Keep Activity" on = chats used for model training, human-reviewed subsets retained up to 3 years, opt-out = 72-hour session loss) hit the HN front page at 05:10 AM ET, ~2h pre-window; underlying policy is longstanding, user-reported and unverified — https://news.ycombinator.com/item?id=50363461 (footnoted once)
-- **SemiAnalysis: SpaceX revises its 2027 data-center capacity target up to ~13GW** — roughly all of Google's 1999–2026 capacity in 1.5 years; published 6:25 AM ET, 35 minutes pre-window — https://techmeme.com/river (footnoted once)
+- **Google's Gemini Omni 1.2 Flash GA** (native 15-second video generation/editing, $0.07/sec 720p — 30% cheaper than 1.1): Google blog + The Verge post at 12:56 pm ET Nov 5, ~4h before window start and inside the 17:00 fire's window but unreported there; footnote-eligible once. (missed: gemini-omni-1-2-flash-ga)
+- **Huawei Qinyun HM650 "100% domestic" desktop** (Kirin X90, HarmonyOS, enterprise/government): announced during China-hours Thursday (≈Wednesday night ET, per SCMP), resurfaced on HN overnight; outside both my window and the prior fires' — footnote-eligible once. (missed: huawei-hm650-desktop)
 
 ## Coverage notes
 
-- **Verified items: 10** (5 leading + 2 in-section governance/market + 3 "also noted"), each fetched and page-timestamped inside 07:00–12:00 ET; lead stories read in full.
-- **Dead ends / limitations**: Bloomberg and WaPo are paywalled — market item corroborated via Quartz's summary and Reuters via TeraWulf's own IR release; VentureBeat's "Comment and Control" prompt-injection audit turned out to be April 21 — dropped (two-strike rule applied); no new closed-weight model launches surfaced 07:00–12:00 ET (thin morning for launches); HF new-model API stream was noise (test repos, mirrors).
+- **Verified: 10 events** (5 lead sections + 5 also-noted one-liners), counted as underlying events; 2 footnotes. Lead stories (Inkling 2 Small, Claude Code leak, NVKE, market rout, IPO update) were read in full from primary pages; every cited URL was fetched this run (WSJ via extractable paywall-lite summary + Seeking Alpha pickup).
+- **Ledger dedupe:** ~6 candidates suppressed as already reported — Delangue "P(doom) close to zero" (ledger 2026-11-05), GPT-6 Cyber re-appearance on tracker sites (ledger 2026-11-05), Kimi K3.1-Pro trending re-coverage (ledger 2026-11-04), MiniMax M3.1-Flash re-coverage (ledger 2026-11-01), weight-space-programming follow-up threads (ledger 2026-11-02/03), Ollama v0.40.14/15 (ledger 2026-11-02/04). No repeat 'Just missed' footnotes (the two above are first-time).
+- Dead ends: Techmeme archive returned 404 for both day pages (logged, not chased); Anthropic "2026 Usage Policy update" turned out to be Oct 8 (stale, dropped); The Hill CAISI article was May (stale, dropped); Claude Haiku 5.5 on Anthropic's newsroom was an Oct 7 page (stale, dropped).
+- Indexes used: HN Algolia (in-window river, corrected epoch), r/LocalLLaMA new-queue (Reddit Atom), GitHub releases/merge searches, llmbenchmark trending, model-release calendars.
