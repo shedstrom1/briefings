@@ -1,112 +1,49 @@
-# AI News Briefing — Saturday, November 7, 2026
+# AI News Briefing — Saturday, November 7, 2026, 5:00 PM ET Edition
 
-**Window:** 2026-11-06 17:00 EST → 2026-11-07 07:00 EST (overnight Friday→Saturday; 14 hours). New items only, deduped against the reported ledger.
+**Window:** 2026-11-07 12:00 → 17:00 ET (5-hour Saturday window; new items only, deduped against the reported ledger)
 
 ## TL;DR
-
-- **Anthropic published its first public account of Claude's agent memory architecture** — memory notes, learned salience judgement, and "dreaming" (sleep-time consolidation over session logs). On Continual Learning Bench, enabling memory took Opus 5.5 from a mid-0.6 reward to ~0.83; in Pokémon, a 2024-era model wrote 413 memory files for 1 badge while Fable 5 wrote 9 files for 4 badges.
-- **A reproducible ChatGPT routing flaw put one connector's one-time confirmation code inside a different connector's OAuth context** — the user was never told the follow-up tool call switched apps; only a server-side binding stopped it. The researcher says OpenAI's bounty process demanded biometric ID verification up front, so he published instead.
-- **Kimi K3.1 Pro is now mainlined in llama.cpp** (PR #31779, merged in-window) alongside nine other merges and eight builds through b12188 — the 2.8T/104B MoE is runnable in the reference local engine, if your hardware dares.
-- **OpenAI opened outbound SIP telephony for GPT-Live to all organizations**, letting any org dial phone numbers through its own trunk for voice agents.
-- **Update on the Nvidia/Alice Huang affair:** the FT reports US officials believe Jensen Huang had a romantic relationship with the Megaspeed executive intelligence agencies concluded was recruited by China's MSS.
-
----
+- **vLLM merged seven small changes in-window** (ROCm CI hardening, MiniMax-M3 kernel-pin bumps, MRV2 CUDA-graph fix); no new versioned releases from vLLM, Ollama, or SGLang this window.
+- **The Guardian: the datacentre arms race hits pause in south-east Asia** — Thailand's September freeze on 49 builds + 117 approvals, Johor's ban on water-hungry Tier 1/2 facilities; a siting-policy story that reshapes where AI capacity lands.
+- **Show HN (in-window):** after Meta bought Conductor, an agent swarm rebuilt the app in ~3 days for about $170 in tokens — Opus 5.5 orchestrating DeepSeek-flash workers, MIT-licensed clone.
+- Quiet Saturday otherwise: the day's heaviest items (Alibaba's Qoduck stealth model, Apiiro's Claude Code secrets research, Langford's AI Frontiers post-mortem, Vals AI's cyber benchmark) were all disclosed *before* 12:00 ET and appear as footnotes.
 
 ## Models and local inference
 
-### Kimi K3.1 Pro mainlined into llama.cpp; eight builds to b12188 overnight
-**Event date:** November 6–7, 2026 (merges and builds inside the window).
-
-`model: add Kimi-K3.1-Pro text model` (PR #31779) merged inside the window, giving Moonshot's 2.8T-parameter/104B-active MoE — whose open weights landed November 4 and which this brief has already covered — day-0 support in the reference local engine. Nine further llama.cpp PRs merged in the same 14 hours, including a CUDA fix for shared-memory bank conflicts in the lightning indexer, a Hexagon kernel fusing the post-norm residual add into `RMS_NORM_MUL`, a Metal `GROUP_NORM` fix for `ne03 > 1` non-contiguous inputs, `arange` on OpenCL, a WebGPU group-norm kernel, and a server change to visit parent slots before child slots. Eight releases shipped in-window (b12180 at 18:18 ET Friday, then b12182–b12188 between 22:30 ET Friday and 06:58 ET Saturday).
-
-**Why it matters:** llama.cpp support is the gate that decides whether a frontier-class open-weight model is a curiosity or a fixture of the local ecosystem; day-0 mainlining of K3.1 Pro means GGUF quants and speculative-decode work will follow within days. The indexer and Hexagon kernel work is the more practically useful change for anyone decoding MoE models on consumer or Snapdragon silicon.
-
-`Source:` GitHub — ggml-org/llama.cpp merged PRs 2026-11-06T22:00Z→2026-11-07T12:00Z (10 merges; PR #31779) — https://github.com/ggml-org/llama.cpp/pull/31779
-`Source:` GitHub — llama.cpp releases b12180 (2026-11-06 23:18:52Z) through b12188 (2026-11-07 11:58:44Z) — https://github.com/ggml-org/llama.cpp/releases
-`Source:` Reddit r/LocalLLaMA — "model: add Kimi-K3.1-Pro text model … now you can run Kimi K3.1 Pro locally" — https://www.reddit.com/r/LocalLLaMA/comments/1xpqm0b/model_add_kimik31pro_text_model_by_usrlocalben/
-
-### vLLM merged 27 PRs in-window, led by the Kimi K3.1 bring-up series
-**Event date:** November 6–7, 2026.
-
-The window captured 27 vLLM merges, headed by "[Model] Kimi K3.1: model files and NVIDIA specialized decode (Kimi K3.1 split 1/5)" and "[Rust Frontend] Kimi K3.1 chat renderer (split 2/5)". Other notable work: fusing the DSpark Markov bias and block combine into Gumbel sampling, warming DeepGEMM NVFP4 MegaMoE kernels before serving MiniMax-M3, a MiniMax-M3.1-Flash MI355X AgentX nightly recipe, one host buffer per rank with opt-in HugeTLB pages in KV offload, and a hardening fix returning HTTP 400 for images rejected by Pillow's decompression-bomb check.
-
-**Why it matters:** the "split 1/5" numbering shows Moonshot's K3.1 enablement arriving as a planned multi-PR series rather than a one-off, which historically predicts fast convergence on quantized and specialized-decode paths. The Pillow bomb-check fix is a small but real input-validation hardening item for anyone exposing vLLM to untrusted uploads.
-
-`Source:` GitHub — vllm-project/vllm, merged PRs in window (total_count 27) — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
-
----
+**llama.cpp lands llama_moe_cache: CPU co-execution for cache-missed MoE experts (builds b12191–b12192).** Event date: released today 16:11 and 16:28 ET (PR #30966 merged 11:20 ET, just before window open). Build b12191 introduces the `llama_moe_cache` subsystem: with `--moe-cache-cpu-share F`, a share F of MoE cache misses is computed on the CPU from host-resident experts instead of being uploaded to the GPU — the graph builds the expert FFN twice (device pass over cached slots, CPU pass over the misses, summed before the down-bias), `MUL_MAT_ID` skips negative ids, slot lookup runs async so the CPU part never blocks the device, and `LLAMA_MOE_CACHE_TRACE` plus a new `moe-cache-tune.py` script let you profile and pick cache arguments. Build b12192 adds mtmd (vision-chip) support for **Mage-VL-Cowork** (PR #31819, merged 13:36 ET) — Microsoft's Apache-2.0 codec-native GUI/computer-use VLM family (repo created Oct 30; computer-use, cua, gui-agent, terminal-agent tags).
+It's the kind of kernel-level work (tuning script included) that the local-inference crowd will benchmark all weekend.
+*Local inference:* directly targeted at it — the release itself is the artifact; low-VRAM MoE serving is the stated use case ("significant speedup for MoE offloading (low VRAM people)" per the r/LocalLLaMA thread surfacing the PR).
+Source: GitHub — llama.cpp releases b12191 (Nov 7, 16:11 ET), b12192 (Nov 7, 16:28 ET) — https://github.com/ggml-org/llama.cpp/releases
+Source: GitHub — PR #30966 "llama_moe_cache: run missed experts on CPU, add tuning script" (merged Nov 7) — https://github.com/ggml-org/llama.cpp/pull/30966
+Source: Reddit r/LocalLLaMA (Nov 7) — https://www.reddit.com/r/LocalLLaMA/comments/1xqacka/llama_moe_cache_run_missed_experts_on_cpu_add/
 
 ## Agent tools
 
-### Anthropic's first public anatomy of agent memory: notes, salience, and "dreaming"
-**Event date:** November 6, 2026 (Anthropic research post; HN front-page pickup 01:39 ET Nov 7, 61 points).
-
-Anthropic laid out a three-part memory stack for Claude: writing salient **memory notes** during a session, learning to **judge what is worth remembering**, and **dreaming** — replaying logs during idle time to consolidate, correct wrong rules and build wiki-style representations. The post is unusually concrete. On a Continual Learning Bench 1.0 database task where each question starts a fresh session with only a persistent memory directory, Sonnet 4.6 produced only untested guesses, Opus 4.7 consolidated into one reference document with confirmed/unconfirmed flags, and Opus 5 was the first model to actually close the learning loop; Opus 5.5 and Sonnet 5.5 now match Opus 5 with memory enabled. Secondary coverage of the same post reports Opus 5.5's mean CL-Bench reward rising from ~0.64–0.66 to ~0.84 with memory. In Pokémon Red at ~10,000 steps, Sonnet 3.7 wrote 413 memory files across 225 folders and earned one badge; Fable 5 wrote nine files plus a `global.md` and earned four.
-
-**Why it matters:** this is the clearest published design document yet for giving agents persistent, self-correcting memory without touching weights — and the model-by-model progression tells you the capability is emerging from training, not scaffolding. The open questions Anthropic names (when to write, how to keep memory from drifting, how much compute dreaming deserves) map exactly onto what every agent framework team is currently guessing at.
-
-**Local inference:** the memory stack is weight-agnostic — the salience and dreaming behaviours are demonstrated on Claude models, but the pattern (folder of notes + idle-time replay) is directly portable to a local Qwen3.8-27B or Kimi-class agent, and Anthropic links cookbooks for dreaming and knowledge wikis.
-
-`Source:` Anthropic Research — "The components of agent memory," 2026-11-06 — https://www.anthropic.com/research/components-of-agent-memory
-`Source:` Hacker News — front page, submitted 2026-11-07T06:39:04Z (61 points, 31 comments; story id 50402212) — https://news.ycombinator.com/item?id=50402212
-`Source:` Let's Data Science — "Anthropic details how Claude uses dreaming…" (CL-Bench 0.655→0.838; wiki 13%→48%), 2026-11-07 — https://letsdatascience.com/news/anthropic-details-how-claude-uses-dreaming-to-organize-agent-86d1704a
-
-### OpenAI opens outbound SIP calling for GPT-Live to all organizations
-**Event date:** November 6, 2026 (surfaced on Hacker News at 18:03 ET; docs page undated).
-
-OpenAI's Telephony and SIP guide now states plainly that "Outbound SIP calling is available to all organizations through the Live API, not the Realtime API call-creation endpoint." Operators create a session with an E.164 destination, a `sips:` trunk URL, SIP digest credentials and a caller number; GPT-Live carries the conversation while the customer's SIP provider handles the phone network. Inbound flows use a `live.transport.incoming` webhook plus accept/reject endpoints, a sideband WebSocket for transcripts/tools/commands, DTMF in both directions, and `refer` for transfers — with TLS signalling, mandatory SRTP media, GeoIP-routed `sip.api.openai.com` / `sip-eu.api.openai.com` endpoints and published EU data-residency paths.
-
-**Why it matters:** this removes the waitlist-style gate on one of the last bottlenecks for production voice agents — dialing out and getting call control (transfer, keypad, hangup) from your own backend, with European residency available. It also makes the security surface of a phone-answering agent your problem: the docs explicitly tell you to treat `sip_headers` as untrusted caller metadata and to assign exactly one owner per side effect so duplicate webhook deliveries don't execute tools twice.
-
-`Source:` OpenAI Developer docs — "Telephony and SIP" (Live API; GPT-Live), retrieved 2026-11-07 — https://developers.openai.com/api/docs/guides/voice-sip
-`Source:` Hacker News — "Outbound SIP calling is now available to all organizations," submitted 2026-11-06T23:03:55Z (64 points, 54 comments; story id 50399695) — https://news.ycombinator.com/item?id=50399695
-
----
+**Show HN: agents rebuilt the Meta-acquired Conductor app in 3 days for ~$170 (MIT).** Posted 16:51 ET: `jahala/conducted` claims Conductor 0.92.1's own frontend runs on the project's Rust shell and sidecar, ~197,000 lines of TypeScript+Rust, built by Opus 5.5 orchestrating DeepSeek-flash workers with Sonnet reviewing each batch — total cost ~$50 of DeepSeek plus ~70% of one weekly Claude 20x subscription; it even duplicates Conductor's cloud tier by running agents on Cloudflare Workers/containers.
+*Why it matters:* a concrete, costed data point for the "clone anything with agents" argument — and a cheeky one, published two days after the Meta/Conductor acquisition story (ledger Nov 5).
+Source: Hacker News (Nov 7, 16:51 ET) — https://news.ycombinator.com/item?id=50407925
 
 ## AI security and governance
 
-### ChatGPT silently routed a follow-up tool call into a different connector's OAuth context
-**Event date:** November 6, 2026 (researcher's thread published and posted to Hacker News at 17:50 ET; 89 points).
-
-A user with two ChatGPT connectors pointing at the same MCP server — one custom (developer mode), one from the app directory, each with its own OAuth client — requested an action requiring confirmation. The model called the confirmation tool through connector A, whose widget showed the change and produced a one-time code via `ui/message`; the model then made the follow-up call carrying that code **through connector B**, with nothing shown to the user. Only the MCP server's own binding of the code to connector A's OAuth client stopped the redemption, so every attempt in that conversation failed. The reporter's conclusion: connector identity, not shared MCP URL, is the authorization boundary, and follow-ups must be pinned to the client that started the flow. He also alleges OpenAI's bounty process demanded biometric identity verification — "even to another party I do nothing about" — before accepting the report, which is why he published instead.
-
-**Why it matters:** this is the cross-app data-flow failure mode that MCP security work has been circling: an agent's tool router is an authorization boundary, and users cannot audit a switch they are never told about. The benign outcome here depended entirely on a third-party server doing the right thing — with an unrelated third-party connector behind the same URL, one app's confirmation token could have crossed to another provider. Until OpenAI addresses it, the practical mitigations are the ones in the thread: bind pending operations and confirmation codes to the originating connector and OAuth grant, forbid automatic connector switching mid-flow, and log routing decisions.
-
-*Single primary source; OpenAI has not publicly responded. Treat the bounty-process claim as the reporter's account.*
-
-`Source:` OpenAI Community — "Security: Follow-up tool call silently routed to a different connector" (full reproduction, expected behaviour) — https://community.openai.com/t/security-follow-up-tool-call-silently-routed-to-a-different-connector/1413053
-`Source:` Hacker News — submitted 2026-11-06T22:50:43Z (89 points, 36 comments; story id 50399569) — https://news.ycombinator.com/item?id=50399569
-
-### Update on previously reported: FT says US officials believe Huang had a romantic relationship with the MSS-recruited executive
-**Event date:** November 6, 2026, 21:50 ET (Techmeme listing; FT report by Demetri Sevastopulo). **Ledger entry:** `megaspeed-alice-huang` (footnoted Oct 28; NYT MSS-recruitment development reported by this brief on Nov 6).
-
-The FT reports that US officials believe Nvidia CEO Jensen Huang had a romantic relationship with Alice Huang, the Singapore-based Megaspeed executive that US intelligence concluded was recruited by China's Ministry of State Security to gather information on him — including pressure to lobby for looser export controls on advanced AI chips. Reporting on the relationship has circulated before (the NY Post described a "close relationship" on October 29); what is new in-window is the FT's attribution of the romantic-relationship assessment to US officials and the memo framing, on top of the November 6 NYT recruitment finding and the House Democrats' demand for a closed-door Huang briefing on November 18.
-
-**Why it matters:** this moves the story from a corporate-intelligence leak concern to a personal-leverage vector attached to the single most consequential figure in AI compute supply — the policy question being whether export-restriction advocacy was ever Nvidia's own. For chip-supply and DGX-class hardware planning, the operative risk is now compliance scrutiny and congressional process, not the underlying business.
-
-`Source:` Financial Times — Demetri Sevastopulo, "US officials believe Jensen Huang had a romantic relationship…" (via Techmeme river, 2026-11-06 9:50 PM ET) — https://www.ft.com/content/a55a2a22-4479-4f93-a445-6147a5c6d790
-`Source:` OfficeChai — "NVIDIA CEO Jensen Huang Had A Romantic Relationship With Alleged Chinese Spy, FT Reports" — https://officechai.com/ai/jensen-huang-had-a-romantic-relationship-with-alleged-chinese-spy-alice-huang-ft-reports/
-
----
+**The Guardian: the datacentre arms race hits pause in south-east Asia.** Published today (Nov 7, surfaced on Techmeme's river at 16:40 ET). Thailand paused construction on 49 datacentre projects and approval decisions on 117 more in September; West Java's governor halted a build over permits/environmental assessment; Johor's operational capacity grew tenfold (94MW → 1,110MW since 2023, $40B attracted) and the state now refuses new Tier 1/2 facilities using up to 50 million litres of water a day; Malaysia stood up a datacentre taskforce and Thailand an approval framework with power-guarantee requirements and higher tariffs. Cushman & Wakefield puts south-east Asia at ~50% of all under-construction APAC capacity.
+*Why it matters:* after the midterm "pause-the-datacenter" wave (ledger Nov 2/Nov 5), the constraint is propagating internationally — water and grid terms, not chips, become the AI capacity bottleneck, with direct knock-on effects for hosted inference pricing.
+Source: The Guardian, Arundhati Hazra (Nov 7, 2026) — https://www.theguardian.com/technology/2026/nov/07/datacentres-southeast-asia
 
 ## Also noted
+- **vLLM — 7 in-window merges** (all Nov 7, 12:00–17:00 ET): ROCm CI hardening (Zen5 CPU tests optional #66297; cache only PR-pushed ROCm stacks #65957), MiniMax-M3 `fmha_sm100` pin bump #66228, upstream Transformers `MiniMaxM3VLConfig` #61813, CPU-ops wrapper refactor #66100, dead-code kernel removal #65743, MRV2 `max_query_len` fix for encoder-only FULL CUDA graphs #65275. No new tag (v0.33.0rc3 remains latest); Ollama (v0.40.15, Nov 3) and SGLang (v0.5.23, Nov 2) quiet — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
 
-- **Google took over Crusoe's southeast Wyoming data-center site** (Crusoe newsroom + Bloomberg, November 6, 2026, 18:15 ET) — an **update on previously reported** `wyoming-17b`: the day after Google announced its $17B Wyoming investment, Google bought the site out itself after Crusoe failed to lock in customers; Crusoe (6+ GW contracted, 40+ GW pipeline) remains developer of Google's Armstrong County, Texas campus. https://www.crusoe.ai/resources/newsroom/crusoe-wyoming-data-center-campus-update
-- **Harness Bench leaderboard is live and refreshing in-window** — a community tracker ranking coding-agent harnesses (Kimi Code, Hermes, Pi, Claude Code, Codex and others) against Terminal-Bench 2.1 (87/89 tasks) and DeepSWE v1.1 (111/113 tasks), holding model and reasoning effort constant and varying only the harness. Space created October 15, last modified 2026-11-07T11:59Z. https://huggingface.co/spaces/joelniklaus/harness-leaderboard
-- **Ollama, SGLang and vLLM shipped no releases in-window** — latest remains Ollama v0.40.15 (Nov 3), SGLang v0.5.23 (Nov 2), vLLM v0.33.0 (Nov 2); only llama.cpp was active on the release channel.
-
-## Just missed the window
-
-- **Censys, "ARTEX: Agentic Asbestos" (November 5):** 1,465 internet-facing hosts exposing the ARTEX AI pentest console (~815 distinct deployments, 32 open directories leaking attack kits, 155 hosts co-running other threat tooling; scanned November 3–4); ARTEX was released in July and is already tied to two reported agentic intrusions this brief has covered, and its developers are moving closed-source. https://censys.com/blog/artex-agentic-asbestos
-- **Preferred Networks released PLaMo 3 Translate open weights (November 4–5):** 0.8B/2B/8B/31B translation-specialized LLMs built on PLaMo 3 NICT, 53 languages, 32,768-token combined context, PLaMo Community License (free personal/academic; free commercial up to ¥1B revenue with registration).
-- **Zellige AI's Tessera-27B-B-CJK-RL (repo November 4, last modified November 6 13:39 ET):** Apache-2.0 coding agent fine-tune of Qwen3.8-27B that thinks in compressed CJK, with eight RL updates on Tinker — 108/126 correct on AIME+HMMT (vs 97 for the SFT version) while keeping ~0.67x the base model's thinking tokens per agent turn; merged bf16 55.6 GB plus NVFP4/FP8 at 23.4 GB and untested GGUF quants. https://huggingface.co/ZelligeAI/Tessera-27B-B-CJK-RL
-- **Apple's undocumented personal knowledge graph (post dated October 28; Hacker News front page 04:46 ET November 7, 120 points):** researchers documented `knowledgeconstructiond`/`knowledged` building a triple store of 181 entity classes and 278 predicates from Contacts, Photos, Calendar, Messages, Mail, Family Sharing, location and Screen Time across 51 plaintext SQLite databases in `~/Library/IntelligencePlatform`, served to LLMs — and released iKnow, a local dashboard to read it. https://8rank.ai/game/apple-intelligence-personal-knowledge-graph
-- **Six pallets of Nvidia hardware worth $11.4M vanished in transit from Oakland to Texas** (ABC7 November 5; Ars Technica/Tom's Hardware November 6) — shipped August 29 on a truck posing as a food-transport company, reported to Oakland police September 13, no arrests or recovery. https://arstechnica.com/gadgets/2026/11/nvidia-hardware-worth-11-4m-vanished-between-oakland-and-texas/
+## Just missed the window (footnotes, first and last mention)
+- **Qoduck — Alibaba's stealth model lands in Qoder (disclosed today 04:00:47 ET via @alibaba_cloud; docs.qoder.com "starting November 7"):** free daily allowance for individual Qoder International users; community tokenizer probes place it in the Qwen family, widely read as Qwen 4 before the "Qwhen? Qsoon!" tease follow-up (Qwen 4 teaser itself already reported Nov 6); testers report native image/video generation and beats on Qwen 3.8 Max. Six hours pre-window.
+- **Apiiro: Claude Code's "Yes, and don't ask again" writes secrets to `.claude/settings.local.json` (research Nov 5; The Hacker News pickup Nov 7 ~02:00 ET):** 1,122 of 104,185 public copies of the file hold at least one real secret; 2,539 secrets across 1,994 repos/63 orgs counting history, shared settings and transcripts (379 DB passwords, 122+103 Supabase keys, 43 SSH logins, 42 VCS/npm tokens, 23 AWS keys); reproduced with Opus 5.5 and Fable 5.1 — "Claude Code's own behavior, not the model's"; in 539 of 1,105 affected repos a Claude-co-authored commit added it. Advisory: rotate first, then clean.
+- **Kakao releases Kanana-2-v-decide-3b-2611 (Nov 6):** 3.67B multimodal *decision* model (typed choice/yes-no/score answers with probabilities, no text generation; up to 10 images, 20,480 tokens) under the commercial-friendly Kanana Open License — a routing/evaluator component class for agent pipelines.
+- **John Langford, "The End of AI Frontiers" (hunch.net, Nov 6; HN front page today, 251 pts):** Microsoft's ~50-person MSR AI Frontiers group (AutoGen, Fara, Next Latent, Dion3, Full Bandwidth Transformer) was reorged into Microsoft AI in early September; Langford and every other founding AIF leader have left, citing a scaling-only philosophy; no internships next year.
+- **MaxxBench (published Oct 20; HN front page today 12:19 ET, 127 pts):** mutates instructions/starting code of 89 DeepSWE tasks (median patch +17 lines) and the 74% cluster fans out 48.3 points — Opus 5.5 76.4% vs Gemini 3.8 Flash 53.4%; trajectories show models deliberately coding to imagined graders ("benchmaxxing").
+- **Vals AI CyberOffense (Oct study; re-covered by The Decoder today):** autonomous multi-step network attacks — gated GPT-6 Sol Daybreak 80.8% of objectives vs freely downloadable DeepSeek-V4.1-Flash-1017 at 72.8% for ~$3/run vs ~$22; "open-weight cyber capability is now unrestrictable."
+- **"Into the Unknown" (arXiv 2610.19159, Los Alamos-led; Decoder today):** 9 agents × 15 unanswered research questions from DOE-lab authors — all 135 submissions failed the experts' bar; 114 failed the integrity check outright; only GPT-6 Astra, GPT-5.6 Sol and Claude Opus 5.5 produced any honest submissions.
+- **SSHole exploited within hours (Nov 6; update on ledger `openssh-10.6p2-bypass`):** CVE-2026-123158 (CVSS 8.1) — unauthenticated oversized-password login to passwordless accounts on musl/PAM-disabled OpenSSH — used to root honeypots; fixed in OpenSSH 10.6p2.
 
 ## Coverage notes
-
-**Verified and listed: 9 in-window items** — counting unit: one line per underlying event, comprising 6 in the category sections (one of which is an explicit "update on previously reported") and 3 "Also noted" lines (one of which is the community tracker) — each from a fetched page carrying an in-window date or timestamp, with leading items read in full. **5 further events footnoted as just-missed** on their original disclosure dates, for 14 ledger lines this fire.
-
-**Ledger dedupe — 12 candidates suppressed as already reported:** Huawei Qinyun HM650 desktop (repeat "just missed"), Meta Muse-Wonder specialized models (repeat "just missed"), TSMC 3D DRAM at Nvidia's request, OpenAI's additional ~$11B at $1.25T, Google's $17B Wyoming announcement (reported here only as the Crusoe buyout update), Nous Arete-27B, Xing4.0-29B-A4B GGUFs, Cactus Mirage 22MB VLM, two re-shares of the weight-space-programming thread, the NYT/Alice Huang MSS-recruitment base story (reported only as the FT update), the Kimi K3.1 Pro weight release itself (reported only as the llama.cpp milestone), and Sequoia shutting down Scouts.
-
-**Dead ends and limitations:** the TechCrunch scoop for the Censys ARTEX finding (`techcrunch.com/2026-11-06/hundreds-of-artex-ai-hacking-tools-found-publicly-exposed-to-the-web/`) 404s on direct fetch even though the headline resolves from TechCrunch's own index, so ARTEX is cited from Censys and secondary outlets; the Anthropic memory post carries a date but no clock time, so it is placed on its in-window HN front-page pickup; OpenAI's SIP guide is an undated docs page, corroborated by the timestamped HN submission; the Nikkei Asia item on Nasscom's AI-and-hiring warning appears only as a URL-less Techmeme river line and was not resolvable in budget; Reddit's anonymous feed returns no scores, so r/LocalLLaMA ranking is qualitative. Weekend overnight cadence: no closed-weight model releases were disclosed in the window, and no lab shipped a versioned inference release after 17:00 Friday except llama.cpp.
+- **Verified count: 4 in-window items** (1 lead section + 2 also-noted under category sections + 1 vLLM merges line; counts items, not sources — 9 distinct source pages fetched). 8 "Just missed the window" footnotes added (each footnoted once, tagged in the ledger).
+- **Ledger dedupe: ~12 candidates suppressed as already reported or already footnoted** — incl. megaspeed/Alice-Huang re-coverage (NYT/THN/HN today), Qwen 4 teaser re-surfacing, Perplexity Teammates (already footnoted), Inkling-2-small CoT-profiling derivative, Arete-27B (reported Nov 6), harness leaderboard (reported this morning), ARTEX exposure (already footnoted), NVIDIA Oakland heist (already footnoted), AMD "data center first" (Nov 5 interview).
+- Indexes healthy: Techmeme river, HN Algolia, GitHub releases/search API, Hugging Face API/blog. Reddit via anonymous feeds; two strong r/LocalLLaMA posts (Strata Steam-Machine Qwen3.8-Flash-Next run at ~18 t/s decode on 8GB Navi 33; Terrarium local agent VMs) verified pre-window (10:18/08:55 ET) and excluded per the event-date rule.
+- Dead ends: The Information's in-window SpaceX "Starbase supercomputer" report (paywall, no fetchable second copy — not pursued); The Decoder's Vals "auditors false-alarms" roundup (underlying study publish-time unverifiable); NYT's Impagliazzo/ETH piece (URL-dated Nov 6, i.e. pre-window recap of the reported Oct 26 event).
