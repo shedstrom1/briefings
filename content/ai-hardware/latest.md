@@ -1,70 +1,74 @@
-# AI Hardware & Local Models Brief — Saturday Evening Edition, November 7, 2026
+# AI Hardware & Local Models Brief — Nov 8, 2026 07:45 ET
 
-**Window:** 2026-11-07 12:45 → 17:45 EST (17:45Z → 22:45Z UTC) · 5-hour new-items-only sweep · fire 17:45 EST
+**Window:** Saturday, November 7, 2026 17:45 ET → Sunday, November 8, 2026 07:45 ET (14h; overnight merge window + early morning)
 
-## TL;DR
-- **Microsoft's Mage-VL-Cowork computer-use agent went llama.cpp-native tonight**: mtmd support merged (PR #31819, 18:36Z), builds b12191/b12192 shipped, and the official **ggml-org/Mage-VL-Cowork-GGUF** landed at 18:51Z — Q4_K_M weighs just 2.72 GB.
-- **SGLang landed AMD's next-gen plumbing**: MI450 carv2 custom all-reduce with FABRIC handles and a gfx1250 table (#49001), plus a per-model in-tree AITER tuned-rows folder (#47862).
-- **vLLM's afternoon wave** fixed Step5 spec-decode MTP re-validation (#66000) and MRV2 full CUDA graphs (#65275), and moved MiniMax-M3 VL config upstream to Transformers (#61813).
-- **Fresh quant ladders**: bartowski's imatrix line for Jackrong Qwopus3.8-27B-Coder-Flash (27B vision coder), mradermacher's LiquidCode-2.5-24B-A2B (Liquid AI LFM2.5 MoE coder), plus four small-model ladders.
-- Thin Saturday: no in-window hardware/silicon disclosures; the day's biggest hardware story (TSMC's denial of the 3D-DRAM-for-Nvidia report) landed ~4.5 hours pre-window — footnoted.
-
-## Model releases
-### Microsoft's Mage-VL-Cowork gets day-0 llama.cpp support + official GGUFs
-**Event date:** November 7, 2026 (18:36Z merge, 18:51Z upload).
-llama.cpp merged mtmd support for **MageVL-Cowork** (PR #31819, committed 18:36Z, co-authored by Pascal (serveurperso)), and releases **b12191** (21:11Z) and **b12192** (21:28Z) carry it. Minutes after the merge, the official **ggml-org/Mage-VL-Cowork-GGUF** repo appeared (created 18:51Z), auto-converted via ggml-org/convert: a **4B Qwen3-based** vision-language agent model with **Q4_K_M at 2.72 GB, Q8_0 at 4.69 GB, BF16 at 8.83 GB**, runnable via `llama serve -hf ggml-org/Mage-VL-Cowork-GGUF`. The source model, **microsoft/Mage-VL-Cowork**, is an Apache-2.0 hybrid agent (GUI/computer-use, coding, terminal; llava_onevision2 lineage, RL-trained, OSWorld/WebVoyager tags) that landed Oct 30 — tonight's event is local enablement, not the weights themselves.
-**Why it matters:** a Microsoft agent-VLM you can run from a 2.72 GB Q4 file means computer-use/terminal-agent capability on a Raspberry-Pi-adjacent budget — and the day-0 upstream support (not weeks-late community patches) shows the llama.cpp team tracking Microsoft's agent stack.
-**Local inference:** fits any 4 GB+ GPU or Apple Silicon Mac in Q4_K_M; Q8_0 suits 8 GB cards; the mtmd path needs b12192+. Community GGUFs (Hansda, MLX 4-bit) already predate this — the ggml-org repo is the canonical tier.
-Sources:
-- PR #31819 commit — llama.cpp/GitHub, 2026-11-07T18:36:44Z — https://github.com/ggml-org/llama.cpp/commit (see release b12192 changelog)
-- Release b12192 (MageVL build) — GitHub, 2026-11-07T21:28:25Z — https://github.com/ggml-org/llama.cpp/releases
-- ggml-org/Mage-VL-Cowork-GGUF — Hugging Face, created 2026-11-07T18:51:10Z — https://huggingface.co/ggml-org/Mage-VL-Cowork-GGUF
-- microsoft/Mage-VL-Cowork (base, Oct 30) — https://huggingface.co/microsoft/Mage-VL-Cowork
+**TL;DR**
+- A dual-RTX PRO 6000 Blackwell workstation owner found both native 12V-2×6 cables on a Seasonic PRIME TX-1600 Noctua Edition PSU with cracked, peeling sleeving — damage at both GPU and PSU ends, intermittent PCIe drops, no melting.
+- vLLM merged the removal of Model Runner V1 (#63373) overnight — the legacy execution path is gone — plus a Kimi-K3.1-Pro MI355X concurrency-1 serving preset.
+- llama.cpp shipped an overnight wave (#31831–#31861): OpenCL q8_0/MoE spec-decode verification, Hexagon thread cleanup, ggml CPU F32 switch, and UTF-8 sanitization for PEG tool-call args.
+- SGLang merged a Kimi-K3.1 TensorRT-LLM DSA backend running under decode context parallelism (#49106) and a scheduler PauseState refactor.
+- A Mac Studio MLX researcher published 35 domain-expert LoRAs for Qwen3.6-35B-A3B — with the honest negative result that the base model beat most of them.
 
 ## AI hardware and silicon
-*No verified in-window disclosures this period* (ServeTheHome's last post was 16:00Z, pre-window; TechPowerUp returned 403 — one strike, logged). Next scheduled hardware watch continues after the weekend.
 
-## Inference software and benchmarks
-### SGLang afternoon: AMD MI450 carv2 all-reduce, AITER tuned-rows library
-**Event date:** November 7, 2026, 18:17Z → 22:33Z merges.
-Nine merges, AMD-heavy: **#49001** runs carv2 custom all-reduce on **MI450** using FABRIC handles with a gfx1250 tuning table (21:27Z); **#47862** (22:33Z) reorganizes AITER tuned rows into one in-tree folder per model — a maintenance signal that AITER-tuned configs are now standard equipment; **#49087** refreshed the Muse Spark Open MI355X AgentX cookbook to the 1106 image (19:14Z). The Rust frontend gained cache-report (`--enable-cache-report` cached-prompt-tokens reporting, #49030), JSON-lines request logging (#49023) and image detail-hint passthrough (#49006); ernie55 import and kv-canary warmup fixes closed the day.
-**Why it matters:** FABRIC-handle all-reduce on MI450/gfx1250 is early multi-GPU software for AMD's next Instinct generation — homelab-relevant because carv2 lineage is the same code path that speeds small MI300/MI350 clusters.
-**Local inference:** MI450 parts target datacenter, but the AITER tuned-rows and Rust-frontend logging land for all AMD users (gfx94x/gfx12x); no NVIDIA-specific changes this wave.
-Source: SGLang commits — GitHub API, 2026-11-07T18:17Z–22:33Z — https://github.com/sgl-project/sglang/commits
+**Damaged Seasonic 12V-2×6 cables nearly destroyed a $32,000 dual RTX PRO 6000 workstation** — Event date: Nov 8, 2026 (reported 06:47 ET).
+A Redditor running two RTX PRO 6000 Blackwell GPUs (600W Workstation Edition, 96GB GDDR7 each, limited to 500W) discovered deteriorating braided sleeving on both native 12V-2×6 cables of a Seasonic PRIME TX-1600 Noctua Edition PSU — damage near the connectors at both the GPU and PSU ends, with no visible melting or discoloration. The system had developed intermittent PCIe issues (one GPU or NVMe drive occasionally dropping from the bus), which prompted repeated cable reconnections; the PSU-side connectors, rarely touched, showed even worse deterioration on the same two wires. The owner is replacing them with Corsair thermal-protection cables and considering a 450W limit, noting that limiting the cards to 300W cut workload performance by roughly 40–50%.
+**Why it matters:** High-wattage Blackwell workstation cards stress 16-pin power delivery paths continuously; this is a physical-layer warning for anyone running multi-GPU inference boxes above ~500W per card, regardless of PSU tier.
+**Local inference:** Dual RTX PRO 6000 Blackwell 96GB — data-center-class local inference box; applies to any 12V-2×6-fed 600W-class GPU build.
+Source: VideoCardz — "User spots damaged Seasonic Noctua power cables before losing two $16,000 RTX PRO 6000 GPUs," published Nov 8, 2026 11:47 GMT (06:47 ET), https://videocardz.com/newz/user-spots-damaged-seasonic-noctua-power-cables-before-losing-two-16000-rtx-pro-6000-gpus ; original post r/PcBuild by u/Doomslayer606.
 
-### vLLM afternoon wave: Step5 spec-decode fix, MRV2 CUDA-graph fix, MiniMax-M3 upstreaming
-**Event date:** November 7, 2026, 17:46Z → 22:38Z merges.
-Ten merges: **#66000** (22:33Z) skips VllmConfig re-validation for the Step5 MTP draft config — a spec-decode crash-class fix for Step-5-Preview users; **#65275** (19:29Z) fixes Model Runner V2 encoder-only FULL CUDA graphs using the promised max_query_len; **#61813** (20:09Z) moves to upstream Transformers `MiniMaxM3VLConfig`; ROCm CI made Zen5 CPU tests optional (#66297) and pinned AITER test fixes (#63166 at 22:37Z). Note: the large **[Core] Remove Model Runner V1 (#63373)** merge landed 22:50Z — five minutes past the window boundary, so it belongs to the next edition.
-**Why it matters:** MRV2's graph fixes and the MiniMax-M3 config upstreaming are the kind of housekeeping that decides whether the 2026-serving stacks stay usable on consumer CUDA and ROCm boxes.
-**Local inference:** affects anyone running MiniMax-M3.1 or Step-5-Preview spec-decode on SM100/SM120 and MI300-class cards.
-Source: vLLM commits — GitHub API, 2026-11-07T17:46Z–22:38Z — https://github.com/vllm-project/vllm/commits
+## Model releases
 
-### llama.cpp b12191/b12192
-Builds at 21:11Z/21:28Z — b12191 carries the CPU-execution MoE-cache path (#30966, reported at the 12:45 edition), b12192 adds MageVL-Cowork (see Model releases). No other merges in-window.
+No open-weight releases, license changes, or major model updates verified within this 14-hour overnight window. (The in-window community discussion of Apex Intelligence's Apex-35B-V1.0 concerns weights that landed Oct 28 — see "Just missed the window.")
 
 ## Community spins and quantizations
-### bartowski: Qwopus3.8-27B-Coder-Flash imatrix ladder (21:01Z)
-Full GGUF ladder of **Jackrong/Qwopus3.8-27B-Coder-Flash** — a Qwen3.5-class 27B multimodal coding/reasoning FT (tool-use, agent tags) with imatrix. In the 16–20 GB band at Q4_K_M: fits the RTX 5060 Ti 16GB / 5070 Ti class with modest context; Q6/Q8 tiers want 24 GB+.
-https://huggingface.co/bartowski/Jackrong_Qwopus3.8-27B-Coder-Flash-GGUF
-### bartowski: Spark-x2.6-4B-HTML (21:54Z), Acaua-Lite (21:45Z), Frost-Cyber-Mini v1.1 (21:48Z)
-Three small ladders: **wesjos/Spark-x2.6-4B-HTML** (HTML/UI-generation SFT from the mario-html dataset, Apache-2.0 — sub-3 GB at Q4, phone-to-laptop class); **HarpiaIA/Acaua-Lite** (LFM3-based code/agent model trained on OrionLLM/OpenAgentInstruct + CodeX-7M — edge coder); **FrostWolfAI/Frost-Cyber-Mini-Uncensored-v1.1** (abliterated agentic cybersecurity mini on spark2_5, Apache-2.0). All under ~4 GB in mid quants — 8 GB-card and below territory.
-### mradermacher: LiquidCode-2.5-24B-A2B-GGUF (20:07Z) and Spark-4B-Faboulous-Edition-i1 (18:32Z)
-**LiquidCode-2.5-24B-A2B** is ItachiSan's Apache-2.0 code fine-tune of Liquid AI's LFM2.5-24B-A2B MoE (unsloth-quantized, TGI-tagged) — A2B-active MoE that streams comfortably on 16 GB cards at IQ4/Q4 tiers. **Spark-4B-Faboulous-Edition** (groxaxo, code/MLX lineage) joins as an i1 imatrix quant.
-https://huggingface.co/mradermacher/LiquidCode-2.5-24B-A2B-GGUF
+
+**35 domain-expert LoRAs on Qwen3.6-35B-A3B, trained with MLX on one Mac Studio — negative results published** — Event date: Nov 8, 2026 (posted to r/LocalLLaMA).
+u/Holiday_Poetry_5133 trained 35 domain-expert LoRA adapters on Qwen3.6-35B-A3B (native MoE, 256 experts, 3B active) with MLX on a Mac Studio M3 Ultra 512GB, BF16, no quantization during training. Everything is Apache-2.0 and public: adapters, datasets, per-domain configs, a small MiniLM router, and training scripts (github.com/hypneum-lab/micro-kiki; HF org hypneum-lab; training stack ailiance/ailiance-mac-tuner, archived). The audit is damning for the adapter strategy: on an independent bench the base 35B model beat most specialist adapters (only HTML/CSS clearly gained); the MiniLM router tops out around top-1 46% / top-3 70%. Fusing a MoE LoRA into 8-bit weights produced garbage — only runtime BF16 adapter hot-swap (~2s per swap, one base loaded once) was usable. Side benefit: an upstream MLX docs fix for `mx.random.normal` bit-exactness across Apple GPU generations (M1 vs M3+).
+**Why it matters:** At 30B-class MoE scale, domain LoRAs do not reliably beat the base model; for large unified-memory Macs the practical pattern is one BF16 base + runtime adapter hot-swap, not fused specialist weights.
+**Local inference:** Mac Studio M3 Ultra, 512GB unified memory — BF16 base model + BF16 adapter pool served via MLX.
+Source: Reddit r/LocalLLaMA — "35 domain-expert LoRAs on a MoE (Qwen3.6-35B-A3B) trained with MLX on one Mac Studio — what worked, what didn't, all Apache-2.0" (posted Nov 8, 2026), https://www.reddit.com/r/LocalLLaMA/comments/1xqw6fr/35_domainexpert_loras_on_a_moe_qwen3635ba3b/
+
+**"Ram Altman" is now a Linux script that emails Sam Altman daily about your unused RAM** — Event date: Nov 8, 2026 (update on previously reported satire).
+The "donate idle RAM" satire reported yesterday (uploadyourram) has spawned a derivative: u/Subulicious reports a Linux script (linked site: ram-altman.lol) that emails Sam Altman every day with a report of how much RAM is sitting unused on the poster's PC. Community reaction is uniformly amused ("OpenAI now training on automated emails sent to the CEO by a script").
+**Why it matters:** Cultural footnote, not infrastructure — but it shows the local-compute-vs-OpenAI satire is now a recurring meme in local-LLM circles.
+**Local inference:** Runs on any Linux box; targets idle RAM on local inference hosts.
+Source: Reddit r/LocalLLaMA — ""Ram Altman" Is Now a Linux Script That Emails Sam Altman Daily to Report How Much Unused RAM Is in Your PC" (posted Nov 8, 2026), https://www.reddit.com/r/LocalLLaMA/comments/1xqwn5n/ram_altman_is_now_a_linux_script_that_emails_sam/
+
+## Inference software and benchmarks
+
+**vLLM: Model Runner V1 removed; Kimi-K3.1-Pro MI355X preset lands** — Event date: Nov 7–8, 2026 (overnight merges 22:50Z → 07:45Z).
+The long-rumored #63373 ("Remove Model Runner V1") merged at 22:50Z — the legacy model-runner execution path is deleted, consolidating vLLM onto the V2 architecture. The wave also included #66343 (Kimi-K3.1-Pro concurrency-1 serving preset for MI355X, aligned with InferenceX#4887), #66329/#66328 (ROCm CI and UMBP runtime fixes), #66190 (Qwen2.5-Omni video encoder budget sized from processor video limits), and #66358 (CI ruff repair after the dots_ocr test change).
+**Why it matters:** Removing Runner V1 eliminates a dual-path maintenance burden and confirms V2 is the only execution model for new features going forward.
+**Local inference:** All vLLM deployments (CPU/CUDA/ROCm); the MI355X preset targets AMD data-center GPUs rather than consumer cards.
+Source: GitHub vLLM merged PRs Nov 7–8: #63373 (22:50Z), #66343 (03:57Z), #66329/#66328 (00:10Z), #66190 (05:36Z), #66358 (07:45Z) — https://github.com/vllm-project/vllm/pull/63373 , https://github.com/vllm-project/vllm/pull/66343
+
+**llama.cpp: overnight merge wave (#31831–#31861)** — Event date: Nov 7–8, 2026 (23:03Z → 09:44Z).
+Six merges landed in-window across builds b12193→b12201: #31857 (hexagon n_hvx/n_threads cleanup — Qualcomm NPU backend hygiene), #31859 (server proxy per-request logs downgraded to trace — fixes log spam in --models mode), #31861 (sanitize invalid UTF-8 in PEG tool-call arguments — prevents parser crashes on malformed tool calls), #31854 (ggml CPU backend switched to F32 src1 — precision behavior change for CPU inference), #31851 (llama/mtmd: follow reference precision of ggml_prec_set_acc — multimodal tensor precision consistency), and #31831 (OpenCL: improved q8_0 and MoE small-n verification for spec decoding — AMD/OpenCL iGPU and APU paths).
+**Why it matters:** The OpenCL q8_0/MoE spec-verification work extends speculative-decoding reliability to OpenCL devices; the UTF-8 fix prevents hard crashes in agentic tool-call pipelines.
+**Local inference:** CPU (F32 precision path), OpenCL (AMD iGPU/APU), Hexagon (Qualcomm NPU) — all local backends.
+Source: GitHub llama.cpp merged PRs Nov 7–8: #31831 (06:04Z), #31851 (07:37Z), #31854 (09:44Z), #31857 (23:03Z), #31859 (00:29Z), #31861 (04:06Z) — https://github.com/ggml-org/llama.cpp/pull/31861
+
+**SGLang: Kimi-K3.1 TensorRT-LLM DSA backend under decode context parallelism; scheduler pause refactor** — Event date: Nov 7–8, 2026 (22:41Z → 09:41Z).
+#49106 adds a TensorRT-LLM DSA (sparse attention) backend for Kimi-K3.1 running under decode context parallelism — an important serving path for long-context sparse-attention MoE models. #49144 moves scheduler pause state into a PauseState object (refactor touching the hicache/Apple Silicon scheduler path), #49118 reverts the unquant low-M BF16 GEMM autotune (#43703), and the remainder are CI/test hardening (#49128 precision-baseline fix, #49154 xeon disk-prune CI, #49097 kv-canary bf16 fixture).
+**Why it matters:** The DSA decode-CP backend extends TensorRT-LLM-class sparse attention into SGLang's parallel decode path for K3.1-class models.
+**Local inference:** Targets GPU serving clusters (TensorRT-LLM backend); the PauseState refactor also touches the Apple Silicon scheduler path.
+Source: GitHub SGLang merged PRs Nov 7–8: #49106 (08:15Z), #49144 (08:42Z), #49118 (06:07Z), #49128 (06:39Z), #49097 (06:05Z), #49154 (09:41Z) — https://github.com/sgl-project/sglang/pull/49106
 
 ## Also noted
-- **Crowd-v1** (u/Vxtzq1, r/LocalLLaMA, in-window): follow-up to CrowdGPT — claims the first collaboratively trained 1B-parameter transformer with no datacenters and zero budget. Early-stage, watch the training claims. https://www.reddit.com/r/LocalLLaMA/comments/1xqh8hk/crowdv1_the_collaborative_llm/
-- **Observer** (u/Roy3838): open-source, 100%-local phone agent (iOS+Android) that runs local models to monitor physical-world events (car approach, bird nest → Telegram alerts). https://www.reddit.com/r/LocalLLaMA/comments/1xqd058/use_your_phone_to_monitor_anything_with_local/
-- **Determinism experiment** (u/Full-Travel857): one extra leading token flipped 6 of 15 answers across Ollama/llama.cpp at temp 0 — a practical note for cache-seeded evals. https://www.reddit.com/r/LocalLLaMA/comments/1xqh2jw/one_token_at_the_beginning_of_a_prompt_changed_6/
+
+None.
 
 ## Just missed the window
-- **TSMC formally denied** The Information's report that it was drafting 3D-DRAM production plans at Nvidia's request (Tom's Hardware, Anton Shilov, published ~13:00Z — ~4.5 h pre-window; update on the ledger's 2026-11-06 tsmc-3d-dram-nvidia entry): TSMC says the tech is "years from market viability"; analysis points it toward base-die/SoIC value capture instead. Footnoted once, never again.
-- **Inferact's TPU megakernels post** (700+ tok/s Kimi K3 on Ironwood vs 452 GB200, 1.4–2x decode at batch 1–8) resurfaced on HN at 20:40Z but the page is dated **Nov 5** — event predates window; related to the Oct 20 TorchTPU footnote. Footnoted once.
-- **PyTorch 2.15** (The Register, Nov 6) tackles the "one bad GPU" problem for large-scale training resilience — disclosed pre-window, never footnoted before. Footnoted once.
+
+- **Huawei Qingyun HM650** — first HarmonyOS desktop PC, Kirin X90 chip, "100% domestically made" components; unveiled at the HarmonyOS Office Industry Summit in Wuhan on Nov 5 (SCMP coverage was in-window Nov 7 ~01:25 ET; SiliconReport also published in-window Nov 8). Enterprise/government desktop; no local inference stack disclosed. `missed:` (footnoted once) — https://www.siliconreport.com/huawei-launches-its-first-harmonyos-desktop
+- **Maxsun Panther Lake / Wildcat Lake NAS MoDT boards** — updated NAS motherboards: SK-PTLNAS (244×244mm) with Intel Core Ultra 9 386H, 128GB DDR5-7200, 10GbE, five M.2 slots; redesigned Wildcat Lake model (90×165mm, four M.2); reported by VideoCardz Nov 7 ~11:30 GMT (~06:30 ET, ~11h pre-window). `missed:` (footnoted once) — https://videocardz.com/newz/maxsun-updates-panther-lake-and-wildcat-lake-nas-motherboards-with-10gbe-and-up-to-128gb-ddr5
+- **Apex-35B-V1.0** — Apex Intelligence's first model: Qwen3.6-35B-A3B fine-tune (36B total / ~3B active, 262K ctx, Apache-2.0), 28 GGUF quants from Q8_0 (37.8GB) to IQ1_S (9.0GB); repo created Oct 28, but in-window r/LocalLLaMA testing discussion ("Anybody tried Apex 35B and Axion 35B?") made it visible today. `missed:` (footnoted once) — https://huggingface.co/Apexintelligence-AI/Apex-35B-V1.0
 
 ## Coverage notes
-- **Verified count:** 3 lead stories (1 model-ecosystem, 2 software waves) + 6 quantization repos + 3 also-noted = **12 qualifying items**, all with fetched, in-window-timestamped sources (GitHub API commits/releases, HF API/ repo pages, reddit feeds).
-- **Ledger dedupe:** ~17 candidates suppressed as already-reported or morning re-coverages — moe-cache thread, KV-quant KLD study, Qoduck/Qwen4 rumor threads, EOU indic detector, Steam Machine Strata bench, kofu/grok-oss-Cerberus/persona_lambda/Arete-i1/K2-Horizon ladder (5 repos), Lisa Su "data center first" re-surfacing, D3D paper, llmd/Scyllas/Jeff/Mirage re-lists. Three new `missed:` footnotes added (TSMC denial, Inferact megakernels, PyTorch 2.15) — each now tagged, never to be footnoted again.
-- Dead ends: TechPowerUp news 403 (one strike, not chased); The Register AI index 404'd on the guessed path (homepage window scan used instead); Tom's slug-guess 404'd once before the exact-headline search returned the real URL (per skill, resolved on second attempt).
-- Exclusion notes: mlx-community/Mage-VL-Cowork-MLX-4bit was already reported Nov 21; vLLM #63373 (Model Runner V1 removal) missed the boundary by 5 minutes and is reserved for the next edition; The Register PyTorch 2.15 and Inferact megakernels were excluded from items per the event-date rule.
-- A quiet Friday-evening window: no new silicon, no new base weights, drivers unchanged (NVIDIA 621.14 WHQL / AMD 26.10.2 / Intel 9175 current).
+
+- **Verified count:** 6 items (1 hardware report; 3 inference-stack merge waves; 2 community posts). Counting unit: distinct underlying events.
+- **Ledger dedupe:** 5 candidates suppressed as already reported — CPU-Z RAM-capacity decline (Nov 7 07:45 run), Googlebook Nov RAM-freeing update (Nov 7 12:45), NVIDIA RTX 5090 giveaway (Nov 6 17:45), llama.cpp llama_moe_cache #30966 (Nov 7 12:45), Nous Research Arete-27B river item (Nov 6 17:45).
+- **Notable dead ends:** ram-altman.lol direct fetch blocked (resolved to private network address); generic "llama.cpp release" web searches returned only comparison guides; HN river (points>30) was dominated by non-AI stories (Commodore PET history, GitHub UI previews); NVIDIA forum "70 tok/s Qwen3.8-Flash-Next-Int4-AutoRound" is a September thread with only recent replies — not an in-window event.
+- **Indexes:** Techmeme river up (harvested Nov 7 9:45 PM–Nov 8 7:45 AM); HN Algolia up; ServeTheHome up (no new in-window articles beyond the already-reported ASRock Rack DMRD16); GitHub search API up (JSON truncated in cache but meaningful merges captured); HF papers page showed Nov 6 submissions only — no in-window papers verified.
+- **Thin-day note:** No silicon announcements, model releases, or benchmark studies verified in this 14-hour overnight window — the report stands at six items, not padded.
