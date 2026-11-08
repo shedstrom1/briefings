@@ -1,74 +1,66 @@
-# AI News Briefing: Sat Nov 7 17:00 → Sun Nov 8 07:00 ET
+# AI News Briefing — Sunday, Nov 8, 2026, 12:00 ET
 
-Window: 2026-11-07 17:00 ET → 2026-11-08 07:00 ET (previous fire → now; 14-hour weekend sweep). This is a NEW-ITEMS-ONLY edition against the reported ledger.
+**Window:** 2026-11-08 07:00 ET → 12:00 ET (5 hours since the 07:00 fire).
 
 **TL;DR**
-- Richard Sutton — author of "The Bitter Lesson" — published a new post saying raw compute alone is not enough for intelligence; ex-OpenAI researcher Jerry Tworek says blind transformer scaling "has reward hacked brains of a whole generation of scientists," while OpenAI's Altman and Anthropic's Amodei push back.
-- SemiAnalysis went inside China's fastest-growing AI data center region: Envision's 800MW Galaxy campus in Inner Mongolia delivered its first 120MW in under a year at roughly a fifth of US costs, with an SST-native 800V DC pilot and chiller-free cooling.
-- llama.cpp shipped eight builds (b12195–b12202) across the window — SYCL/Vulkan/OpenCL fixes, speculative-decoding MoE-cache guards, and Hexagon auto-load.
-- Thin weekend window: only four verified new items made the cut. Five prominent disclosures (SpaceX Starbase supercomputer, Public First PAC midterm results, Alibaba's Co-Design Bench, Vals AI's Inkling study, llama-modchip) landed just before or well outside the 17:00 ET cutoff and are footnoted below.
-- Reuters reports environmental groups are embracing AI for climate and wildlife tracking even as they warn about data-center power and water impacts; Turkey's COP31 is expected to feature an AI sustainability pledge.
+- Financial Times reports Anthropic locked up **$3.4B for 1.7GW of gas-fired generators** via OnePWR — the largest known power-equipment buy by an AI lab, signed in late September.
+- Apple CEO John Ternus is pushing Craig Federighi to build a **true agentic Siri** (tracks goals, works between conversations) with a 2027 ship target, per Bloomberg's Gurman — and restructured the iOS 28 sprint to 6 weeks of coding vs 4.
+- **llama.cpp** shipped builds b12207–b12211 (SpacemiT MXFP4 repack, llamafile bf16/q8_0 vxe, deterministic CUDA/Metal Top-K); **vLLM** merged 10 PRs including Mooncake circuit breakers and encoder CUDA-graph batching.
+- Quiet 5-hour window otherwise: no in-window model releases or security disclosures; six overnight stories sit in "Just missed" footnotes.
 
 ## Models and local inference
 
-**Richard Sutton's bitter-lesson post puts LLM scaling in the crosshairs**
-Event date: November 8, 2026
+**Anthropic buys commitments for 1.7GW of gas-fired generators for $3.4B**
+Event date: disclosed 2026-11-08 (deal signed late September 2026). The Financial Times reports Anthropic struck a $3.4B deal with OnePWR Solutions (San Antonio, TX) to take over 1.7GW of heavy-duty generators that OnePWR had ordered from Caterpillar roughly two years ago but lacked capital to complete. Anthropic assumes the orders plus installation work — not OnePWR itself and no staff transfers. FT calls it the largest known single purchase of power-generation equipment by an AI company; Bloomberg followed up the same day, and Piper Sandler describes it as the sale of OnePWR's power-gen platform to "a frontier AI lab." The deal lands as Anthropic prepares its IPO — its amended S-1 filed last week showed ~$895B in purchase commitments and leases, almost all compute and infrastructure.
 
-Turing Award winner Richard Sutton — who in 2019 argued that scaling general methods beats human-engineered shortcuts — writes in a new post that raw compute alone is not sufficient for intelligence and that AI science needs "clever new methods" and is "far from finished." The Decoder reports he again called synthetic data a "big mistake" because the real world is infinitely complex, and argued for agents with world models that keep learning from their own experience rather than stopping after training. Ex-OpenAI researcher Jerry Tworek (Core Automation) amplifies the critique: the more compute goes into training, the more the algorithm matters, and the temporary success of transformer scaling "has reward-hacked the brains of a whole generation of scientists." Jayden Teoh adds that the bitter lesson is often misread to dismiss promising academic work. Industry CEOs dissent: Sam Altman says scaling is far from exhausted (citing OpenAI's recent disproof of a long-standing math conjecture), and Dario Amodei calls scaling progress "a rainbow with no end." The Decoder notes its Frontier Radar #5 is tracking 45 new AI labs betting on this post-scaling gap — including Sutton's Oak Lab and Tworek's Core Automation.
+*Why it matters:* This is physical compute security, not cloud contracts. By buying generator commitments directly, Anthropic is locking in firm power capacity independent of grid timelines — a signal that data-center energy, not just chips, is now the binding constraint for frontier training.
 
-Why it matters: the sharpest public split yet between scaling maximalists and founders/ researchers betting that continuous-learning, world-model agents — not bigger pretraining — will deliver the next leap. That divergence is now visibly shaping startup funding directions.
+*Source:* Financial Times, "Anthropic strikes $3.4bn deal to generate gas-fired power for its data centres," 2026-11-08 ~10:05 ET — https://www.ft.com/content/41bf5c6a-9735-4f1a-a8e3-2bcccad58ba0
+*Further:* The Next Web, "Anthropic buys $3.4bn of gas generators, FT reports," 2026-11-08 ~10:30 ET — https://thenextweb.com/news/anthropic-3-4bn-gas-generators-onepwr-ft
 
-Source: The Decoder, "The inventor of the bitter lesson has a bitter lesson for LLM scaling enthusiasts" (Matthias Bastian, Nov 8, 2026) — https://the-decoder.com/the-inventor-of-the-bitter-lesson-has-a-bitter-lesson-for-llm-scaling-enthusiasts/ (Source cited in article: Sutton via X)
+**llama.cpp ships builds b12207–b12211 (five builds) with SpacemiT MXFP4 repack and llamafile updates**
+Event date: 2026-11-08, 09:20–11:48 ET (GitHub). Five release builds landed in-window, carrying six notable commits: SpacemiT IME2 MXFP4 dense repack (#31776), llamafile bf16 and q8_0 vxe implementations (#31866), deterministic tied-selection fixes for CUDA/Metal radix Top-K (#31084), a d_state=64 fast path in the SSM_SCAN CUDA kernel (#31818), moe-cache no longer blocking the CPU path on cached experts (#31888), and mtmd consolidation removing clip.h (#31865).
 
-**SemiAnalysis inside "China's Stargate": Inner Mongolia's Galaxy campus**
-Event date: November 7, 2026 (newsletter); Techmeme river entry Nov 8, 6:00 AM ET
+*Why it matters:* The SpacemiT MXFP4 repack extends low-precision CPU inference to RISC-V accelerators, and the llamafile vxe additions broaden the quant formats available in the single-binary local runner — both expand what runs on non-NVIDIA local hardware.
 
-SemiAnalysis published a field report from Inner Mongolia, China's fastest-growing AI data center region — calling it the "West Texas" of China, but without the anti-datacenter sentiment. The main stop is Galaxy, an Envision Group campus in Ulanqab planned for up to 800MW of IT capacity; its first 120MW phase was delivered within a year at about a fifth of US costs, built-to-suit for two internet giants. In one 5MW hall, solid-state transformers take 10kV AC straight to 800V DC for the racks — removing the low-voltage transformers, UPS and rectifier stages that dominate US designs. Cooling uses a shared water loop for liquid- and air-cooled servers with no central chiller plant, a design common in northern China but still a roadmap item in the US. The surrounding Chahar High-tech Zone had nearly 30,000 construction workers across 22 data center projects. Regional economics: rents have roughly halved over five years to about $40/kW/month (ex-power), capex is under $3M per MW, and power costs about $0.055/kWh all-in. The region has 25GW of announced projects, and the report notes roughly a quarter of Chinese data centers built in the past decade run on DC power, versus about 97% of US facilities still on AC UPS.
+*Source:* GitHub, ggml-org/llama.cpp releases b12207 (14:20Z) through b12211 (16:48Z), 2026-11-08 — https://github.com/ggml-org/llama.cpp/releases
 
-Why it matters: China is building hyperscale AI capacity faster and far cheaper than the US, with power architectures (800V DC, chiller-free loops) that US roadmaps are still trying to reach — a direct signal on where inference capacity economics are heading.
+**vLLM merges ten PRs: MOSS-Transcribe-Diarize config, Mooncake circuit breaker, encoder CUDA-graph batching**
+Event date: 2026-11-08, 07:20–10:03 ET (GitHub). Merges include: upstream config adoption for MOSS-Transcribe-Diarize (#66388); a circuit breaker bounding Mooncake store prefix lookups (#65939); multimodal encoder CUDA graphs running one replay per batch with a finer grid up to one max budget (#65227); pluggable shared stores for daemon warmup caches (#65168); ROCm padding fix for Qwen4Exp PLE n-gram inputs in piecewise CUDA-graph replays (#62675); and sleep-mode offload of model-runner construction buffers (#59994).
 
-Source: SemiAnalysis, "We Visited China's Stargate in Inner Mongolia" (Everlyn Tan, Jeremie Eliahou Ontiveros, Xiaopeng Laoban, Dylan Patel, Nov 7, 2026) — https://newsletter.semianalysis.com/p/we-visited-chinas-stargate-in-inner (Techmeme river, Nov 8, 2026, 6:00 AM ET)
+*Why it matters:* The Mooncake guard and warmup-cache plumbing reduce long-tail failures in distributed KV-offload deployments, while the encoder CUDA-graph change lowers latency for multimodal serving stacks.
 
-**llama.cpp ships eight builds (b12195–b12202) with SYCL, OpenCL and speculative-decoding fixes**
-Event date: Nov 7, 20:11 ET → Nov 8, 03:11 ET (GitHub releases)
-
-Eight builds landed in the window (13 commits). Notable changes: SYCL gets exact rounding in CPY to Q4_1/Q5_1/Q8_0 (#31465) and refuses device buffers that would exceed VRAM (#31285); OpenCL improves q8_0 and MoE small-n verification for speculative decoding (#31831); the MoE cache is no longer applied to the draft model (#31497); Hexagon now auto-loads libhtp without legacy env vars (#31781); invalid UTF-8 is sanitized in PEG tool-call arguments (#31861); WebGPU gains COUNT_EQUAL support (#31578); CI moves to Ubuntu 26.04 (#31529); the CPU backend switches to F32 src1 (#31854); and mtmd follows ggml reference precision (#31851) with log-mel computation moved to cgraph (#31808).
-
-Why it matters: continued rapid mainline iteration — the SYCL/Intel GPU and speculative-decoding stability work is directly relevant to local inference stacks running MoE models.
-
-Local inference: these builds feed directly into GGUF-serving runtimes (llama.cpp server, LM Studio, Ollama under the hood).
-
-Source: GitHub ggml-org/llama.cpp releases b12195–b12202 (Nov 7–8, 2026; commit log via GitHub API) — https://github.com/ggml-org/llama.cpp/releases
+*Source:* GitHub, vllm-project/vllm merged PRs (search: merged 2026-11-08T12:00Z..17:00Z), 2026-11-08 — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
 
 ## Agent tools
 
-No new agent-framework releases or launches verified inside this window. The recent stable lines remain outside it: OpenClaw v2026.11.1 (Nov 5), Ollama v0.40.15 (Nov 3), vLLM v0.33.0rc3 (Nov 2).
+**Bloomberg: Ternus demands agentic Siri from Federighi, targets 2027, overhauls iOS 28 sprint**
+Event date: 2026-11-08, 11:20 ET (Bloomberg "Power On," Mark Gurman). Apple's new CEO John Ternus held a closed-door meeting with software chief Craig Federighi explicitly demanding more urgency: move beyond incremental Siri AI tweaks to an agentic assistant that tracks goals and continues work between conversations, with a target of shipping as early as 2027. The push also restructured the iOS 28 M1 milestone from a 4/4 coding/integration split to 6 weeks of coding and 2 of integration — a 50% coding-time increase. Vision Pro creator Mike Rockwell is reportedly weighing a departure amid the shake-up.
+
+*Why it matters:* This is Apple's clearest internal mandate yet that Siri must become a persistent agent, not a voice assistant with LLM polish. The sprint restructuring shows engineering resources are being reallocated to agent continuity — the same "works across conversations" capability that defines the current agent-tool race.
+
+*Source:* Bloomberg (Mark Gurman), "Apple Explores Turning Siri AI Into ChatGPT Dots-Like Agent," 2026-11-08 ~11:20 ET — https://www.bloomberg.com/news/newsletters/2026-11-08/apple-explores-turning-siri-ai-into-chatgpt-dots-like-agent-ios-28-shake-up
+*Further:* 9to5mac, "Bloomberg: Apple CEO Ternus Pressures Federighi to Ship Agentic Siri by 2027, Overhauls iOS 28 Sprint," 2026-11-08 16:59 UTC — https://9to5mac.com/ (via AI Weekly alert, https://aiweekly.co/alerts/bloomberg-apple-ceo-ternus-pressures-federighi-to-ship-agentic-siri-by-2027)
 
 ## AI security and governance
 
-**Reuters: environmental groups embrace AI even as they warn of data-center impacts**
-Event date: November 8, 2026 (2:02 AM EST)
-
-Reuters reports that environmental groups worldwide are using AI to analyze climate data, track forest fires, and count endangered wildlife — while warning that the technology is driving a surge in electricity demand, water use, and greenhouse-gas emissions. The outlet interviewed 15 major environmental, conservation, and development organizations; all said they use AI in some form and all expressed concern about the data centers powering it. Conservation International, for example, is using AI to assess satellite-detected hotspots and send real-time wildfire alerts to community patrols in Cambodia. The tradeoffs are expected to draw attention at the UN's COP31 climate conference this month in Turkey, where the host is calling for a pledge outlining principles to ensure AI is developed and deployed sustainably.
-
-Why it matters: the governance debate around AI's environmental footprint is moving from industry self-policing toward formal multilateral pledges — at exactly the moment data-center buildout is accelerating globally.
-
-Source: Reuters, "Environmental groups embrace AI, even as they warn of data center impacts" (Valerie Volcovici, Nov 8, 2026, 2:02 AM EST) — https://www.reuters.com/sustainability/cop/environmental-groups-embrace-ai-even-they-warn-data-center-impacts-2026-11-07/
+No verified items first disclosed inside this 07:00–12:00 ET window. (The Kahn v. Anthropic class-action ruling, TSMC's 3D-DRAM denial, and the xAI Grok watermark activation all broke before the window opened — see footnotes.)
 
 ## Also noted
 
-- No other verified in-window items beyond the four listed above. Community leads seen but not fully verified within budget: Show HN "Aiport" (self-improving local LLM gateway, Nov 8 ~06:44 ET) and "RepoMagpie" (coding-agent repo memory, Nov 8 ~05:13 ET).
+- **Show HN: Webcrawl** — open-source Firecrawl alternative that runs locally with no API key (brainfish-ai/webcrawl-anything); agent-scraping utility, posted ~11:03 ET on Hacker News (story 50414396).
 
 ## Just missed the window
 
-- **SpaceX "Starbase supercomputer"** — The Information, Nov 7, ~2:40 PM ET (minutes to hours before the 17:00 cutoff): public records, SpaceX job listings, new steel structures, and gas turbines point to a multigigawatt AI "Starbase supercomputer" near SpaceX's Texas launch site; Hinojosa's election (vowing an immediate data-center moratorium) may delay parts of the build, though a 45-year, 166-acre Cameron County development agreement prohibits local moratoriums (RGV Business Journal). Corroborated by FourWeekMBA (Nov 7) and Techmeme. The Information body is paywalled; records not independently seen.
-- **Public First PAC midterm results** — Bloomberg, Nov 7, 9:30 AM ET: Anthropic co-founder Dario Amodei and other AI-safety advocates funded more than $63M for the midterms; 10 of the 17 congressional candidates Public First backed won. Politico magazine ran a companion account Nov 7, ~9:45 PM ET.
-- **Co-Design Bench** — Alibaba/Qwen-team arXiv paper (Oct 26/27) covered by The Decoder Nov 8 (in window): 273 real-world multimodal coding tasks; GPT-6 Astra fully solves only 26.4% of tasks despite passing ~70% of criteria on average; harness choice swings results (Qwen3.8-27B scores 75% vs 56% on large overhauls depending on environment).
-- **Vals AI: Inkling 2 Small swears in internal chain-of-thought** — vals.ai blog Nov 6 + The Decoder Nov 7: across 2,655 runs on 13 benchmarks, "fuck" appears 316 times (50 runs; 241 instances from two runaway runs, including one 500,000-character loop); not a failure predictor (96% of failed runs never swore).
-- **llama-modchip v2.4.0** — GitHub release Nov 3–4 (repo created Oct 29): claims 284B DeepSeek-V4-Flash on a pure 64GB CPU (<59GiB RAM, 44.4 tok/s prefill, 9.1–14.7 tok/s decode, 256K ctx) via custom Fractal-64 Q2_0 tensors, SwiGLU-H2 compression, and AVX-512 register tiling; HN front-page resurgence Nov 8, ~05:22 ET (story 50411961, 6 points).
+- **Thinking Machines Lab is closing a $5B round led by Accel at a $40B pre-money valuation** — more than triple its $2B seed valuation (Business Insider, Nov 5; resurfaced on HN's front page ~11:39 ET today).
+- **Menlo Ventures "State of Enterprise AI 2026" report** (released Nov 3; SCMP coverage Nov 6): Chinese models took **89% of global enterprise spending on open-source models** — Kimi 61%, DeepSeek 15%, Z.ai's GLM 11% — while Meta's Llama held just 7%; Chinese models have led OpenRouter token usage for 27 consecutive weeks.
+- **xAI activated an invisible statistical text watermark in Grok API responses** on Nov 7 across grok-4.7, 4.6, 4.5, 4.3 and three grok-4.20 variants; detection exposed via an `x-watermark` header, and admins can disable it only by asserting an EU AI Act legal exception (DataStudios, ~05:00 ET today).
+- **Microsoft released APM (Agent Package Manager)** — MIT-licensed dependency manager declaring skills, prompts, plugins, and MCP servers in a single `apm.yml` manifest across nine harnesses including GitHub Copilot, Claude Code, and Cursor (microsoft.github.io, ~03:00 ET today).
+- **Tencent published Qwen3.8-27B-DSpine-b16 on Hugging Face** (Nov 7): a five-layer parallel speculative-decoding drafter (block size 16, 8,192-token sliding window) that hits up to 3.84x autoregressive throughput on agent benchmarks in SGLang — a small (~2B-param) model that runs comfortably on local GPUs alongside Qwen3.8-27B.
 
 ## Coverage notes
 
-- **Verified this run:** 4 reportable items (Sutton/Decoder; SemiAnalysis; llama.cpp builds; Reuters) + 5 "Just missed" footnotes (each first noted).
-- **Ledger dedupe:** 11 candidates suppressed as already reported or already footnoted — Nous Arete-27B (Techmeme/Decoder re-runs); Anthropic IPO $80–100B update (Decoder short news); OpenAI ~$11B tranche (Decoder short news); Google smartwatch hypertension study (`missed:`); nine-agents DOE research failure (`missed:`); Vals cyber-offense benchmark (`missed:`); Meta Muse Wonder specialized models (`missed:`); Censys ARTEX exposure (`missed:`); NYT H200 Chinese-firm empty offices (reported Nov 7); NYT ETH/Impagliazzo follow-up (reported Oct 26); Guardian SEA data-center pause (reported Nov 7). TechNode's GenRobot $100M robot-data round was disclosed Nov 2 — stale for this window.
-- **Dead ends / index gaps:** SGLang GitHub releases endpoint returned 404; The Information Starbase body paywalled (corroborated via FourWeekMBA + Techmeme); HN Algolia slice covered only the final ~2 hours of the window (100 hits), so earlier Sunday/Saturday-night stories were not fully enumerated; Reddit anonymous feed was rate-limited (one successful call per sub).
+- **Verified in-window:** 4 items (2 news disclosures, 2 GitHub layer updates) + 1 also-noted community post = 5 verified. Counting unit: distinct events/items.
+- **Ledger dedupe:** 7 candidates suppressed as already reported or previously footnoted — SemiAnalysis Inner Mongolia Galaxy hub (07:00 run), environmental groups/COP31 embrace of AI (07:00 run), Nous Arete-27B (Nov 6 run), Andy Hall agent-auditor study re-coverage (Nov 7 run), Claude Code `.claude/settings.local.json` secret-leak scan (footnoted Nov 7), MSR AI Frontiers closure/Langford exit (footnoted Nov 7), TSMC 3D-DRAM denial (update on Nov 6 item, broke ~03:00 ET pre-window).
+- **Indexes:** Techmeme river (Nov 8, 00:00–11:20 ET), HN Algolia river (12:00–17:00Z), Reddit r/LocalLLaMA + r/artificial (new feed), GitHub release/commit streams (llama.cpp, vLLM, Ollama, SGLang, OpenClaw, Codex). Ollama (v0.40.15, Nov 3), SGLang (v0.5.23, Nov 2), OpenClaw (v2026.11.1, Nov 5), and Codex (rust-v0.169.0-alpha.3, Nov 7) were quiet in-window.
+- **Dead ends / exclusions:** Lovable "100k PRs" blog post (dated Sept 24 — stale HN resurfacing); "Show HN: Cinnamon AI" and "0rwx framework" (timestamps/claims not verifiable in budget); GenRobot $100M Series A+ (TechNode 01:05 ET — prior window, peripheral robotics funding, not footnoted).
