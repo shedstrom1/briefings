@@ -1,156 +1,115 @@
-# AI Hardware & Local Models Brief — 2026-11-10 12:45 ET
+# AI Hardware & Local Models Brief — Nov 10, 2026 (17:45 edition)
 
-**Window:** 2026-11-10 07:45 EST → 2026-11-10 12:45 EST (previous fire → now; 12:45–17:45 UTC). New-items-only; the event date anchors, not article freshness.
+**Window:** 2026-11-10 12:45 → 20:08 EST (manual catch-up for the failed 17:45 fire)
 
-**TL;DR**
-- **MiniMax released MiniMax-H3-Image open weights** — a 33.1B-parameter, 6-step (no-CFG) diffusion transformer that renders ~16-megapixel images natively, announced 09:15 EST with the HF repo public within the hour. Weights are 68.65 GB BF16 plus a 66.7 GB H3 text encoder — server-class, not a 16 GB-card model, and the community license excludes the US, EU, UK and South Korea.
-- **AMD's EPYC 9006 "Venice" / Zen 6 server platform went available** at 12:00 EST with OEM/ODM systems shipping; the flagship 256-core EPYC 9996 lists at $14,904 and the high-frequency 96-core 9686F shipped at a confirmed 5.3 GHz boost (up from the 5.0 GHz originally disclosed).
-- **llama.cpp merged FP8 (OCP E4M3) KV-cache support** after two months of review — a real memory-footprint lever for long-context local serving, with optional runtime static per-tensor scales.
-- **AMD pushed MEXT predictive memory** (flash-as-DRAM tiering for EPYC) with Linux support but no source — directly aimed at the memory crunch that is pricing local builders out of RAM.
-- Quiet but consequential background: SGLang landed MiniMax-H3-Image serving support and AMD gfx1250 W4A8 MoE kernels in the same five-hour band; a single RTX 3080 Ti was shown holding ~100 tok/s at 260 W — 42% below its 450 W peak.
+## TL;DR
+
+- **Apple's Claris subsidiary is testing "Harbor"** — a private AI inference server app that turns Apple silicon Macs into local open-weight model endpoints and pools unified memory across Thunderbolt 5 Mac clusters.
+- **XeMaya arrived**: a new SYCL/Level-Zero engine bringing native DeepSeek V4.1-Flash and GLM-5.3-Flash support to Intel Arc Pro GPUs, with prefill up to ~3x patched llama.cpp SYCL builds on the author's three-card B70/B65/B60 rig.
+- **AMD filled in Zen 6 details** post-launch: 12-core CCDs (up to 32 for Zen 6c), a claimed 27% average IPC gain (31% on AI workloads), and a pointed pushback on NVIDIA/Arm "agentic CPU" marketing.
+- **SGLang shipped a 48-commit afternoon wave** including AMD Muse Spark Open ROCm day-0 support, GPTQ/AutoRound INT4 enablement on AMD, and MiniMax-H3-Image deployment performance docs; **Ollama cut v0.40.17-rc0** with Vulkan-iGPU mmap and concurrent MLX generation.
+- **RustingStrata answered the "speed = quality loss" critique** with a measured perplexity/KLD study: +29% decode over llama.cpp at near-identical output quality on an RTX 3060.
 
 ---
 
 ## AI hardware and silicon
 
-### AMD EPYC 9006 "Venice" (Zen 6) SP7 goes available; 256-core flagship at $14,904, 9686F boosts to 5.3 GHz
-**Event date: 2026-11-10 (12:00 EST embargo lift; systems shipping today from OEM/ODM partners).**
-AMD's 6th-gen EPYC reached actual hardware availability today after the July soft-launch at Advancing AI. The SP7 stack tops out at the EPYC 9996 — 256 Zen 6C cores / 512 threads, 2.55 GHz base / 4.1 GHz boost, 1,024 MB L3, 600 W default (configurable down to 400 W), 96 lanes of PCIe 6.0, 16 channels of DDR5-8000 or MRDIMM-12800, up to 8 TB — at $14,904 per 1KU. The notable spec change at availability is the high-frequency EPYC 9686F: originally disclosed at 5.0 GHz boost, it ships at 5.3 GHz on 96 cores / 192 threads (500 W). AMD's own briefing numbers claim 2.2x the HPC performance of Intel's Xeon 6980P (up to 3.2x on NAMD), and vs. last-gen Turin: 2x integer, 2.4x floating-point, 2.7x memory bandwidth, 1.3x matrix compute. SP8 arrives H1 2027; 9006X and the LPDDR5X "Verano" parts land H2 2027.
-*Why it matters:* this is the first shipping Zen 6 silicon and it is a server part aimed squarely at agentic-inference host nodes — the CPU tier that feeds GPUs and the CPU-only inference tier. The MRDIMM-12800 / 16-channel bandwidth jump is the number to watch for anyone doing large MoE expert offload to host memory; CPU inference on this class of box stops being a novelty. It also means the desktop/mobile Zen 6 parts inherit a validated microarchitecture.
-*Local inference:* not a workstation product — $14,904 flagship, 2P/SP7, 600 W — but its memory-subsystem gains (8 TB, MRDIMM-12800) are exactly the tier where multi-hundred-GB MoE weights live on host RAM, and today's benchmark embargo lifted on both the 9996 and the 9686F.
-Source: AMD Showcases 6th Gen AMD EPYC Processors to Lead Next Era of AI and Enterprise Computing — ir.amd.com, Nov 10 2026 12:00 pm EST — https://ir.amd.com/news-events/press-releases
-Source: AMD EPYC 9996 Benchmarks Show Unparalleled Performance With 256 Zen 6C Cores — Phoronix, Nov 10 2026 12:00 PM EST — https://www.phoronix.com/review/amd-epyc-9996
-Source: AMD EPYC 9006 Results Are Here and AMD Delivers a Knockout Part Deux — ServeTheHome (Patrick Kennedy), Nov 10 2026 — https://www.servethehome.com/amd-epyc-9006-results-are-here-and-amd-delivers-a-knockout-part-deux/
+**Apple's Claris is building Harbor, a local AI inference server for Macs with Thunderbolt 5 memory pooling** — event date: Tuesday, Nov 10, 2026
+Claris — the FileMaker company owned by Apple — is offering early access to "Harbor," an app that turns an Apple silicon Mac into a private AI inference server for open-weight models. The official Claris page (live today) describes zero cloud fees, no per-token billing, single-Mac endpoint setup "in minutes," and — the headline feature — connecting two or more Thunderbolt 5 Macs to pool their unified memory into one inference resource for larger models or higher concurrency. MacRumors (3:34 PM PST) adds that Harbor auto-detects TB5 devices to form a cluster, includes an in-app model browser/downloader, requires no command line, and leans business-focused (the sign-up form asks for a company name); an App Store listing briefly appeared and was pulled. Apple shipped RDMA-over-Thunderbolt 5 in macOS Tahoe 26.2, which is what makes the clustering fast.
+*Why it matters:* This is an Apple subsidiary productizing exactly what Exo and LM Studio do separately — cluster Macs, serve open weights — with a no-config GUI and enterprise positioning. If Harbor ships broadly, the Mac becomes a first-class, vendor-sanctioned local-inference node, and Thunderbolt-5 memory pooling becomes a competitive axis against DGX-class boxes.
+*Local inference:* Runs on Apple silicon Macs; clustering requires TB5-capable models (M5 Pro-class and newer); pooled memory targets models exceeding any single Mac's unified-memory budget (128GB+ territory per machine).
+Source: MacRumors — "Apple's Claris Testing 'Harbor' App for Local AI on Macs," Nov 10 2026, 3:34 PM PST — https://www.macrumors.com/2026/11/10/apple-claris-harbor-app/
+Source: Claris (official product page, live Nov 10) — https://content.claris.com/local-ai-server-get-started
+Source: 9to5Mac — "Apple has new Mac app coming to make running local AI models easy," Nov 10 2026 — https://9to5mac.com/2026/11/10/apple-has-new-mac-app-coming-to-make-running-local-ai-models-easy/
+Source: AppleInsider — "Apple's Harbor app will make running local AI across multiple Macs trivial," Nov 10 2026 — https://appleinsider.com/articles/26/11/10/apples-harbor-app-will-make-running-local-ai-across-multiple-macs-trivial
 
-### AMD markets MEXT predictive memory for EPYC — Linux driver, closed source
-**Event date: 2026-11-10 (Phoronix, 12:00 PM EST).**
-AMD used the EPYC availability briefings to push MEXT, the AI-driven predictive-memory technology it acquired this summer, which makes NVMe flash behave as an extension of DRAM. On EPYC servers it performs flash/DRAM tiering driven by a predictive AI engine that decides what stays in RAM; supported distros include RHEL, Rocky, AlmaLinux, Oracle Linux, SUSE, Debian and Ubuntu. Phoronix's point of note: the Linux driver exists but MEXT is one of the few AMD offerings that is *not* open-source, breaking from AMD's usual open-ecosystem posture.
-*Why it matters:* during a memory crisis where DDR5 capacity and price are the binding constraint on self-hosted inference, "let an MLP predict which pages live in RAM" is the vendor answer, and it is the same technique the local-MoE community is building by hand (expert page-cache streaming, SSD-resident expert tiers). A closed source stack here means the community will keep rolling its own.
-*Local inference:* targets EPYC + NVMe tiers — the architecture behind every "48 GB GPU + 128 GB DDR5 + NVMe expert stream" rig. AMD's positioning validates host-memory/flash tiering as the mainstream way to run big MoE on cheap parts.
-Source: AMD Talks Up Their MEXT Software Amid RAM Crisis — Linux Support But Not Open-Source — Phoronix, Nov 10 2026 12:00 PM EST — https://www.phoronix.com/recent-linux-news
-Source: AMD MEXT Predictive Memory Software — AMD product page (OS support, mextMemory config) — https://www.amd.com/en/products/software/mext.html
+**AMD details Zen 6: 12-core CCDs, 27% average IPC claim, up to 256 EPYC cores** — event date: Nov 10 (Update on previously reported: "EPYC-9006-SP7-availability," reported Nov 10 12:45)
+With Venice shipping, AMD published its architecture deep-dive: Zen 6 moves to 12-core CCDs (Zen 6c up to 32 cores per CCD), four-MRDIMM-12800 support on 16 channels, PCIe 6.0, and high-frequency parts at 5.3 GHz, topping out at 96 Zen 6 or 256 Zen 6c cores. The headline claim is 27% average IPC over Zen 5 in selected server workloads — but note the methodology VideoCardz flags: 16 Zen 6c cores on one CCD versus 16 Zen 5 cores spread across two CCDs at matched clocks (~20% enterprise/cloud, ~31% AI workloads), so it is not a single-core comparison and says nothing confirmed about Ryzen. TechPowerUp's same-day Zen 6 Technical Deep Dive corroborates the wider execution window and 4MB L3 per core.
+*Why it matters:* The 12-core CCD is the number to watch beyond the server: it lets AMD lift Ryzen core counts without extra chiplets, and the AI-workload IPC delta matters for anyone hosting agents on CPU-heavy serving nodes.
+*Local inference:* Server/host silicon — most relevant as the agentic-inference host CPU tier (SP7, 16-channel DDR5-8000/MRDIMM-12800); no consumer-card implications announced today.
+Source: VideoCardz — "AMD Zen 6 architecture detailed with 12-core chiplets and up to 256 EPYC cores, 27% higher IPC," Nov 10 2026, 18:26 GMT — https://videocardz.com/newz/amd-zen-6-architecture-detailed-with-12-core-chiplets-and-up-to-256-epyc-cores-27-higher-ipc
+Source: TechPowerUp — "AMD Zen 6 Technical Deep Dive," Nov 10 2026 — https://www.techpowerup.com/ (reviews front page)
+Source: ServeTheHome — "AMD EPYC 9006 Results Are Here and AMD Delivers a Knockout Part Deux," Nov 10 2026 — https://www.servethehome.com/amd-epyc-9006-results-are-here-and-amd-delivers-a-knockout-part-deux/
 
-### AMD confirms ACE on 7th-gen EPYC "Florence"; 8th-gen is "Ravenna"
-**Event date: 2026-11-10 (12:00 PM EST embargo window).**
-Alongside SP7 availability AMD teases its roadmap: 7th-gen EPYC "Florence" brings ACE (AI Compute Extensions) and 8th-gen is named "Ravenna".
-*Why it matters:* x86-native matrix ISA extensions on the server roadmap are what eventually make meaningful CPU inference (and CPU/GPU hybrid serving) viable without bolt-on accelerators — the same x86 Ecosystem Advisory Group that posted the ACE v2 / AVX10.3 specs this morning.
-*Local inference:* long-horizon signal for CPU-side inference and for MoE gate/indexer offload; nothing to buy today.
-Source: AMD Confirms ACE With 7th Gen EPYC "Florence" While 8th Gen EPYC Is "Ravenna" — Phoronix, Nov 10 2026 12:00 PM EST — https://www.phoronix.com/recent-linux-news
-
-### AMD EPYC Embedded 9006 (SP7) announced
-**Event date: 2026-11-10 (12:00 PM EST).**
-Announced in the same batch as desktop-socket SP7 availability: an EPYC Embedded 9006 Series on SP7.
-*Why it matters:* embedded SP7 is the part class that shows up inside PCIe inference appliances, rugged edge inference boxes and long-lifecycle homelab/server purchases — the Zen 6 + MRDIMM + PCIe 6 platform outside the datacentre.
-*Local inference:* the realistic vehicle for a future 16-channel, high-memory inference mini-PC or industrial AI box.
-Source: AMD EPYC Embedded 9006 Series SP7 Announced — Phoronix, Nov 10 2026 12:00 PM EST — https://www.phoronix.com/recent-linux-news
-
----
+**AMD pushes back on NVIDIA and Arm "agentic CPU" marketing** — event date: Nov 10, 2026, ~7:35 PM EST
+Madhu Rangarajan, AMD corporate VP of Compute and Enterprise AI, said at a media session (covered by Tom's Hardware and TechPowerUp) that EPYC 9006 "Venice" was never purpose-built around agentic AI — a jab at NVIDIA's Vera and Arm's identical positioning — while still calling 9006 "the best CPU for the agentic era." Chief Zen architect Mike Clark separately admitted AMD "didn't see agentic computing coming," framing the CPU's AI role as handling diverse workflow tasks rather than any agent-specific hardware feature.
+*Why it matters:* Cross-vendor CPU marketing is now explicitly fighting over the AI-agent host slot; expect host-CPU selection (core count, MRDIMM bandwidth, PCIe6) to become a real differentiator in inference-node pricing.
+*Local inference:* Peripheral for homelabs, but it validates buying high-core-count standard server CPUs for agentic serving rather than "AI CPUs."
+Source: TechPowerUp — "AMD Pushes Back on NVIDIA and Arm's 'Agentic CPU' Marketing," Nov 10 2026, 19:35 EST — https://www.techpowerup.com/
 
 ## Model releases
 
-### MiniMax releases MiniMax-H3-Image open weights: 33.1B DiT, six sampling steps, native ~16-megapixel output
-**Event date: 2026-11-10 (announced on X at 14:15 UTC / 09:15 EST; the Hugging Face repo loaded publicly between 14:37 and 15:07 UTC).**
-MiniMax released the weights for MiniMax-H3-Image, an image generation + editing model built on its H3 video family. The diffusion transformer is a dense single-stream 33.1B-parameter model — 50 layers, hidden size 5376, 56 attention heads, FFN 14336, 3D multimodal RoPE, BF16 weights with FP32 embedding/timestep/output layers — distilled to 6 sampling steps (6 NFEs) with no classifier-free guidance, and it produces images natively at about 16 MP (4096×4096 up to 6272×2688) without an upscaler, with an effective working range of ~4 MP to 20 MP. Editing accepts 1–16 reference images. The DiT reads layer-50 hidden states of the full Qwen3-VL text encoder from MiniMax-H3 (66.7 GB); the image VAE is 2.34 GB FP32 with 16× downsampling and 24 latent channels. An optional prompt expander, MiniMax-H3-Image-PE (17.9 GB NVFP4, fine-tuned from Qwen3.8-27B), runs locally. Serving recipes are published for SGLang, vLLM-Omni, diffusers and ComfyUI, including single-GPU `vllm serve MiniMaxAI/MiniMax-H3-Image --omni` and four-GPU Ulysses sequence parallelism; MiniMax names H200, RTX PRO 6000 Blackwell and AMD Instinct MI350X as supported accelerators. Claimed speed is 4K×4K in 10–20 seconds — with no hardware stated and no benchmark published. The MiniMax-H3-Image Community License Agreement is dated the same day and excludes the US, EU, UK and South Korea, requires written authorization above $1M annualized revenue or for hosted serving, and forbids using outputs to train other models.
-*Why it matters:* this is the rare open-weight image model that skips the upscale pipeline entirely and commits to a six-step, guidance-free sampler — the cheapest possible path to high-resolution output, and a direct challenge to closed editors on instruction following (up to 16 references). The territory carve-out on the license, though, means US/EU/UK builders cannot legally self-host it without a separate agreement, which is the story most coverage will skip.
-*Local inference:* 68.65 GB BF16 DiT + 66.7 GB text encoder + 2.34 GB VAE rules out any single card short of ~144 GB; realistic local targets are multi-GPU H200/MI350X/RTX PRO 6000-class boxes, or the community quant tiers landing within hours (see below) that pull the footprint toward consumer territory. Community tiers from PotatoForge (W4A4) and WaveCut (pruned) were uploaded inside this window.
-Source: MiniMaxAI/MiniMax-H3-Image — Hugging Face model card (architecture, Model Zoo sizes, deployment, license) — https://huggingface.co/MiniMaxAI/MiniMax-H3-Image
-Source: MiniMax H3-Image: 16M-Pixel Images, Prices, Open Weights — CellCog (Nitish Garg), Nov 10 2026, published 14:37 UTC / updated 15:23 UTC — https://cellcog.ai/blog/minimax-h3-image/
-Source: MiniMax H3-Image Released, an Open-Weight Image Model built on H3 — r/LocalLLaMA, Nov 10 2026 14:18 UTC — https://www.reddit.com/r/LocalLLaMA/comments/1xso1ie/minimax_h3image_released_an_openweight_image/
-
----
+No new open-weight base releases landed in this window beyond the previously reported MiniMax-H3-Image (12:45 edition); community quant activity covered that plus new finetune families below.
 
 ## Community spins and quantizations
 
-### mradermacher ships the full GGUF ladder for Arete-27B-Unlocked-Uncensored-Heretic
-**Event date: 2026-11-10 (16:38 UTC plain GGUF, 17:36 UTC i1 imatrix).**
-Day-0 quantization ladder of SolsticeAI's unlocked/uncensored heretic fine-tune of Nous Research's Arete-27B (itself the Western-values SFT of Qwen3.8-27B), including an imatrix `i1` tier set.
-*Why it matters:* Arete-27B was one of the most-pulled Qwen-27B-class spins of the last cycle; a decensored variant with a proper quant ladder is the version most local users will actually run.
-*Local inference:* 27B dense — Q4_K_M class lands around 16–18 GB (fits the RTX 5060 Ti 16 GB tier tight, comfortable on 24 GB), Q8 ~29 GB for 32–48 GB cards.
-Source: mradermacher/Arete-27B-Unlocked-Uncensored-Heretic-GGUF — Hugging Face, created Nov 10 2026 16:38 UTC — https://huggingface.co/mradermacher/Arete-27B-Unlocked-Uncensored-Heretic-GGUF
-Source: mradermacher/Arete-27B-Unlocked-Uncensored-Heretic-i1-GGUF — Hugging Face, created Nov 10 2026 17:36 UTC — https://huggingface.co/mradermacher/Arete-27B-Unlocked-Uncensored-Heretic-i1-GGUF
+**XeMaya: a native Intel Arc engine for DeepSeek V4.1-Flash, GLM-5.3-Flash and Qwen3.8-Flash-Next** — event date: Nov 10, 2026 (posted ~7:45 PM EST)
+Developer Jumbomuffin1312 unveiled XeMaya, a fork of XeStrata built to run flagship MoE models natively on Intel Arc via SYCL and Level Zero — the "Project Maya for Intel" the Arc community has been missing, replacing patched llama.cpp builds. Author-reported numbers on his rig (Arc Pro B70 32GB + B65 32GB + B60 24GB, Ryzen 9950X, 128GB RAM): GLM-5.3-Flash (Maya-S v2 IQ2_XXS) prefill/generation moved from 68.3/13.6 tok/s on stock llama.cpp SYCL to 152–161/17.4 (~20 with MTP); DeepSeek-V4.1-Flash-Coder (GSQ-RCO IQ2_XXS) from 48.5/16.3 to 224.8/21.7; Qwen3.8-Flash-Next (IQ3_S) trails Strata slightly (1,842–1,884 vs 2,211 prefill). He also found two GPUs beat three for the 384-expert model because the B60 sits on a slower chipset link, and Engram files (~110.6GB) are SSD-mmap'd rather than VRAM-resident.
+*Why it matters:* Intel Arc has been a second-class citizen for the newest MoE architectures; a purpose-built SYCL/L0 engine with MTP and multi-GPU expert handling makes the B60/B65/B70 price-per-VRAM story genuinely competitive for long-context MoE serving.
+*Local inference:* Targets Intel Arc Pro B-series (24–32GB per card), multi-GPU + large system RAM + SSD for Engram tables; iGPU support theoretically possible but untested by the author.
+Source: r/LocalLLaMA — "XeMaya, an Intel Arc inference engine to run DeepSeek V4.1 and GLM 5.3," Nov 10 2026 — https://www.reddit.com/r/LocalLLaMA/comments/1xt2mjk/xemaya_an_intel_arc_inference_engine_to_run/
 
-### Community quant tiers for MiniMax-H3-Image land within hours of the weights
-**Event date: 2026-11-10 (PotatoForge W4A4 17:14 UTC; WaveCut pruned 17:37 UTC).**
-Two independent reductions of the new image model: PotatoForge's W4A4 quantization of the Comfy-Org MiniMax-H3-Image checkpoint (4-bit weights *and* activations, tagged for ComfyUI), and WaveCut's pruned variant of MiniMaxAI/MiniMax-H3-Image.
-*Why it matters:* W4A4 on a 33.1B DiT is the aggressive end of what people will attempt on a 68.65 GB BF16 model, and the speed of turnaround (under three hours from public weights) shows how fast the image-model quant ecosystem now moves. Both are unvalidated for quality — no published FID/CLIP numbers.
-*Local inference:* aimed at making a 16 MP DiT fit single-GPU territory that the BF16 checkpoint cannot approach; still needs the 66.7 GB H3 text encoder unless a substitute encoder is swapped in.
-Source: PotatoForge/Minimax-H3-Image-W4A4 — Hugging Face, created Nov 10 2026 17:14 UTC — https://huggingface.co/PotatoForge/Minimax-H3-Image-W4A4
-Source: WaveCut/MiniMax-H3-Image-Pruned — Hugging Face, created Nov 10 2026 17:37 UTC — https://huggingface.co/WaveCut/MiniMax-H3-Image-Pruned
+**RustingStrata posts a quality-vs-speed rebuttal: 29% faster than llama.cpp at essentially identical output** — event date: Nov 10, 2026 (Update on previously reported: "RustingStrata," first reported Nov 4)
+Serious_Scarcity7818 answered the recurring "these engines cheat on quality" objection with a controlled test: the same Qwen3.8-Flash-Next IQ2_XS file, same prompts, 128-token replies on an RTX 3060 12GB. RustingStrata: 33.0 tok/s decode (29.3–35.8 range) vs llama.cpp 25.6; first-prompt read 109 vs 31 tok/s. Over 9,180 WikiText-2 tokens: perplexity 2.9212 vs 2.9156, 96.78% same most-likely next token, mean KLD 0.0098 — within noise, per the author's own framing ("one model, one quant, one card"). Commenters pushed back that vanilla Strata with DFlash2 hits ~60 t/s at IQ2_S, so the honest comparison set is still missing.
+*Why it matters:* Engine-level quality fidelity (KLD/perplexity vs a reference engine) is becoming the accepted bar for new local runtimes — the same rigor Basalt and Strata threads have established — and it's now coming from engine authors themselves.
+*Local inference:* Demonstrated on 12GB RTX 3060 + 32GB DDR5; the point of RustingStrata is low-VRAM Qwen/GLM/DeepSeek MoE serving.
+Source: r/LocalLLaMA — "Does Strata like projects trade accuracy for speed?," Nov 10 2026 — https://www.reddit.com/r/LocalLLaMA/comments/1xsw9mr/does_strata_like_projects_trade_accuracy_for_speed/
 
-### MLX "OQ" quant wave for Comet 60B and Ornith-1.5-35B-A3B
-**Event date: 2026-11-10 (queuedog Comet 60B oQ4e-mtp 17:41 UTC; funnygeeker Ornith-1.5-35B-A3B oQ5e/oQ6e-mtp 17:41–17:42 UTC).**
-Apple-Silicon MLX quant tiers on two current community favourites: queuedog's 4-bit `oQ4e-mtp` of Multiverse Computing's Comet 60B-A12B (nemotron_h_omni architecture, MTP draft head retained) and funnygeeker's `oQ5e`/`oQ6e-mtp` set of Ornith-1.5-35B-A3B, including an abliterated Huihui variant and an FP16 MTP tier.
-*Why it matters:* keeping the MTP head inside the quant means Apple Silicon users get multi-token-prediction drafting, not just a smaller file — the same feature gap that has dogged MLX quants.
-*Local inference:* MLX/Apple Silicon only. A 60B-A12B at 4-bit (~34 GB) needs a 36–48 GB M-series machine and is comfortable on 64–128 GB; the 35B-A3B set is a 24–48 GB class model.
-Source: queuedog/Comet_60B_A12B_BF16-oQ4e-mtp — Hugging Face, created Nov 10 2026 17:41 UTC — https://huggingface.co/queuedog/Comet_60B_A12B_BF16-oQ4e-mtp
-Source: funnygeeker/Ornith-1.5-35B-A3B-oQ5e-mtp — Hugging Face, created Nov 10 2026 17:41 UTC — https://huggingface.co/funnygeeker/Ornith-1.5-35B-A3B-oQ5e-mtp
+**Day-0 quant ladder: Gork-27b-Cybersecurity, Qwen3.8-40B NEO Build2, Sage-A1.5-Concise, Ling-3.0-tiny-CuteHuman** — event date: Nov 10, 2026
+mradermacher pushed four fresh GGUF ladders inside the window (Hugging Face API creation timestamps): Gork-27b-Cybersecurity-GGUF (18:37 EST) plus its imatrix i1 sibling (19:12 EST) — a Qwen3.8-27B-based security/t threat-response agentic finetune from ConsensusProtocol-Thanos using heimdallm consensus tooling; Qwen3.8-40B-Ultimate-Heretic-Uncensored-Build2-i1-GGUF (15:39 EST), the next build of DavidAU's expanding-architecture heretic line; Sage-A1.5-Concise-GGUF (19:23 EST), an efficient-reasoning RL model from TheFusionCube; and Ling-3.0-tiny-CuteHuman-i1 (13:11 EST), a persona spin of Ant's tiny BailingMoE3.
+*Why it matters:* The cybersecurity-agentic tier keeps densifying on Qwen3.8-27B — Gork joins Arete, Frost-Cyber-Mini and Industry-Coder — and Build2 signals the 40B NEO expansion is iterating weekly.
+*Local inference:* All standard GGUF for llama.cpp-class engines: 27B Q4_K_M ≈ 16GB class (fits a 5060 Ti 16GB with KV headroom at moderate ctx); tiny-class repos run anywhere.
+Source: Hugging Face — https://huggingface.co/mradermacher/Gork-27b-Cybersecurity-GGUF (created Nov 10 23:37 UTC)
+Source: Hugging Face — https://huggingface.co/mradermacher/Qwen3.8-40B-Ultimate-Heretic-Uncensored-Build2-i1-GGUF (created Nov 10 20:39 UTC)
+Source: Hugging Face — https://huggingface.co/mradermacher/Sage-A1.5-Concise-GGUF (created Nov 11 00:23 UTC)
 
-### Austriani publishes ik_llama.cpp trellis quants of WaifuGemma4-26B-A4B
-**Event date: 2026-11-10 (17:40 UTC).**
-An `ik_llama.cpp` ladder (IQK trellis quantization, maxoptima search, v3 imatrix calibration) for hiwaifu-research's WaifuGemma4-26B-A4B, a Gemma-4-26B-A4B MoE roleplay fine-tune.
-*Why it matters:* ik_llama.cpp's trellis/IQK tiers routinely beat stock llama.cpp at the same bits-per-weight on MoE — worth watching whenever a 26B-A4B gets a dedicated trellis pass rather than a stock re-quant.
-*Local inference:* 26B-A4B MoE — Q4-class trellis sits near 14–16 GB, i.e. the RTX 5060 Ti 16 GB / RTX 4070-class tier, with expert offload making 8–12 GB cards workable.
-Source: Austriani/WaifuGemma4-26B-A4B-V1-ik_llama.cpp — Hugging Face, created Nov 10 2026 17:40 UTC — https://huggingface.co/Austriani/WaifuGemma4-26B-A4B-V1-ik_llama.cpp
-
-### sabda-ai ships Gemma-4 E2B/E4B on-device speech-recognition GGUFs
-**Event date: 2026-11-10 (17:16 and 17:18 UTC).**
-GGUF releases of Gemma-4-E2B-it and Gemma-4-E4B-it tuned for speech recognition and tagged `on-device` / `llama.cpp`.
-*Why it matters:* ASR inside the GGUF ecosystem (rather than whisper.cpp's separate path) means one runtime and one VRAM budget for transcribe-plus-reason pipelines on phones and single-board hardware.
-*Local inference:* E2B/E4B are sub-4 GB at 4-bit — phone, Raspberry Pi 5 and integrated-GPU territory, not discrete-GPU only.
-Source: sabda-ai/gemma-4-E4B-sabda — Hugging Face, created Nov 10 2026 17:18 UTC — https://huggingface.co/sabda-ai/gemma-4-E4B-sabda
-Source: sabda-ai/gemma-4-E2B-sabda — Hugging Face, created Nov 10 2026 17:16 UTC — https://huggingface.co/sabda-ai/gemma-4-E2B-sabda
-
-### ConeML: a from-scratch 348M-active MoE that beats Qwen2.5-1.5B on deep fact chains
-**Event date: 2026-11-10 (r/LocalLLaMA post, 17:11 UTC).**
-An independently trained sparse MoE with 1.17B stored parameters and ~348M active per token, trained from scratch on roughly 11B tokens including instruction tuning. On a shuffled relational-fact-chain task (512 questions per depth, greedy, 16-token answers) it reports 487/512 at depth 1 falling to 74/512 at depth 24, against Qwen2.5-1.5B's 481→47, SmolLM2-1.7B's 426→21, Llama-3.2-1B's 267→13 and Gemma-3-1B's 343→19. The author concedes it is not a general assistant and that overall scores are weak (13.8 on another suite), and commenters flagged the post's AI-generated styling.
-*Why it matters:* a hobby-scale training run beating 1.5B-class models by ~5x at depth 12 is the recurring community result that sparse routing plus targeted data beats parameter count on structured recall — and a useful stress-test dataset, since the author published both the GGUF and the eval set.
-*Local inference:* 1.17B stored parameters — runs in a couple of GB of RAM; CPU-only or any GPU, no VRAM constraint.
-Source: I trained a 348M-active MoE on ~11B tokens… GGUF + eval set — r/LocalLLaMA (u/Significant-Serve-58), Nov 10 2026 17:11 UTC — https://www.reddit.com/r/LocalLLaMA/comments/1xssj9q/i_trained_a_348mactive_moe_on_11b_tokens_it/
-
----
+**Deletion Tuning: zeroing <0.05% of weights matches full fine-tuning** — event date: surfaced on r/LocalLLaMA Nov 10, 2026 (NeurIPS 2026 poster)
+A Princeton-affiliated agentic-learning team showed that learning a binary mask over transformer gate projections — zeroing fewer than 0.05% of weights, nothing else changed — matches full fine-tuning across RLVR, SFT, and on-policy distillation, while forgetting far less (prior-task accuracy near base vs up to 5.4 points lost for FFT/LoRA/random-sparse under RL). The mask artifact is hundreds-to-thousands of times smaller than the resulting checkpoint, and geometry analysis (stable rank, spectrum drift, principal-weight overlap) puts it closest to FFT of all sparse methods. Code on GitHub (agentic-learning-ai-lab/deleting-weights), masks on Hugging Face.
+*Why it matters:* For the local community this is the strongest "distribution-as-delta" result yet — capability updates that ship as a few megabytes of mask instead of 50GB checkpoints — and in-thread it's already being mapped onto the heretic/abliteration workflow (p-e-w noting it slots into Heretic's plugin architecture). It's also the third weight-editing result this week after MIT's weight-space programming and the neuron-map posts.
+*Local inference:* Engine-agnostic post-training technique; immediate fit is tuning local quants without re-merging full models.
+Source: r/LocalLLaMA — "The Surprising Effectiveness of Deleting Weights in LLM Post-Training," Nov 10 2026 — https://www.reddit.com/r/LocalLLaMA/comments/1xswmb7/the_surprising_effectiveness_of_deleting_weights/
+Source: project page — https://agenticlearning.ai/deleting-weights/
 
 ## Inference software and benchmarks
 
-### llama.cpp merges FP8 (OCP E4M3) KV-cache support
-**Event date: 2026-11-10 (PR #28392 merged 16:08 UTC / 11:08 EST).**
-ORippler's PR landed after roughly two months of review: OCP-FP8-based KV caches, with runtime static per-tensor scales supported but optional. Scaling is implemented at the graph level rather than inside `ggml_flash_attn_ext`, matching the existing NVFP4/FP8 ownership model so FP8 logic can be shared across flash-attention and standard attention layers. It ships end-to-end tests for conversion/loading, context shifts and FP8-cache correctness, enables Gemma 4 Assistant with FP8 by storing and fetching scale pointers, allows BF16 scales, and multi-GPU/`--kv-ffload=false` tests are excluded for FP8 for now. Non-unit-scaled FP8 KV already exists in checkpoints such as nvidia/Mistral-Medium-3.5-128B-NVFP4.
-*Why it matters:* KV cache, not weights, is what caps context length on a fixed card. Native FP8 KV in the most-used local runtime halves KV memory versus BF16 for the models that ship scales, which converts directly into usable context on 16 GB and 32 GB cards — and it puts pressure on the manual KV-quant experiments the community has been running.
-*Local inference:* immediate relevance at the 16 GB (RTX 5060 Ti class) to 32 GB tier, where a 200K+ context budget is otherwise impossible; CUDA is the primary path today, with OpenVINO excluded from the FP8 KV tests.
-Source: Add FP8 KV-cache support by ORippler · PR #28392 (merged 16:08 UTC Nov 10) — GitHub, Nov 10 2026 — https://github.com/ggml-org/llama.cpp/pull/28392
+**SGLang 48-commit afternoon wave: AMD Muse Spark Open day-0, GPTQ/AutoRound INT4 on ROCm, gfx1250 MLA decode** — event date: Nov 10, 2026, 12:45–8:30 PM EST
+Highlights from GitHub's commit feed: ROCm day-0 implementation for Muse Spark Open (#47371); GPTQ and AutoRound INT4 checkpoint support on AMD (#42119); aiter's Triton MLA decode on gfx1250 consumer/workstation RDNA (#44458); DeepSeek-V4.1 Engram 16-row gather kernels for SM103/SM107 (#48731); opt-in MXFP8 draft lm_head for DSpark on SM10x (#49595); GLM-5.3-Flash B300 TP4 AgentX tuning results (#49071); StepFun models (Step-3.5/3.7-Flash, Step-5-Preview) rendered through sglang-processor in the router (#49392); Kimi-K3 wire-format chat shaping (#48777); measured MiniMax-H3-Image deployment performance docs (#49593); CUDA 13.4 nightly images published for x86_64 and aarch64 (#47999).
+*Why it matters:* The AMD column keeps compounding — day-0 MoE support, INT4 formats, and tuned MLA decode on gfx1250 are precisely what Radeon AI Pro cards need to be viable Qwen/DeepSeek serving platforms.
+*Local inference:* Direct gains for RDNA4 (gfx1250) and consumer Blackwell (SM12x) users; CUDA 13.4 nightlies cover GB300-class through Spark-class boards.
+Source: GitHub — sgl-project/sglang commit feed, Nov 10 2026 17:45Z–01:08Z — https://github.com/sgl-project/sglang/commits/main
 
-### SGLang's five-hour merge wave: MiniMax-H3-Image serving, gfx1250 mixed W4A8 MoE, SM120/SM12x FP8 fast paths
-**Event date: 2026-11-10 (19 PRs merged 12:57–17:33 UTC).**
-Highlights from the window: #49552 adds diffusion support for MiniMaxAI/MiniMax-H3-Image (day-0, alongside the weight release); #47398 lands mixed W4A8 MoE for gpt-oss on gfx1250 (Gluon below a token-count threshold, FlyDSL above); #45262 and #45264 add FlashInfer b12x block-FP8-as-MXFP8 linears on SM12x and a BLOCK_K=32 `hc_mix` config on SM120; #48928 switches DeepSeek-V4.1-Flash prompt encoding to segmented fastokens; #42855 adds an opt-in fused int8 Markov walk kernel for batch ≤64 on Hopper; #49263 pauses automatic GC during CUDA graph capture; and a nine-PR cluster reworks unified-memory capacity accounting in `mem_cache`.
-*Why it matters:* the gfx1250 W4A8 MoE work and the SM12x FP8 configs are the two changes that move tokens/sec on hardware people actually own, and the unified-memory rework is groundwork for expert/attention pages being placed across device boundaries.
-*Local inference:* SM120/SM12x coverage targets Blackwell consumer and RTX PRO cards; gfx1250 is the Radeon AI Pro tier. Hopper-only items are datacentre-relevant.
-Source: sgl-project/sglang merged pull requests, merged:2026-11-10T12:45Z..2026-11-10T17:45Z — GitHub search API, Nov 10 2026 — https://github.com/sgl-project/sglang/pulls?q=is%3Apr+is%3Amerged
+**vLLM afternoon wave: Kimi-K3 Mono decode on MI355X, GLM-5.3 MTP GEMM fix, NVFP4-KV layout for MiniMax-M3** — event date: Nov 10, 2026
+From the GitHub commit feed: a Mono decode layer for Kimi-K3 on MI355X with vanilla decode (#61498); Kimi-K3.1-Pro GB300 AgentX presets aligned to InferenceX (#66642); a low-latency GEMM plan fix for GLM-5.3's MTP eh_proj (#65704); BLHNC KV-cache layout allowed with NVFP4 KV for MiniMax-M3 (#66892); DomynEdge now mixes sliding and full attention layers (#66819); external KV connectors can declare KV-cache memory registration (#66605); plus a security fix pruning quadratic attribute scans in Muse tool-call extraction (#62345).
+*Why it matters:* ROCm-side Kimi-K3 decode and GB300 agent presets keep shrinking the gap between AMD DC cards and NVIDIA for frontier MoE serving; the KV-registration hook matters for anyone building custom offload tiers.
+*Local inference:* Mostly DC-class (MI355X/GB300), but the MiniMax-M3 NVFP4-KV and GLM-5.3 MTP fixes benefit the same models run on local SM120/SM121 boxes.
+Source: GitHub — vllm-project/vllm commit feed, Nov 10 2026 17:45Z–01:08Z — https://github.com/vllm-project/vllm/commits/main
 
-### vLLM merge wave: extensible-KV re-prepare for Kimi-K3, Humming MoE intrinsics, INT8 MoE scale indexing fix
-**Event date: 2026-11-10 (11 PRs merged 13:39–17:20 UTC).**
-In-window: #66370 re-prepares model state after an extensible KV-cache extension (the Kimi-K3 AMD specialized-decode path), #65975 uses fast SiLU intrinsics in Humming MoE activations, #65177 fixes INT8 MoE per-channel weight-scale indexing relative to activation quantization (#58570), #59025 registers the cuDNN backend for FlashInfer BF16 matmul, #65217 adds `prefill_context_kv_only` for prefill instances in MRV2 speculative decoding, plus ROCm/CI and XPU CI housekeeping.
-*Why it matters:* the INT8 MoE scale-indexing fix is a correctness bug with real quality implications for quantized MoE serving, and the extensible-KV fix is what lets KV pools grow dynamically without desynchronising the decode state.
-*Local inference:* the extensible-KV sizing and INT8-MoE fixes apply directly to 32 GB+ workstation cards and ROCm rigs (Radeon AI Pro / Instinct) running MoE models.
-Source: vllm-project/vllm merged pull requests, merged:2026-11-10T12:45Z..2026-11-10T17:45Z — GitHub search API, Nov 10 2026 — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
+**Ollama v0.40.17-rc0: mmap'd Vulkan on integrated GPUs, concurrent MLX generation** — event date: Nov 10, 2026, 5:25 PM EST
+The rc published 22:25 UTC with four functional changes: `llm: use mmap for Vulkan integrated GPUs` (#19640), concurrent generation support for the MLX backend (#19197), a llama.cpp bump to b12257 plus MLX/MLX-C bumps, and improved ChatGPT CLI restore/graceful restart.
+*Why it matters:* iGPU mmap is a real quality-of-life unlock for NPU/APU-class machines (Strix Halo, Panther Lake boxes) running Ollama on Vulkan, and MLX concurrency makes Apple silicon multi-user serving practical without third-party wrappers.
+*Local inference:* Vulkan iGPU rigs (AMD 8060S-class, Intel Arc iGPUs) and Apple silicon Macs are the direct beneficiaries.
+Source: GitHub — ollama/ollama release v0.40.17-rc0, published Nov 10 2026 22:25 UTC — https://github.com/ollama/ollama/releases/tag/v0.40.17-rc0
+
+**llama.cpp minor afternoon wave + b12257–b12262** — event date: Nov 10, 2026
+Quiet-but-useful merges: Muse Spark no longer ignores `response_format` json_schema (#32017), the UI Discover tab now surfaces audio for models with an audio-encoder mmproj (#31837), and mtmd got a format-string cleanup/rename (#32040). Builds b12257–b12262 shipped 21:54–23:04 UTC.
+*Why it matters:* Structured-output compliance on Muse Spark closes an agent-harness papercut; audio discovery in the UI keeps the multimodal surface consistent.
+*Local inference:* Applies to every llama-server deployment; Muse Spark users get spec-compliant JSON mode.
+Source: GitHub — ggml-org/llama.cpp commits and releases, Nov 10 2026 — https://github.com/ggml-org/llama.cpp/releases
 
 ---
 
 ## Also noted
 
-- **llama.cpp b12246–b12250 released inside the window** (13:09, 15:01, 16:08, 16:57, 17:13 UTC) — the FP8 KV-cache merge plus backend-scheduler reuse when sched_params are compatible (#32009), sampling-chain output marking to prevent aliasing (#32015), MUL_MAT src1 precision gating (#31896) and CUDA cleanup. — https://github.com/ggml-org/llama.cpp/releases
-- **42% GPU power reduction with zero measured performance loss (author-reported).** u/Asthenia5 stepped an RTX 3080 Ti's power limit from 450 W to 260 W while running Qwen3.5-9B Q4_K_M and saw token rate hold at ~100 tok/s, only degrading to ~80 tok/s at 220 W; commenters attribute the flat region to memory bandwidth (912 GB/s over a 5.5 GB GGUF ⇒ ~165 tok/s theoretical ceiling) and to NVIDIA's half-rate matrix cap on consumer parts. — https://www.reddit.com/r/LocalLLaMA/comments/1xsp309/42_gpu_power_reduction_with_zero_performance_loss/
-- **TTS benchmark of 91 open TTS models and 28 paid APIs on identical prompts** posted to r/LocalLLaMA at 16:09 UTC — a broad, single-prompt-set comparison for anyone picking a local voice stack. — https://www.reddit.com/r/LocalLLaMA/comments/1xsqv86/tts_bench_91_open_tts_model/
-- **Startlux 4B/9B "Instant" (System1/Jev) Q4_0 running on four Raspberry Pi 5 8GB boards** (15:22 UTC) — small-model serving spread across SBC-class hardware. — https://www.reddit.com/r/LocalLLaMA/comments/1xspmhe/startlux_4b_9b_instant_syst/
-- **Cross-language agentic coding benchmark of Qwen3.6-27B, Qwen3.8-27B and GLM-5.3 Flash** on real tasks in Elixir, OCaml, Haskell and ten other ecosystems (14:48 UTC) — a useful long-tail-language check against the usual Python/JS leaderboards. — https://www.reddit.com/r/LocalLLaMA/comments/1xsorsx/we_tested_qwen36_27b_qwen38/
-- **Minor in-window quant uploads:** mradermacher's i1 ladder for DavidAU's Qwen3.8-31B-Looping-Transformer (looping-transformer experiment), plus MonadGPT-GGUF (en/fr/la philosophical model), gemma-4-12B-it-SOMPOA-heresy-i1, Sirigannada-2B-base-GGUF and shennong-1.5b-sft-GGUF. — https://huggingface.co/mradermacher
+- **HF API timestamps confirm the quant economy's pace**: Gork-27b-Cybersecurity went from base-model exposure to full GGUF + i1 ladders in roughly an hour this evening (huggingface.co/mradermacher).
 
 ## Just missed the window
-- **speakleash/Bielik-11B-v3.1-Instruct** and its day-0 quant family (GGUF, AWQ, NVFP4, NVFP4A16, MLX-4bit, MLX-8bit — repos created 01:58–07:12 UTC, base card last updated 11:21 UTC, all before the 07:45 EST fire; the r/LocalLLaMA post at 16:30 UTC is re-coverage). Apache-2.0, Llama-architecture 11B tuned for Polish and ~40 other languages; ~22–25 GB at BF16, so a 24–32 GB card or ~16 GB at Q4. — https://huggingface.co/speakleash/Bielik-11B-v3.1-Instruct
+
+- (missed:) **MINISFORUM's $1,559 Ryzen AI Max+ 388 mini PC** — VideoCardz, Nov 9 ~9:58 AM EST: Radeon 8060S with 40 CUs, but memory speed cut ~20% versus the originally announced spec — the bandwidth hit matters for Strix Halo-class inference. https://videocardz.com/newz/minisforums-new-1559-gaming-mini-pc-features-ryzen-ai-max-388-but-memory-speed-has-been-reduced *(headline reference; VideoCardz home listing Nov 9)*
+- (missed:) **llama.cpp on Tesla K80/Kepler: "3× faster"** — larfus303's nc-dequantize fork hit Hacker News at 20:12 EST, four minutes past window end. https://github.com/larfus303/llama-cpp-kepler-k80-nc-dequantize
 
 ## Coverage notes
-**Verified: 16 in-window events** (4 lead items, 8 sectioned items, 6 also-noted — counting unit: distinct underlying events, one entry each; the AMD EPYC entry bundles the SP7 availability announcement and the 9686F clock-bump milestone of the same launch, and the two AMD roadmap/embedded one-liners are counted separately because AMD disclosed them as separate announcements). One "just missed the window" footnote, used for the first and only time.
 
-**Ledger dedupe:** 11 candidates suppressed as already reported — Kvark Sparkle 1.1 (reported this morning 07:45), DavidAU Qwen3.8-40B-Ultimate-Heretic-Turbo-Brilliance-50x-AGI-NEO-GGUF (07:45), llama.cpp b12242–b12244 (07:45), the vLLM 55-PR and SGLang 46-PR overnight waves (07:45), the 07:45 mradermacher/bartowski quant ladder items (Qwen3.8-4B-Distill-ARA-Abliterated, LiquidCode-2.5-24B-A2B-GGUF, jmc0_Rein-NPC-4B-GGUF), the two previously-footnoted "missed:" entries resurfaced in-window (Multiverse Comet 60B stock-llama.cpp GGUFs, ReadyArt MiniMax-M3 jablit ladder), and the Day-0 vLLM "MiniMax-H3" tweet which belongs to the H3-Image event already counted. No repeat "Just missed" footnotes were issued.
-
-**Out of scope, deliberately excluded:** Gemini 4 Carbon availability (cloud API), Anthropic IPO valuation reporting, NVIDIA board investigation, KORA OS, Blender 5.3, .NET 11, GTA VI coverage on VideoCardz.
-
-**Dead ends / limitations:** (1) direct `web_extract` of reddit.com thread URLs returns 403 — used the reddit-reading Atom route; the AMD MEXT thread body came back empty (link-only post), so that item rests on the Phoronix article. (2) The AMD IR press-release deep link 404'd; cited the IR press-release index page, which carries the exact "Nov 10, 2026 12:00 pm EST" timestamp. (3) Phoronix does not show minutes on every entry — the EPYC 9686F benchmark article is listed on the Nov 10 index with its timestamp collapsed into the 12:00 PM EST batch, so I treated it as part of the EPYC launch item rather than a separate event. (4) Search backend threw repeated DuckDuckGo timeouts; several angles went through the fallback provider only. (5) No independent benchmark exists yet for MiniMax-H3-Image's 10–20 s claim, and MiniMax names no test hardware — both flagged inline. (6) Hugging Face's `createdAt` for MiniMaxAI/MiniMax-H3-Image is Nov 3; the repo was not publicly readable until ~15:07 UTC today, and the anchor used here is MiniMax's own 14:15 UTC announcement. (7) ServeTheHome published nothing else AI-relevant in this five-hour band; its EPYC piece carries a date but no minute.
+- **Verified items: 12** (4 hardware/silicon incl. 1 update, 5 community/engine stories, 3 software waves) — every one fetched and page-timestamp-confirmed inside 12:45–20:08 EST, except two r/LocalLLaMA threads verified by creation-order bounding and one project page (Deletion Tuning) cited as "surfaced today."
+- **Ledger dedupe: ~15 candidates suppressed** as already reported or already footnoted: MiniMax-H3-Image rL wave, TTS-bench, Startlux-4xRPi5, Elixir/OCaml/Haskell bench, ConeML 348M, DavidAU 40B NEO (Build2-i1 quant treated as new tier), Fz1zz Strata fork, Ren-WuJun CUDA+ROCm Maya, pwilkin external-PLE PR (11 re-coverage) + repeat-missed items Bielik-11B-v3.1, Comet-60B GGUF, Supermicro Super AI Station, Google TPU 8tx (4).
+- **Dead ends:** HF `api/models?sort=createdAt` returned unusable noise (dropped in favor of per-author `sort=lastModified`); DuckDuckGo backend errored on two of three early searches (nous fallback served); anonymous Reddit feed lacks scores/timestamps (used base-36 ID ordering against known-in-window anchors).
+- **Budget:** run started 20:08, research concluded ~20:35 (~27 min — slightly over the tightened 20-min target but within all phase walls; no rabbit holes chased).
