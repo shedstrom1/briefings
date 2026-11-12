@@ -1,133 +1,127 @@
-# AI Hardware & Local Models Brief — November 12, 2026, 12:45 ET edition
+# AI Hardware & Local Models Brief — Nov 12, 2026 · 12:45→17:45 ET
 
-**Window:** 2026-11-12 07:45 → 12:47 ET (previous fire → now). New items only; ledger-deduped.
+**Window:** 2026-11-12 12:45 EST → 17:45 EST (UTC 17:45–22:45). New-items-only brief; all events first disclosed inside the window or material updates to ledger items.
 
 ## TL;DR
-
-- **NVIDIA loses Jensen Huang.** The Board announced this morning that co-founder and CEO Jensen Huang resigned as President, CEO and director "effective immediately"; CFO Colette Kress is Interim CEO and Harvey C. Jones is the company's first-ever Board Chair. Shares fell ~12% premarket Thursday; NVIDIA promises the product roadmap continues "without interruption."
-- **Axelera AI unveiled Titania**, its third-generation chiplet inference architecture: LPDDR6 instead of HBM (128 GB per two-chiplet package), an air-cooled 4U reference server with 20 PFLOPS FP8 and 1 TB accelerator memory, and claims of up to 7x throughput-per-watt and 20x better TCO than data-center-grade GPU servers — backed by over $300M in confirmed commitments, demoed at SC26.
-- **UCIe 4.0 shipped** today: the chiplet interconnect spec moves from die-to-die plumbing to system-level integration (manageability, security, memory connectivity, RAS) — the standardization step chiplet-based AI accelerators need.
-- **Penguin Solutions launched the SMART CXL-8F2W-D4**, an eight-DIMM DDR4 CXL add-in card (Marvell StructeraX controller) that recycles DDR4 as expansion memory for AI servers — up to 512 GB per card, directly aimed at the DRAM squeeze.
-- **Local stacks:** vLLM merged Kimi K3.1 Pro ROCm DCP (split 5/6) plus a GLM-5.3-Flash serving preset worth +27% E2E throughput; llama.cpp shipped b12319–b12320; SGLang landed a 13-PR wave; mradermacher and bartowski pushed an afternoon GGUF ladder.
+- A forensic report published this afternoon claims six flagship open-weight models from DeepSeek, Moonshot, MiniMax and Ant Group carry numerical fingerprints proving they were initialized on export-controlled NVIDIA Blackwell GPUs (B200/B300/GB200/GB300), confirmed on physical chips for two models.
+- Thinking Machines shipped the Apache-2.0 open weights for Inkling 2 Small (594B/17B MoE, 1M ctx) — NVFP4 needs ~500 GB aggregate VRAM (2x B300 / 4x H200 class); day-0 recipes landed in vLLM, SGLang, TokenSpeed and Unsloth.
+- Cerebras posted record Q3 (core revenue $230.9M, +70% YoY), two hyperscaler wins incl. Oracle OCI, 700 MW contracted, and WSE5 back from fab in system test; CS-5 targets 10,000 tok/s in mid-2027.
+- The NVIDIA CEO shakeup deepened with a Senate Finance investigation into alleged kickbacks on illegal Blackwell sales to China, plus Bloomberg reporting on pre-exit pressure to expand NVIDIA's AI backstop guarantees.
+- RustingStrata's author published Q8_0/BF16 datacenter benchmarks: 508 tok/s decode (MTP) for Qwen3.6-35B-A3B on a single H100.
 
 ---
 
 ## AI hardware and silicon
 
-### NVIDIA: Jensen Huang resigns as CEO; CFO Colette Kress takes over as interim (event date: November 12, 2026)
+**Forensic report: six Chinese open-weight models fingerprint to export-controlled Blackwell GPUs** — Event date: November 12, 2026 (this window; HN ~21:49Z)
+Will DePue (Unemployment Labs) published checkpoint-forensics research finding six models released since April 2026 — DeepSeek-V4-Flash (B200/B300, 148 SMs), DeepSeek-V4-Pro, Kimi K3, Kimi K3.1-Pro and Ant's Ling-3.1-flash (GB200/GB300, 152 SMs), MiniMax-M3 (B200/B300) — contain weight-initialization patterns matching Blackwell hardware, recovered from the public weights themselves; DeepSeek-V4-Flash and Kimi K3 matches were confirmed on physical Blackwell chips. Earlier models from the same labs (DeepSeek-V3, Kimi K2/K2.5, MiniMax-M2.7, Ling-3.0-flash) read as Hopper. Match strengths run 49–1,385 sigma against a ~8-sigma chance ceiling over ~6 trillion seed/layout combinations; the method reproduces all 24 publicly-disclosed hardware cases, including NVIDIA's own Nemotron-3 Ultra. The report sizes each run at roughly 500–3,000 Blackwell GPUs over 2–3 months ($150–200M per cluster at ~$70k/GPU) and notes Alibaba/Qwen, Zhipu/GLM, Tencent, Xiaomi and StepFun still read Hopper, while Meituan LongCat shows no NVIDIA fingerprint. The author is explicit this supports but does not prove Blackwell training, and does not establish where the chips are or that export controls were violated.
+**Why it matters:** This is the first public technical evidence backing government allegations about smuggled Blackwells, and it lands the same day as the Senate probe below — with direct implications for China access policy, NCP/geo-attestation pressure, and the credibility of "trained on Ascend/Huawei" narratives. For homelab readers it is also a live demo of checkpoint-forensics: weights leak hardware provenance.
+**Local inference:** Not a local-run item; relevant to everyone serving these same open weights (DeepSeek-V4.1-Flash, Kimi K3, MiniMax-M3 lineups) — provenance now carries a hardware-forensics layer.
+Source: "Top Chinese Frontier AI Models Carry the Fingerprint of Export-Controlled NVIDIA Blackwell GPUs," Will DePue, Unemployment Labs, November 12, 2026 — https://unemploymentlabs.com/checkpoint-forensics
+Source: Hacker News story 50474813, 2026-11-12T21:49Z — https://news.ycombinator.com/item?id=50474813 (tweet: https://twitter.com/willdepue/status/2120992457630326841)
 
-The NVIDIA Board announced Thursday morning that Jensen Huang — CEO since founding the company in 1993 — has resigned as President, CEO and board member, effective immediately, days after disclosures of his personal conduct triggered a national-security furor (TechCrunch reports the board accepted the resignation Wednesday night). CFO Colette Kress, at NVIDIA since 2013 and formerly of Cisco and Microsoft, serves as Interim CEO while keeping the CFO role; Harvey C. Jones (ex-Synopsys CEO, a director since 1993) was appointed the company's first-ever Chair of the Board and will lead the successor search. The stock dropped nearly 12% in Thursday's early morning trading — down as much as 19%, roughly $855B of market cap, since Friday. The Board explicitly stated that "operations, customer commitments and product roadmap" continue without interruption; the first real test of continuity comes Tuesday, November 17, with the Q3 FY2027 earnings call.
+**Cerebras Q3 2026: record revenue, two hyperscaler wins, WSE5 already in system test** — Event date: November 12, 2026 (released after market close, ~21:05Z)
+Cerebras reported record Q3 core revenue of $230.9M (+70% YoY; GAAP $210.8M, +55%), core cloud revenue $144.9M (+272%), 41% core gross margin, $26.1B RPO and $7.8B liquidity; Q4 guide $310–330M core. Commercial wins: Oracle Cloud Infrastructure will integrate Cerebras fast inference in 2027, plus an unnamed "top-three hyperscaler" cloud deal (Techmeme/Bloomberg sourcing identifies Microsoft). Capacity: 700 gross MW contracted through end-2027 with new Norway/Finland sites; manufacturing with Flex/Sanmina to exit 2026 at >10x capacity. Silicon roadmap: CS-4 (up to 30x faster inference) entering full production, CS-5 targeted early summer 2027 at up to 10,000 tokens/s/user, and Wafer Scale Engine 5 is already back from the fab, brought up and in system test — tape-out to system test in under five months. Day-zero Kimi K3.1 serving claimed at up to 2,000 tok/s. Stock +15% after hours.
+**Why it matters:** Wafer-scale is turning from a speed stunt into a contracted capacity business (700 MW) right as NVIDIA's leadership crisis puts "NVIDIA-only" procurement assumptions under review — heterogeneous inference (Cerebras prefill/decode split) is being pitched at exactly the moment clouds are diversifying.
+**Local inference:** Datacenter-class, not homelab; the practical read-through is more offload options — Cerebras-hosted Kimi K3.1/Inkling-class serving at thousands of tok/s gives local-stack users fast "burst to cloud" targets.
+Source: "Cerebras Systems Delivers Record Revenue in Third Quarter 2026, Raises Full-Year Outlook," Cerebras IR (GlobeNewswire), November 12, 2026 — https://investors.cerebras.ai/news-releases/news-release-details/cerebras-systems-delivers-record-revenue-third-quarter-2026
+Source: Newsquawk wire, November 12, 2026 — https://www.newsquawk.com/headlines/cerebras-systems-inc-cbrs-q3-2026-usd-core-revenue-2309mln-exp-2147mln
 
-**Why it matters:** This is the biggest leadership shock in the company that sets the cadence of the entire accelerated-computing ecosystem — Rubin/Vera Rubin ramp timing, DGX Spark and GeForce AI product lines, CUDA/ROCm competitive posture, and the ~$99B investment book (OpenAI $30B, Anthropic $10B, CoreWeave, Nebius, the $105B Ohio OpenAI campus credit line) all now sit with an interim CEO and no designated successor. For homelab and local-inference buyers, near-term roadmap risk is low (the board's continuity language plus a scheduled Nov 17 call), but partner and neocloud equity reacted hard (CoreWeave -9%, Nebius -16%, IREN -6.6%), and pricing/availability of NVIDIA-adjacent hardware should be watched for the knock-on.
-**Local inference:** No immediate change to CUDA, GeForce, RTX Spark or DGX Spark support; the exposure is forward-looking roadmap certainty (next data-center generation and consumer AI boxes) and the health of the second-hand GPU market if the selloff persists.
-**Source:** NVIDIA Newsroom, "NVIDIA Announces CEO Transition," November 12, 2026 — https://nvidianews.nvidia.com/news/nvidia-announces-ceo-transition
-**Source:** TechCrunch, Ram Iyer & Julie Bort, November 12, 2026 — https://techcrunch.com/2026-11-12/nvidias-jensen-huang-resigns-chipmaker-names-cfo-colette-kress-as-interim-ceo/
-**Source:** ServeTheHome, Ryan Smith, November 12, 2026 — "NVIDIA CEO and Co-Founder Jensen Huang Resigns, Effective Immediately" (https://www.servethehome.com/ front page)
-**Source:** VideoCardz, November 12, 2026 (~09:45 ET) — "Jensen Huang officially resigns as NVIDIA CEO after 33 years" (videocardz.com news river)
+**Update on previously reported (NVIDIA CEO transition, reported today 12:45): chip-sales probe opens; backstop pressure detailed** — Event date: November 12, 2026, afternoon developments
+Within the window: Sen. Wyden and Rep. Neal launched a Senate Finance investigation into an alleged "administration scheme to take a cut" of illegal NVIDIA AI chip sales to Chinese companies (press release posted ~19:30Z), citing ignored warnings about the former CEO; Bloomberg reported (21:53Z HN) NVIDIA faced pressure to enlarge its AI backstop guarantees (e.g., the OpenAI deal) before Huang's exit; Reuters reported (19:51Z) a second employee relationship, and Forbes (20:36Z) a third affair with another NVIDIA employee; House Foreign Affairs Chair Mast said Huang agreed to testify under oath before Thanksgiving; interim CEO Colette Kress's staff email promised a November 18 all-hands; Bloomberg sources say Chinese AI firms are rushing to rent overseas NVIDIA cloud capacity amid tighter-enforcement fears; SemiAnalysis published "Nvidia and the World Without Jensen" (~18:50Z). November 17 earnings is now the marquee date.
+**Why it matters:** The hardware-relevant core: export-control enforcement on Blackwell is becoming an active US legislative investigation on the same day the forensic paper dropped — expect tighter NCP attestation, supply uncertainty for China-adjacent clusters, and questions about continuity of Huang-era deals (backstops, MGX, Spark) under an interim CEO.
+**Local inference:** No direct device impact; watch RTX Spark/DGX roadmap commitments and CUDA/driver cadence across the Nov 17 earnings and the Nov 18 staff meeting.
+Source: Senate Finance Committee press release (Wyden/Neal), November 12, 2026 — https://www.finance.senate.gov/newsroom/press-releases/wyden-and-neal-launch-investigation-of-trump-administration-scheme-to-take-cut-of-nvidia-ai-chip-sales-to-chinese-companies-trump-and-commerce-department-reportedly-ignored-warnings-about-former-ceo/
+Source: Bloomberg, 2026-11-12 — https://www.bloomberg.com/news/articles/2026-11-12/nvidia-faced-pressure-to-boost-its-ai-backstop-before-huang-exit
+Source: SemiAnalysis, 2026-11-12 ~18:50Z — https://newsletter.semianalysis.com/p/nvidia-and-the-world-without-jensen
 
-### Axelera AI unveils Titania: LPDDR6 chiplet inference silicon claiming 7x perf/watt, air-cooled 4U (event date: November 12, 2026)
-
-Axelera AI (Eindhoven) released the details of Titania, its third-generation architecture built on Digital In-Memory Computing with a chiplet design. Each Titania system-in-package pairs two chiplets (32 AI cores + 16 RISC-V compute cores, 128 MB cluster-shared SRAM each, per the architecture breakdown) on TSMC N4C, and the platform deliberately uses **LPDDR6 instead of HBM** — 128 GB capacity per package at lower memory power and no dependence on HBM supply. The flagship reference: eight SiP accelerators (codename AX8) in a standard **4U air-cooled server at 5–6 kW typical delivering 20 PFLOPS FP8, 1 TB of accelerator memory and 19.6 TB/s aggregate bandwidth** — Axelera says one server holds a 1.6-trillion-parameter model at FP4 with KV-cache headroom, two fit a legacy 15 kW rack. Claims: up to 7x the throughput-per-watt of the best data-center servers and up to 20x better TCO, with tensor/expert/pipeline parallelism, speculative decoding and KV-cache offload/disaggregation supported out of the box via the Voyager toolchain. Form factors span standard PCIe cards to OCP OAM modules; Axelera cites **over $300M in confirmed commitments**, with SC26 (booth 3251) demos this week.
-
-**Why it matters:** The "inference doesn't need HBM or liquid cooling" thesis is the most credible challenger narrative to NVIDIA's rack-scale strategy, and it's backed by signed money rather than a slide. LPDDR6 capacity beats HBM capacity per dollar for sparse MoE (small active-parameter footprint), which is exactly where open-weight serving lives. Numbers above are vendor expectations, not independent measurements — treat the 7x/20x claims as targets until third-party tests land.
-**Local inference:** Targets enterprise/neocloud racks rather than desktops, but the pricing pressure is real (Axelera explicitly positions below an RTX-6000-class server's cost/power budget); PCIe-card form factors and 4U air-cooled servers keep homelab-adjacent deployment plausible if OEM channels take them.
-**Source:** Axelera AI press release, "Axelera AI Unveils Titania Architecture…," November 12, 2026 — https://axelera.ai/news/axelera-ai-unveils-titania-architecture-hpc-class-ai-responsiveness-without-liquid-cooled-racks-targeting-110b-underserved-market
-**Source:** TechPowerUp press release post, November 12, 2026, 10:46 ET — https://www.techpowerup.com/354736/axelera-ai-unveils-titania-architecture
-**Source:** Futurum Group analysis (per-chiplet core counts, 1.25 PFLOPS FP8 per chiplet, TSMC N4C), November 12, 2026 — https://futurumgroup.com/insights/axelera-titania-brings-native-fp8-and-fp4-to-in-memory-compute/
-
-### UCIe Consortium releases the UCIe 4.0 specification — chiplets as a managed system (event date: November 12, 2026)
-
-The Universal Chiplet Interconnect Express Consortium published UCIe 4.0 today (Beaverton, Nov 12), pushing the die-to-die standard "beyond chiplet-level interface design" to integrating multiple chiplets as one coherent on-package system: new capabilities for manageability and security, power/die-area efficiency, memory connectivity across chiplets, and reliability.
-
-**Why it matters:** AI accelerators are increasingly chiplet mosaics (compute + HBM/LPDDR + I/O dies from potentially different vendors); 4.0's management/security plumbing is what makes multi-vendor chiplet designs serviceable and auditable at scale — a quiet unlock for the accelerator startups (Axelera above) and for CXL-attached memory topologies.
-**Local inference:** Indirect — a healthier chiplet supply chain lowers cost pressure on the accelerators and client NPUs that local inference runs on.
-**Source:** UCIe Consortium press releases index, November 12, 2026 — https://www.uciexpress.org/press-releases
-**Source:** Business Wire via Yahoo Finance, November 12, 2026 — https://finance.yahoo.com/technology/articles/ucie-consortium-advances-chiplet-connectivity-130000549.html
-**Source:** TechPowerUp, November 12, 2026, 10:39 ET — "UCIe Consortium Advances from Chiplet Connectivity to System-Level Integration with UCIe 4.0 Specification"
-
-### Penguin Solutions launches SMART CXL-8F2W-D4: CXL memory expansion that recycles DDR4 for AI servers (event date: November 12, 2026, 09:30 ET)
-
-Penguin Solutions introduced an eight-DIMM DDR4 Compute Express Link memory add-in card built on the Marvell StructeraX CXL controller: four memory channels support up to eight qualified DDR4 RDIMMs (DDR4-3200; eight 64 GB RDIMMs = **512 GB of CXL-attached capacity per card**), presenting retired/available DDR4 as additional system memory in compatible servers. Penguin cites TechInsights data that AI data centers account for 34% of DRAM demand in 2026, heading toward nearly 50% by 2029 — the card's pitch is capacity growth without buying scarce, expensive DDR5. Demoed under the CXL Consortium's banner at SC26.
-
-**Why it matters:** With the November DRAM crunch already depressing GPU/laptop value (CPU-Z capacity declines, RTX price inflation), using dead DDR4 stock as KV-cache/expert-offload tier is a genuinely new supply valve for AI boxes, and CXL-attached RAM is the cheap expansion path for MoE expert streaming engines.
-**Local inference:** CXL host-attached DDR4 is the same tier llama.cpp/vLLM expert-offload and KV-cache engines already consume (the Basalt/Strata/DeepSeek SSD-expert workloads); server-class, but it validates the "old RAM is the new capacity" playbook trickling down.
-**Source:** TechPowerUp press release, November 12, 2026, 11:41 ET — https://www.techpowerup.com/354743/penguin-solutions-introduces-cxl-enabled-ddr4-module-to-help-address-memory-shortages-in-ai-data-centers
-**Source:** Business Wire, November 12, 2026, 09:30 ET — https://markets.ft.com/data/announce/detail?dockey=600-202611120930BIZWIRE_USPRX____20261112_BW319858-1
-**Source (technical spec):** CXL Consortium blog (Marvell StructeraX, 4 channels / DDR4-3200 / 512 GB config) — https://computeexpresslink.org/blog/cxl-gives-ddr4-a-second-life-penguin-solutions-demonstrates-memory-reuse-at-sc26-4883/
-
-### Corsair launches HX1000i SHIFT CRYSTAL — first PSU with per-pin 12V-2x6 overcurrent protection (PinProtect+) (event date: November 12, 2026)
-
-Corsair's new flagship 1000 W Cybenetics Platinum, ATX 3.1 PSU is its first with PinProtect+ per-pin overcurrent protection on the native 12V-2x6 GPU connector, plus side-mounted cables, an integrated iCUE LINK hub (up to 24 devices) and transparent panels; TechPowerUp's review went live the same morning.
-
-**Why it matters:** The November 8 dual-RTX-PRO-6000 Seasonic cable-sleeving scare put 12V-2x6 failure modes back on the agenda; per-pin OCP is the first mainstream hardware mitigation sold to enthusiasts.
-**Local inference:** Directly relevant to multi-GPU inference rigs (dual 5090/PRO-6000 builds) where connector overload is the classic failure; 1000 W suits 2x high-power-card workstations.
-**Source:** TechPowerUp press release, November 12, 2026, 10:34 ET — Corsair HX1000i SHIFT CRYSTAL launch; review same day at https://www.techpowerup.com/ (Today's Reviews)
-
----
-
-## Inference software and benchmarks
-
-### vLLM: 19-PR in-window wave — Kimi K3.1 Pro split 5/6 (ROCm DCP) and GLM-5.3-Flash +27% E2E preset (event date: merges November 12, 12:48–17:40 UTC)
-
-Highlights merged in the 07:45→12:45 ET window: **#65685 Kimi K3.1 Pro (split 5/6: ROCm DCP, P/D disaggregation, indexer top-k)** — continuing the day-0 K3.1 support arc first reported Nov 6; **#67099 GLM-5.3 Perf: `latency_specialized` on by default (+27.0% E2E throughput)** and **#67104 skip unused MTP post-attention rows (+4.2% E2E)**; **#67269 Muse Spark MegaMoE + B300 specialized-decode recipe**; **#66047 ROCm DSv4.1 sparse-indexer decode rows sharded across TP**; **#66318 Mamba2 ReplaySSM speculative decoding on the Triton backend**; **#67205 tensorized model loader** for cross-implementation loads; plus Mooncake re-admit fix #66384 and EPLB async-rearrangement fix #64485.
-
-**Why it matters:** The GLM-5.3 defaults change is a free ~31% combined E2E uplift for GLM serving without hardware changes, and K3.1's ROCm DCP path keeps AMD in the frontier-open-model serving game.
-**Local inference:** ROCm/DCP and B300 recipes are data-center-leaning, but ReplaySSM spec-decode and the sampler/loader fixes land in desktop SM120/SM89 builds too.
-**Source:** GitHub merged-PR search, vllm-project/vllm, merged 2026-11-12T12:45Z–17:47Z — https://github.com/vllm-project/vllm (query: is:pr is:merged merged:2026-11-12T12:45Z..2026-11-12T17:47Z)
-
-### llama.cpp b12319–b12320: Hexagon Q5_0/Q5_1, MCP tool-call cancellation, qwen3.5 tensor merge on convert (event date: builds published November 12, 16:34 and 17:44 UTC)
-
-Two builds in the window ride on the b12302–b12318 batch already reported: **hexagon: add Q5_0 and Q5_1 support (#32094)** — Snapdragon NPU quant coverage expands mid-tier; **server: cancel MCP tool calls on client disconnect or timeout (#32025)** — kills orphaned agent tool executions; **qwen3.5: merge tensors on convert also (#32102)** — smaller/faster converted checkpoints. (A few-row CUDA MMQ improvement #31533 re-committed at 13:12Z was already reported.)
-
-**Why it matters:** Q5-class Hexagon coverage makes 5-bit quants viable on Qualcomm silicon for the first time; MCP cancellation is a real agent-harness reliability fix for llama-server deployments.
-**Local inference:** Runs on Snapdragon X2/8-Elite laptops and any llama.cpp host; the qwen3.5 converter change benefits every Qwen3.5 deployment.
-**Source:** GitHub releases ggml-org/llama.cpp b12319 (2026-11-12T16:34:48Z), b12320 (2026-11-12T17:44:55Z) — https://github.com/ggml-org/llama.cpp/releases
-
-### SGLang: 13-PR wave — runway praxis 1 diffusion, H3-Image CI, GLM-5.3-Flash cookbook pin (event date: merges November 12, 13:05–17:07 UTC)
-
-In-window merges: **#49872 diffusion: runway praxis 1 support**; **#49706 run MiniMax-H3-Image T2I and edit in the B200 CI suite** and **#45730 keep ComfyUI patches in the plugin + refresh H3 compatibility**; **#50041 cookbook: pin GLM-5.3-Flash high-throughput recipes to mamba ratio 0.9**; **#49894 apply API keys in tokenizer workers and WebSocket routes** (security); reverts the Mamba GDS eviction policy (#50118); RoPE class support for DiT models (#44753); int4_w4a16 tuning-CLI accept (#49890).
-
-**Why it matters:** H3-Image is now CI-tested on Blackwell with a maintained ComfyUI path — day-2 polish for the big open image model; the GLM-5.3-Flash recipe pin codifies the optimal hybrid-mamba ratio.
-**Local inference:** #49894 matters for anyone exposing SGLang on LAN; H3/ComfyUI fixes help 16–24 GB image-gen rigs.
-**Source:** GitHub merged-PR search, sgl-project/sglang, merged 2026-11-12T12:45Z–17:47Z — https://github.com/sgl-project/sglang
-
----
-
-## Community spins and quantizations
-
-### mradermacher afternoon GGUF ladder (event date: repos created November 12, 17:03–17:47 UTC)
-
-A dense pre-close cluster: **Qwen3.5-4B-Arete-GGUF** — quants of wesjos/Qwen3.5-4B-Arete (a 4B Qwen3.5-4B SFT on NousResearch/arete-data-pairs, the small sibling of Nous's Arete-27B reported Nov 6; base landed 01:31 UTC today, mr's imatrix ladder 17:33 UTC); the **DeepSeek-V4-Pro-Qwen3.5-4B-UNCENSORED-heretic (+i1)** pair; **xtools-at MultiDistill megamix cluster** (4B 3x- and 8x-merge, 2B 6x-merge, all UNCENSORED-heretic, GGUF+i1); **Qwen3.5-4B-DeepThought-STEM re-upload**; **Qwen2.5-0.5B-PromptBus-v2-GGUF** (BRR1154's null-space-LoRA DAG-routing agent-orchestration SLM); **Qwen3-REAP-15B-A3B-GGUF** (pruned-MoE REAP); **LFM3-Omni-2B-RP-GGUF**; prose-rewriter-4b-v2.6; Andgit-0.6B-SFT (multilingual reasoning SFT); Lyric-135M (continual-pretrain toy).
-
-**Why it matters:** The 4B Arete is the community's first small-footprint take on values-aligned SFT from the Arete data pair corpus, and PromptBus-v2 is an interesting DAG-routing experiment at 0.5B.
-**Local inference:** All 4B/2B/0.5B ladders quantize under 4 GB (any 8 GB card / phone-class SoC); REAP-15B-A3B targets 12–16 GB cards.
-**Source:** Hugging Face, mradermacher (createdAt 17:03–17:47Z) — e.g. https://huggingface.co/mradermacher/Qwen3.5-4B-Arete-GGUF , https://huggingface.co/mradermacher/Qwen2.5-0.5B-PromptBus-v2-GGUF , https://huggingface.co/mradermacher/Qwen3-REAP-15B-A3B-GGUF
-
-### bartowski: Barcenas (Mexican-Spanish LFM3) and MoganOCR-TR (event date: repos created November 12, 17:19–17:23 UTC)
-
-**bartowski/Danielbrdz_Barcenas-LFM3-1.7B-GGUF** — ladder of Danielbrdz's Mexican-Spanish SFT of Liquid AI's LFM3-1.7B (trained on OysterCoreAI/SFT-General-Spanish-50K); **bartowski/moganai_MoganOCR-TR-GGUF** — quants of moganai's Turkish document OCR VLM (document parsing to markdown, tr+en).
-
-**Why it matters:** Continues the fast localization-of-LFM3 trend; Turkish OCR VLMs at GGUF sizes are practical edge document-AI.
-**Local inference:** 1.7B models run on 4–6 GB quantized; the OCR VLM lands under 2–4 GB — Jetson/RPi5/phone class.
-**Source:** Hugging Face — https://huggingface.co/bartowski/Danielbrdz_Barcenas-LFM3-1.7B-GGUF , https://huggingface.co/bartowski/moganai_MoganOCR-TR-GGUF
-
-### Also noted (community): glitch401/qwen3.8-27B-terse (16:57 UTC) — a "concise-reasoning" weight-space-edit LoRA on Qwen3.8-27B (follow-on to yesterday's humanizer/terse cluster); richardyoung/OLMo-2-0325-32B-Instruct-DiM-heretic-GGUF (17:20 UTC) — imatrix ladder of ALLENAI heretic ablation.
+**Update on previously reported (Nov 11: radeon-ssd-write-blocker): Adrenalin 26.11.1 ships the fix** — Event date: November 12, 2026 (~20:50Z)
+AMD released Adrenalin 26.11.1 (driver 26.20.15.16) as an optional update, delivering the promised fix for the atieclxx.exe bug that wrote 0.3–5 MB/s (26–432 GB/day) to the system drive at idle on RX 7000+; it also fixes writes during window moves/resizes. Known issues include crashes in several titles and SAM possibly toggling off after install on Win10 (re-enable ReBAR if you disabled Resizable BAR as the workaround). Community Necandi blocker tool no longer needed; early commenters split on whether the fix fully sticks.
+**Why it matters:** Radeon workstation cards (the R9700/AI Pro tier many local-AI builds use) spend idle time in AI-serving rigs hammering SSD endurance; this closes a two-week-old endurance risk and restores confidence in 26.10.x-era deployments.
+**Local inference:** Directly relevant to any RX 7000/9000 local-inference box left idling between jobs — update and re-check disk-write counters; keep ReBAR enabled.
+Source: "AMD Patches Radeon SSD Write Bug in Adrenalin 26.11.1 Optional Driver," TechPowerUp, November 12, 2026 — https://www.techpowerup.com/354756/amd-patches-radeon-ssd-write-bug-in-adrenalin-26-11-1-optional-driver
+Source: AMD Software: Adrenalin Edition 26.11.1 Release Notes — https://www.amd.com/en/resources/support-articles/release-notes/RN-RAD-WIN-26-11-1.html
 
 ---
 
 ## Model releases
 
-No verified brand-new open-weight model releases landed inside this window (the day's flagship weight event, Translated's **Lara Mini**, missed it — see footnote).
+**Update on previously reported (Nov 5: "weights promised next week"): Inkling 2 Small open weights are live** — Event date: November 12, 2026 (~21:35Z, HF lastModified; rL 22:25Z)
+Thinking Machines published Apache-2.0 weights for thinkingmachines/Inkling-2-Small and an MXFP8 variant: 594B total / 17B active, 48-layer MoE (8-of-384 experts), hybrid local/global attention, native multimodal (ViT image encoder), 1M-token context, pretrained end-to-end in NVFP4. Model card hardware guidance: NVFP4 checkpoint needs ≥500 GB aggregate VRAM (2x B300 or 4x H200); MXFP8 needs ~800 GB (4x B300 / 8x H200), and TML says the MXFP8's 1–2 eval-point gain "is not meaningful" — NVFP4 is the recommended path. Eval table positions it atop the open-weight flash class (AA Index v5.0 30.6 vs GLM-5.3-Flash 27.8, MiniMax-M3.1-Flash 29.1; SWEBench Pro Hard 86.3). Day-0 recipes: SGLang, vLLM (merged #67319/#67322 this window), TokenSpeed, Unsloth; post-training via Miles/SkyRL/Snowflake; API via NVIDIA, Fireworks, Together, Baseten, Nebius, Modal, Cloudflare.
+**Why it matters:** A frontier-adjacent flash model with genuinely open weights (not a teaser) and natively-NVFP4 training is the strongest argument yet that FP4-native checkpoints — not post-hoc quants — are the 2027 serving default; it also validates the "next week" cadence TML promised on Nov 5.
+**Local inference:** Above consumer hardware (500–800 GB VRAM class per the card); the realistic local path is community quants (Unsloth has a recipe; expect GGUF/MLX tiers in coming runs) or offload to TML's partner clouds.
+Source: thinkingmachines/Inkling-2-Small model card, Hugging Face, 2026-11-12 — https://huggingface.co/thinkingmachines/Inkling-2-Small
+Source: r/LocalLLaMA release thread, 2026-11-12T22:25Z — https://www.reddit.com/r/LocalLLaMA/comments/1xuqplg/thinkingmachinesinkling2small_is_released/
+
+**Community index: ERNIE 5.5 Flash Preview debuts strong in agentic coding** — Event date: November 12, 2026 (rL thread 20:13Z)
+A community member's 12-benchmark "agentic coding" aggregate index (Terminal-Bench 4.0, DeepSWE, FrontierCode 2.0, SWE-bench Pro et al., distinct from AA) puts Baidu's "Ernie 5.5 Flash Preview" — 280B total / 14B active — near DeepSeek-V4.1-Flash-tier coding performance at roughly half the active parameters. Commenters immediately flagged the serving reality: ERNIE is BF16-native (~560 GB weights) vs DSv4.1-Flash's MXFP4-native (~280 GB), and "apples-to-apples would be Ernie at Q4"; context spec still unlisted. Recall: the ERNIE-5.5-Flash-Base checkpoint (FP8+BF16, 1M infer ctx) quietly landed Nov 2–5, and Baidu said full release is ~two weeks out.
+**Why it matters:** Another 280B-class hybrid entering the flash-MoE price/perf war before its weights are formally GA'd; for self-hosters the native precision choice (BF16 vs MXFP4) is the whole ballgame, and Baidu has now shown it can compete on the coding board.
+**Local inference:** Not runnable on consumer hardware at native precision (560 GB class); the released base checkpoint's FP8/quant path is the one to watch once GA'd.
+Source: r/LocalLLaMA thread, 2026-11-12T20:13Z — https://www.reddit.com/r/LocalLLaMA/comments/1xune1i/new_model_ernie_55_flash_preview_hits_strongly_at/
 
 ---
 
-## Just missed the window
+## Community spins and quantizations
 
-- **Translated — Lara Mini Base (7.2B-A0.6B multilingual MoE):** from-scratch 6T-token pretrain, hybrid Gated DeltaNet/SLA/global (34 layers), 128k context; tops 36 open ≤2B-active base models with a 57.0 overall average and ~1,100 chars/s on one A100 (Pareto-fastest class); CC BY-NC-SA 4.0, gated. Repo created Nov 11, 14:38 UTC — yesterday's windows missed it; the HN post (story_50471156, 12:43 ET) is re-coverage. — https://huggingface.co/translated/Lara-4-Mini-Base (footnoted once, never again)
+**mradermacher afternoon quant ladder (in-window uploads)** — Event dates: November 12, 2026, 18:45–22:20Z
+New GGUF repos this window: Summerwise-27B-GGUF (22:03Z; Pleochroic literary/creative-writing SFT+DPO of Qwen3.8-27B, Apache-2.0, zh+en long-form), Qwen3-REAP-15B-A3B-i1-GGUF (21:52Z; imatrix tier of atbender's expert-pruned 15B-A3B MoE — the plain GGUF was reported at 12:45, this is the new i1 tier), VFIG-8B-GGUF (22:20Z; XunmeiLiu GRPO-trained SVG/vector-figure-understanding VLM, CC-BY-4.0), OptiScene-Qwen3-8B-GGUF (21:52Z; indoor 3D scene layout SFT+DPO on the 3D-SynthPlace dataset, MIT), Qwen3.8-27B-CodeForge-3xMerge-UNCENSORED-heretic-i1-GGUF (20:xxZ; coding/reasoning efficient-thinking merge), Velary-2.0-1.7B-GGUF (18:45Z; AuroraSystem Russian-English LFM3-architecture reasoning SLM), Mistral-7B-Liberated-i1-GGUF (20:37Z; abliteration classic).
+**Why it matters:** Steady day-0 coverage keeps fresh research spins immediately loadable on llama.cpp/Strata-class rigs; Summerwise and CodeForge extend the Qwen3.8-27B spin ecosystem, VFIG is a rare vector-graphics RL spin.
+**Local inference:** All llama.cpp-native; Summerwise/CodeForge Q4_K_M tiers ~16–18 GB (RTX 5060 Ti 16GB class at Q4 with offload), REAP-15B-A3B Q4 ~8–9 GB fits 12GB cards, VFIG-8B/OptiScene/Qwen3.5-4B-class files run comfortably on 8–12 GB, Velary-1.7B and Mistral-7B run on anything.
+Source: mradermacher Hugging Face (created 2026-11-12T18:45–22:20Z) — https://huggingface.co/mradermacher
+
+**Swanada: 12-language Indic + Classical Sanskrit offline STT in the browser** — Event date: November 12, 2026 (rL 19:50Z)
+Builder init0 (of Ninada in-browser Indic TTS) released Swanada, a speech-to-text engine covering 12 Indian languages plus Classical Sanskrit that runs fully offline in the browser and on phones with zero cloud calls; in-thread discussion covers WebAssembly/GPU model loading and memory pressure on mobile Safari and low-RAM Android.
+**Why it matters:** On-device ASR for low-resource/Indic languages has been a persistent gap — a zero-cloud, phone-capable implementation matters for privacy-sensitive deployments and for local-voice stacks that currently bail to cloud APIs for these languages.
+**Local inference:** Runs in-browser/on-device (no GPU floor beyond modern WebGPU/WebAssembly hardware); pairs with Ninada TTS for a fully local Indic voice loop.
+Source: r/LocalLLaMA thread, 2026-11-12T19:50Z — https://www.reddit.com/r/LocalLLaMA/comments/1xumryr/got_great_feedback_on_ninada_inbrowser_indic_tts/
+
+---
+
+## Inference software and benchmarks
+
+**RustingStrata datacenter benchmark: Q8_0 and BF16 Qwen3.6-35B-A3B on A100/H100/L40S** — Event date: November 12, 2026 (rL 21:03Z)
+Serious_Scarcity7818 published the high-quant side of the pure-Rust RustingStrata engine (NVRTC-compiled CUDA kernels, same kernels on Vulkan, no ggml): with the whole model in VRAM, H100 hits 11,486 tok/s prefill (4K prompt) / 290 tok/s decode / 508 tok/s with MTP at Q8_0 (37.8 GB); BF16 (71.1 GB) on H100 NVL 8,691/230/324; A100-80G Q8_0 6,507/193/288; L40S Q8_0 9,542/165/270. Counter-intuitive results: Q8_0 decodes faster than Q2_K_XL on A100/H100 (193 vs 174; 290 vs 265) though slower on L40S (165 vs 214); MTP gains shrink as quant quality rises (1.4–1.9x at Q2_K_XL/Q8_0, 1.2–1.4x BF16); Q8_0 on a 24 GB A30 (63% experts resident) still does 130 tok/s decode, 200 with MTP, while BF16 on the same card collapses to ~12.5 tok/s.
+**Why it matters:** Hard numbers that quant choice is bandwidth- vs compute-bound per card — high quants are not automatically slower, which argues for per-GPU quant selection in serving stacks; and a no-ggml Rust engine matching datacenter expectations keeps pressure on the llama.cpp status quo.
+**Local inference:** The Q8_0>Q2_K_XL decode reversals are consumer-relevant on bandwidth-poor cards; expert-residency math (63% experts → 130 t/s) directly informs 16–24 GB + DDR5 offload builds. Author-run.
+Source: r/LocalLLaMA thread, 2026-11-12T21:03Z — https://www.reddit.com/r/LocalLLaMA/comments/1xuon4m/what_does_qwen3635ba3b_look_like_at_q8_0_and_bf16/
+
+**vLLM afternoon merge wave: Inkling 2 Small day-0, FlashInfer 0.7.4, RDNA/MXFP4 kernels** — Event date: November 12, 2026, 18:00–22:20Z (GitHub merged)
+18 PRs in window, highlights: Inkling 2 Small recipe + image (#67319/#67322), FlashInfer bump to 0.7.4 (#67042), ROCm/RDNA trio — gfx11 decode-kernel VGPR-spill workaround (#67226), triton_kernels on ROCm 3.8.x RDNA MXFP4 configs (#64331), w2-scatter + topk-sum MoE combine on RDNA (#64055), HiSparse GLM-5.3-Flash support (#61243), spec-decode draft-as-single-PP-stage (#66063), extended NVFP4 manual activation fusion (#65149), Kimi K3 into AMD DI nightly CI (#67056), CUDA-graph pool reset fix (#67201).
+**Why it matters:** The RDNA MXFP4/MoE kernel cluster is the most consumer-relevant line — AMD's RDNA3/4 MoE decode path keeps closing on CUDA; day-0 Inkling support keeps the new open flagship servable on day 1.
+**Local inference:** RDNA MXFP4 config work benefits RX 9070-class MoE serving (Strix Halo/R9700 adjacent); Inkling itself is datacenter-class.
+Source: vLLM GitHub merged-PR search (window 2026-11-12T17:45Z–22:45Z) — https://github.com/vllm-project/vllm
+
+**SGLang afternoon wave: Inkling cookbook, sgl-fa3 wheel packaging, ROCm diffusion ring attention** — Event date: November 12, 2026, 18:22–22:24Z (GitHub merged)
+11 PRs: Inkling-2-Small deployment cookbook (#50185), sgl-fa3 standalone FA3 wheel build workflow + cp310-abi3 packaging (#49972/#50193), sgl-router configurable body cap via SGLANG_ROUTER_MAX_BODY_BYTES (#50161) and PD gap-closure toward replacing sgl-model-gateway (#50052), HiCache prefetch trailing-window key fix (#50056), diffusion dead-code cleanup series (#49841–43), and ROCm diffusion ring attention on aiter with reused K/V ring buffers (#49078).
+**Why it matters:** sgl-fa3 as a packaged wheel lowers the FA3 adoption barrier outside CUDA-master builds; the router work moves SGLang toward a single gateway story; ROCm ring attention extends multi-GPU diffusion (image/video) to AMD.
+**Local inference:** Router/HiCache fixes touch self-hosted multi-model deployments; ring attention matters for multi-Radeon diffusion boxes.
+Source: SGLang GitHub merged-PR search (window 2026-11-12T17:45Z–22:45Z) — https://github.com/sgl-project/sglang
+
+**llama.cpp b12329: prune wave + Hexagon Windows-ARM64 host build** — Event date: November 12, 2026 (build published 22:22:59Z)
+Five merges since the 12:45 report (b12319–b12320): "llama: prune" (#30565) and "ggml: prune" (#29801) dead-code removal at 18:58–18:59Z, fix(hexagon) host build with clang-cl on Windows ARM64 (#32011, 21:52Z — Snapdragon-hosted builds unblocked), and two server CI hardening fixes (#32166/#32167). No new features; hygiene release with one real-platform fix.
+**Why it matters:** The Hexagon clang-cl fix widens the Windows-on-ARM (Snapdragon X/RTX Spark-adjacent) build story; prune releases reduce attack/maintenance surface in the most self-compiled inference codebase on earth.
+**Local inference:** Grab b12329 if you build for ARM Windows/Hexagon NPU; otherwise no behavior change.
+Source: llama.cpp GitHub release b12329, 2026-11-12T22:22Z — https://github.com/ggml-org/llama.cpp/releases/tag/b12329
+
+**Evolving benchmark: LLMs reverse-engineer a mystery audio codec (local models on the board)** — Event date: November 12, 2026 (rL 21:34Z)
+Character-Result-2 released a four-stage "moving target" benchmark: given a mystery compressed audio file, the model must deduce the format, write a decoder, then build a better encoder (Python+numpy only, run locally via OpenCode); stages progressively reveal reference audio, codec info, then an oracle tool. Current "Evolve 2" leaderboard: Claude Fable 127 (stage 1), DeepSeek V4.1 Flash 1017 at 81 (stage 3), Qwen3.8-Flash-Next NVFP4 at 67 (stage 3), Q3_S 56 (stage 4). In-thread critique: SNR is a weak codec metric (PQeval suggested); promotion testing questioned.
+**Why it matters:** A genuinely anti-benchmaxxing eval (evolving targets) that ranks the open-weight flash models people actually run locally on algorithmic-understanding tasks rather than instruction-following.
+**Local inference:** Qwen3.8-Flash-Next NVFP4 (single-consumer-GPU class) placing 3rd behind only flagship closed/API models on a novel reverse-engineering task is a good local-agent signal. Author-run, unreviewed.
+Source: r/LocalLLaMA thread, 2026-11-12T21:34Z — https://www.reddit.com/r/LocalLLaMA/comments/1xupf99/i_built_a_benchmark_where_llms_reverseengineer_an/
+
+---
+
+## Also noted
+- r/LocalLLaMA (20:00Z): "MoE and expert offloading on llama, exllamav3, strata on RX 9070 XT" — fresh same-GPU engine-offload comparison from willeyh (discussion-level, no published table in the feed). https://www.reddit.com/r/LocalLLaMA/comments/1xun15v/moe_and_expert_offloading_on_llama_exllamav3/
+- r/LocalLLaMA (20:29Z): users report a guardrail topic-avoidance pattern inside qwen4-max-preview thinking traces (update-adjacent to the Nov 11 preview item; unconfirmed, discussion-level). https://www.reddit.com/r/LocalLLaMA/comments/1xunsz9/guardrail_in_qwen4maxpreview_thinking_trace/
+- VideoCardz (~17:50Z): "Jensen Huang officially resigns as NVIDIA CEO after 33 years" — confirmation coverage of the already-reported transition, no new facts.
+
+## Just missed the window
+- NVIDIA Snapshot (Nov 10, developer blog): open-source GPU checkpoint/restore for Kubernetes (DSX AI Factory platform) — restores initialized vLLM/SGLang/TRT-LLM replicas in 3.6–42.7 s (8–36x faster than cold start), TP/DEP/DCP multi-GPU MoE up to 1 TB checkpoints; Crusoe cut GLM-5.3 pod readiness 8 min→31 s on HGX B300. Disclosed two days pre-window; footnoted once. — https://developer.nvidia.com/blog/start-and-restore-gpu-workloads-in-seconds-with-nvidia-snapshot/
 
 ## Coverage notes
-
-- **Verified items this edition: 11 report items** (5 hardware/silicon incl. launches, 3 software/benchmark waves, 2 community-quant items + 1 also-noted) plus 1 "Just missed" footnote — each backed by a fetched in-window page; lead stories read in full (NVIDIA Newsroom, TechCrunch, Axelera PR read end-to-end).
-- **Ledger dedupe:** ~16 in-window/re-surfaced candidates suppressed as already reported or already-footnoted — RTX 5090 96GB listing, Beelink Panther Lake NAS, Siren Halo GDDR7, meta-encoder-v1, KQuant MLX quants, MACaQ-R Q4_K_XL, GLiDE-9B (all 07:45 today); unsloth/Qwen3.8-27B-GGUF and KarLexAI Qwen3.8-27B-GGUF (refresh updates); xtools DeepThought-STEM re-upload (Nov 4); ServeTheHome MetaRoCE + TPU 8tx/8i Max + "EPYC 9006 Knockout Part Deux" homepage re-crests (missed-tagged, Nov 9–11 disclosures); The New Stack Nemotron-Transcribe piece (Oct 28 event, reported Nov 3).
-- **Logged exclusions/dead ends:** wici.ai "InferSSD 800B on consumer hardware" HN item (story_50471151) is a re-surfacing of an **October 29** article — too old for even a "just missed" footnote; The Register /AI_Data/ returned 404 (front page used instead — only non-hardware items in-window); AMD Adrenalin 26.11.1 driver page crawl stamps (~17h) put its availability just before the window, so the release itself is not listed (the Nov 11 ledger entry already covers the "fix in 26.11.1" plan); r/LocalLLaMA new queue returned zero posts inside 12:45–17:47 UTC (quiet midday window; community lane otherwise walked via HN river).
-- Phase walls honored; two-strike rule applied (Register 404 not retried).
+- Verified items: 11 qualifying (4 lead hardware/silicon incl. 1 update, 2 model releases, 2 community, 4 software/benchmarks) + 3 also-noted (discussion-level) + 1 missed-window footnote. All items fetched; lead pages read in full with in-window timestamps.
+- Sources swept this window: Unemployment Labs, Cerebras IR, Senate Finance, Bloomberg, Reuters, Forbes, SemiAnalysis, TechPowerUp, AMD, VideoCardz, The Register, ServeTheHome, Techmeme river, Hacker News Algolia, r/LocalLLaMA (new river + 4 threads), GitHub merged-PR search (llama.cpp/vLLM/SGLang/ollama/TensorRT-LLM releases), Hugging Face API (mradermacher/bartowski/unsloth/thinkingmachines).
+- Ledger dedupe: ~12 candidates suppressed as already reported — NVIDIA CEO re-coverage (VideoCardz/Reuters/USA Today profile pieces), llama.cpp Intel Arc Vulkan FA #29357 (reported 07:45), mradermacher Qwen3.5-4B-Arete / Qwen3-REAP plain GGUF / bartowski Barcenas+MoganOCR (reported 12:45), LexiSuite AIO re-post (Nov 8), plus 3 repeat-footnote blocks from `missed:` tags (CMP170HX voltage-glitch re-post 17:14Z, MetaRoCE STH article, TPU 8tx/8i Max items).
+- Dead ends: TechPowerUp news index 403 (used per-article URL from search instead — fetched fine); Reddit thread fetch for the 22:39Z visual-challenge post returned no usable body (excluded); bartowski/unsloth showed no in-window uploads after 17:45Z (confirmed, not a failure).
+- Out-of-scope by rule (not counted): Google Gemini 4 Hydrogen API launch, Microsoft 365 outage, AMD gaming-GPU China supply cuts (gaming-only angle), ZEPHYR/VASTARMOR AIB and monitor posts, SpaceX/Tesla merger, Anthropic IPO oversubscription.
