@@ -1,71 +1,73 @@
-# AI Hardware & Local Models Brief — Saturday, November 14, 2026
+# AI Hardware & Local Models Brief — Saturday, November 14, 2026, 12:45 ET edition
 
-**Window:** 2026-11-13 17:45 EST → 2026-11-14 07:45 EST (previous fire → now) | 8 events verified (unit: underlying events, lead + also-noted; appendix footnotes excluded)
+**Window:** 2026-11-14 07:45 → 12:45 EST (previous fire → this fire). New items only, deduped against the reported.md ledger.
 
 ## TL;DR
-- **llama.cpp shipped Qualcomm Hexagon IQ2_XXS and NVFP4 kernels** (PR #31954, build b12376) — ultra-low-bit and NVFP4 weights now run natively on Snapdragon DSP hardware, with HVX matmul plus HMX matrix-engine paths.
-- **Community "CQ" calibration-free 4-bit quant posted rigorous benchmarks**: statistically indistinguishable from BF16 on Qwen3.8-27B (McNemar, greedy), while bitsandbytes NF4 loses 12 GSM8K points; plus GCMP, a 2.9M-param LoRA replacement (author-reported).
-- **vLLM (38 merges) and SGLang (54 merges) overnight waves** landed Kimi-K3.1-Pro MI355X AgentX presets, MiniMax-M3.1 ROCm GEMM/indexer tuning, DSpark monokernel Markov sampling, NVFP4-on-B12X scale compression, SGLang rust-server HTTP/2 and MXFP8 KV-cache linking.
-- **Quantizer mradermacher dropped a fresh in-window ladder**: ViRA-9B/27B visual-agent RL models, CyberBuddy-9B cyber pair, Ripple-65B-Heretic-light GGUF+i1, Vision-AutonoSearch 9B/35B-A3B.
-- Quiet Friday-night/Saturday-morning hardware tape: no verified new silicon or device launches in window; WSJ's NVIDIA circular-financing report broke ~74 minutes before the wall (footnoted).
+- homebrewserver.club published the first independent measurement of llama.cpp v1.0 on an RTX 3090: single-stream is flat, but four-way batch is 14–22% faster and MTP speculative decoding lifts the 27B model 52–55%.
+- RustingStrata ran Recursive's Flint 40B (27.9 GiB UD-Q5_K_XL) on an RTX 3060 12 GB + 30 GB RAM rig at 64.6 tok/s decode — about 33% over llama.cpp on the same file.
+- Unsloth pushed new sub-4-bit tiers (UD-IQ1_S → UD-IQ3_XXS) into the Inkling-2-Small-GGUF repo this morning.
+- A quiet Saturday for weight drops: no new open-weight model releases verified in window; community spins carried the day (tiny-voca 4.5M TTS, basal-omni-2.0-mini decision model).
 
 ## Inference software and benchmarks
 
-**llama.cpp: Hexagon NPU gains IQ2_XXS and NVFP4; DFlash spec-decode refactored** — event date 2026-11-14 (merged 04:57Z/08:42Z; builds b12374–b12377)
-The night's marquee merge (PR #31954, co-authored with Qualcomm's Max Krasnyansky) adds tiled repack layouts, HVX matmul kernels and HMX matrix-engine paths for IQ2_XXS and NVFP4 in the Hexagon backend, including an IQ2_XXS 2-gather tile decode with compact grid and a fix for HMX dequant-scale underflow in fp16. Build b12377 (09:46Z) also carries a large refactor of DFlash-family speculative decoding (#32016) that splits head/backbone loaders per file (DFlash, DFlash2, DSpark, LiliCorr variants detected once), while b12374 fixed a Metal mul_mv destination-offset overflow (#32221) and #32023 cuts jinja chat-template rendering overhead.
-*Why it matters:* IQ2_XXS (~2.6 bpw) plus NVFP4 as first-class Hexagon kernels pulls sub-3-bit quantized 27B-class models into reach on Snapdragon X2/8-Elite-class NPUs — the NPU finally gets the same low-bit vocabulary that CUDA and Vulkan already have, and the spec-decode cleanup makes draft-head work (DFlash2/DSpark) far cheaper to extend.
-*Local inference:* runs on Qualcomm Hexagon NPU devices (Snapdragon X series, 8-Elite Gen phones/mini-PCs); IQ2_XXS quants of 27B-class models fit single-digit-GB budgets on shared LPDDR5X.
-Sources:
-- llama.cpp release b12376 (2026-11-14 08:42:49Z): https://github.com/ggml-org/llama.cpp/releases/tag/b12376
-- llama.cpp release b12377 (2026-11-14 09:46:55Z): https://github.com/ggml-org/llama.cpp/releases/tag/b12377
-- PR #31954 Hexagon IQ2_XXS/NVFP4 (merged 2026-11-14 04:57:06Z): https://github.com/ggml-org/llama.cpp/pull/31954
+**llama.cpp v1.0 measured: batch +14–22%, MTP spec-decode +52–55% on an RTX 3090** — Event date: today, November 14 (published "14 November 2026").
+homebrewserver.club compared llama.cpp v1.0.0 (build 12359, tagged Friday November 13) against pre-v1 build 12199 on a Fedora 44 Docker box with an RTX 3090 24 GB and Ryzen 9 5900X, using Unsloth Q4_K_M files. One-request decode is unchanged (9B 116.0 vs 114.7 tok/s; 27B 38.7 vs 39.2), but four concurrent requests gained 14% (9B, 316.8 tok/s) and 22% (27B, 116.4 tok/s) thanks to the new CUDA few-token kernel for RTX 30-series and newer, and MTP speculative decoding on 27B jumped from 45.1 to 68.5 tok/s (+52%; up to +55% on short prompts). CPU-only and VRAM footprint were identical. Operational notes: `--defrag-thold` is removed, and `llama-server` now refuses tools/MCP on non-loopback addresses without an `--api-key`. Ollama (v0.40.16 at b12177) still ships none of it.
+*Why it matters:* the v1.0 gains are concentrated in exactly the multi-user and spec-decode configurations homelab agents use, and they land on Pascal-era-successor hardware owners already have — free throughput without new silicon.
+*Local inference:* RTX 30-series and newer; measured on a 24 GB RTX 3090 with 16.7 GB 27B Q4_K_M; single-user chat sees no change.
+Source: homebrewserver.club — "llama.cpp v1.0 on an RTX 3090: up to 55% faster with speculative decoding," November 14, 2026 — https://homebrewserver.club/llama-cpp-v1.html (surfaced on HN at 11:30 ET, story_50498314)
 
-**Community "CQ" 4-bit matches BF16 on Qwen3.8-27B benchmarks; GCMP claims LoRA parity at 55× smaller** — event date 2026-11-13 21:55 EST (r/LocalLLaMA post)
-Researcher u/textclf published benchmark-counted results for CQ, a calibration-free 4-bit format (first posted weeks ago as a training-loss comparison): on Qwen3.8-27B under identical lm-evaluation-harness runs with greedy decoding, CQ 4-bit at 18 GB shows no statistically significant difference from BF16 on nine tasks, while bitsandbytes NF4 (22.4 GB) drops 12.0 GSM8K points (p=3e-6); CQ vs NF4 is +8.7 GSM8K (p=0.0005), with WikiText-2 KL 0.0282 vs 0.0330. The same post introduces GCMP, a LoRA replacement training 2.9M params (~11 MB) vs ~159M (~320 MB) at equal-adapter quality settings. All numbers are author-run; a commenter flagged the post as AI-assisted prose (author confirmed Claude formatting).
-*Why it matters:* calibration-free 4-bit that survives paired significance testing would cut both quantization friction (no calibration corpus) and VRAM — a 27B at 18 GB lands squarely in the RTX 3090/4090 tier and is only a hair above 16GB cards.
-*Local inference:* targets 24GB-class cards for the 18GB Q4 base (RTX 3090/4090/5090); NF4 comparison implies a 4.4GB VRAM saving at equivalent-or-better accuracy.
-Source:
-- r/LocalLLaMA post (2026-11-14 02:55Z): https://www.reddit.com/r/LocalLLaMA/comments/1xvrgf1/cq_4bit_matches_bf16_on_qwen3827b_benchmarks/
+**Update on previously reported (RustingStrata): Flint 40B at 64.6 tok/s decode on a 12 GB card** — Event date: today, November 14 (post 10:51 ET).
+Serious_Scarcity7818 benchmarked RustingStrata (the pure-Rust Qwen/GGUF engine first reported November 4) on Recursive's trending Flint 40B, UD-Q5_K_XL at 27.9 GiB — larger than VRAM — on an RTX 3060 12 GB with 30 GB system RAM. Warm decode: 64.6 vs 48.6 tok/s for llama.cpp (≈+33%); warm 4K-prompt prefill: 1.14–1.30k vs 0.85–1.02k tok/s. The wins come from adapting expert placement to the in-flight reply instead of the prompt's routing pattern, and releasing host-RAM pages for experts already resident in VRAM. Author-run, quality claims rest on the author's prior benchmarks.
+*Why it matters:* a 40B-class model running faster than llama.cpp on a 12 GB card + modest RAM keeps old mid-range GPUs viable for MoE serving as pages, not weights, become the bottleneck.
+*Local inference:* RTX 3060 12 GB + 30 GB DDR5; the class of rig most of the community actually owns.
+Source: r/LocalLLaMA — https://www.reddit.com/r/LocalLLaMA/comments/1xw5nzn/rustingstrata_runs_flint_40b_on_a_12_gb_card_64/ (November 14, 2026)
 
-**vLLM overnight wave: Kimi-K3.1-Pro MI355X presets, MiniMax-M3.1 ROCm tuning, DSpark monokernel** — event date 2026-11-13/14 (38 PRs merged 22:45Z–12:38Z)
-Highlights from GitHub's merged-PR log: Kimi-K3.1-Pro gained MI355X AgentX presets covering all six InferenceX#5043 concurrencies (#67600, #67487) plus TP8 mono-build CI (#67439); MiniMax-M3.1 on ROCm got GEMM improvements (#66933) and attention-indexer XCD balancing (#66934); Muse Spark DSpark Markov sampling now runs one launch per round via --monokernel (#66051); NVFP4 MoE expert scales stay CSF-compressed on GPU under B12X (#64753); NIXL can now pull KV from pipeline-parallel prefill stages (#65336), and MRV2 skips draft attention metadata on context-KV-only prefills (#67291).
-*Why it matters:* the AMD MI355X recipe line keeps maturing toward day-one parity for K3.1-class MoEs, and the DSpark single-launch sampler plus NVFP4-scale residency are decode-loop speedups on Blackwell.
-*Local inference:* MI355X is datacenter-class; the MRV2/NIXL and quant paths carry down to SM120/SM121 (RTX 5090 / DGX Spark) builds.
-Source:
-- GitHub vLLM merged search (2026-11-13T22:45Z→2026-11-14T12:45Z): https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
+**In-window merge waves: llama.cpp b12379–b12383, vLLM 13 PRs, SGLang 5 PRs** — Event date: today, November 14 (12:47Z–16:36Z).
+llama.cpp: mtmd now allows a custom video decoder (#32188) plus video aspect-ratio/rotation fixes (#32267), Granite4Vision registered for text conversion (#32237), pplx-decider conversion aligned to qwen3.5 model_type (#32156), and a ggml-backend fix starting a new split at incompatible weights (#31775). vLLM: XPUFlashAttnMLABackend registered for FLASH_ATTN_MLA on Intel (#64255), EPLB allowed with modular TRT-LLM FP8 block-scale MoE (#67591), Qwen2 servable via the Transformers backend (#66821), sparse-NCCL update OOM fix (#66375). SGLang: Hy-Nomas diffusion fused groupwise INT8 weight dequantization (#49270), multi-rank IPC all-to-all leak fixed (#50321), expensive Python stop-regexes rejected (#49915). Saturday-size waves, nothing arch-breaking.
+*Why it matters:* the mtmd custom-decoder path and XPU MLA registration keep widening which backends can serve which models without patches.
+*Local inference:* benefits llama-server video pipelines, Intel Arc XPU serving, and diffusion stacks on consumer GPUs.
+Source: GitHub — https://github.com/ggml-org/llama.cpp/releases (b12379–b12383), https://github.com/vllm-project/vllm/commits/main , https://github.com/sgl-project/sglang/commits/main (November 14, 2026)
 
-**SGLang overnight wave: rust-server HTTP/2, MXFP8 KV links, Mooncake TENT, HiCache batched writes** — event date 2026-11-13/14 (54 PRs merged 22:45Z–12:43Z)
-The Rust frontend now serves HTTP/2 (h2c) alongside HTTP/1.1 behind --enable-http2 (#50401) and passes video frame/token caps to multimodal processors (#50407). The unified cache gained MXFP8 KV support in the direct external linker (#50324); AMD HiCache write-backs move via hipMemcpyBatchAsync (#50363); disaggregation can use an opt-in Mooncake TENT transfer-engine backend (#47025); qwen4-exp gathers prefill PLE rows host-side for the file-backed table (#50318); and a joint Full/SWA eviction walk landed on the Rust tree core (#49992). Also merged: dense SiLU+mul fusion for masked per-token-group quantization (#50364) and sglang-kernel 0.4.11 / sgl-fa3 0.1.0 bumps (#50397).
-*Why it matters:* HTTP/2 on the Rust server cuts proxy overhead for multi-user local fleets, and MXFP8-KV in the external linker extends Blackwell-friendly cache compression across the composable-KV stack.
-*Local inference:* HTTP/2 and scheduler gains are hardware-agnostic (helps DGX Spark/Strix Halo single-box servers); MXFP8 KV and PLE items target SM100+/Blackwell and ROCm MI-series.
-Source:
-- GitHub SGLang merged search (2026-11-13T22:45Z→2026-11-14T12:45Z): https://github.com/sgl-project/sglang/pulls?q=is%3Apr+is%3Amerged
+## Model releases
+
+No new open-weight model releases were verified inside this window (Saturday lull; major-lab Hugging Face authors posted no new repos 07:45–12:45 ET). The two genuinely new weights above 100M parameters were community models, listed next section.
 
 ## Community spins and quantizations
 
-**mradermacher in-window ladder: ViRA visual agents, CyberBuddy pair, Ripple-65B heretic-light** — event date 2026-11-14 (repos created 00:39Z–06:40Z)
-New GGUF ladders today: ViRA-9B and ViRA-27B (huaweilin's high-resolution vision-language agent RL models, Apache-2.0) at https://huggingface.co/mradermacher/ViRA-27B-GGUF and https://huggingface.co/mradermacher/ViRA-9B-GGUF; CyberBuddy-CloudSec-9B and CyberBuddy-CyberOps-9B (cloud-security / SOC agentic pair) at https://huggingface.co/mradermacher/CyberBuddy-CyberOps-9B-GGUF; Ripple-65B-Heretic-light in plain and imatrix i1 tiers (schonsense's decensored Ripple-65B-Preview variant — closure on the Nov 5 "missed" footnote) at https://huggingface.co/mradermacher/Ripple-65B-Heretic-light-i1-GGUF; plus Vision-AutonoSearch-9B and Vision-AutonoSearch-35B-A3B GGUFs (https://huggingface.co/mradermacher/Vision-AutonoSearch-35B-A3B-GGUF).
-*Why it matters:* the Ripple-65B family now has a "heretic-light" abliteration with day-0 quants, and ViRA extends RL-trained visual-agent workloads to local sizes.
-*Local inference:* ViRA-9B ≈ 5–6 GB at Q4 (any 8–12GB card); ViRA-27B Q4 ≈ 17 GB (24GB class, tight-16GB with offload); CyberBuddy-9B ≈ 5–6 GB (8–12GB); Ripple-65B-Heretic-light Q4 ≈ 36–40 GB (48GB class: A6000, RTX 6000 Ada, or multi-GPU).
-Source:
-- Hugging Face author feed (createdAt verified in-window): https://huggingface.co/mradermacher
+**tiny-voca: fully open 4.5M-parameter TTS runs 70× real-time on CPU** — Event date: today, November 14 (post 12:26 ET).
+n4ze3m released tiny-voca, a 4,537,291-parameter (18 MB) English TTS with two 24 kHz voices that decodes ~70× faster than real time on four CPU threads, with PyTorch, ONNX and in-browser (WebGPU-era) runtimes. It trains from scratch in 7.7 hours on one RTX 4090 and replaces the neural vocoder with a small source-filter synthesizer — the main reason it is so cheap to run. Everything is open: code, weights, training recipe, dataset (train audio was itself synthesized with Qwen3-TTS). Limitations stated by the author: English only, two voices, no cloning, pronunciation misses on odd spellings.
+*Why it matters:* it is a working existence proof that TTS without a vocoder at ~4.5M params can hit real-time-multiples on plain CPU — relevant to assistants that must run alongside an LLM on the same box.
+*Local inference:* any x86/ARM CPU, 18 MB model; demo runs entirely in-browser, nothing sent to a server.
+Source: r/LocalLLaMA — https://www.reddit.com/r/LocalLLaMA/comments/1xw7zrg/tinyvoca_a_fully_open_45mparameter_tts_code/ ; weights https://huggingface.co/n4ze3m/tiny-voca ; code https://github.com/n4ze3m/tiny-voca (November 14, 2026)
 
-## Also noted
-- **Weight-space reading:** u/suayptalha released a paper + open toolkit ("WSR", github.com/suayptalha/wsr) testing whether 9B–30B open models can predict behavioral effects of weight edits without running the target: Qwen-27B hits 73.0% balanced accuracy on subtle edits with weight access vs 57.8% from text descriptions — but Muse-30B's 34 "successful" edits showed no detectable behavior change (2026-11-14 09:07Z). Runs on 9B–30B models, any 16–24GB card. https://www.reddit.com/r/LocalLLaMA/comments/1xvxyhj/can_openweight_llms_can_predict_the_effects_of/
-- **Ollama** merged #19686 (preserve unmodeled tool-schema keywords in the API, 2026-11-14 00:00Z) — small correctness fix for tool-calling apps on local Ollama servers. https://github.com/ollama/ollama/pull/19686
-- **Commentary:** Nathan Lambert's Interconnects piece "Open-source AI without Jensen" (published 2026-11-14) argues NVIDIA's founder-driven funding of the open-weight ecosystem will dry up post-resignation and calls for a new coalition; relevant context for anyone betting on Nvidia-backed open models (Nemotron family). https://www.interconnects.ai/p/open-source-ai-without-jensen
+**basal-omni-2.0-mini: two-way-reading typed decision model on Gemma 4 E4B** — Event date: today, November 14 (post 10:16 ET).
+Remek published an early release of the small model of basal-omni 2.0, fine-tuned on Gemma 4 E4B: it reads the input state in both directions before answering, scores 0.811 on the hidden bilingual Werdykt set (5,000 Polish/English decisions), and emits calibrated probability distributions over up to 255 coded options in a single forward pass — no text generation, answers never leave the allowed set. Runs on the public basal engine 2.8.0 (2.5+ required for two-way reading).
+*Why it matters:* typed decision heads remain the community's favorite low-VRAM answer to flaky JSON tool-calling; this one competes on a hidden benchmark rather than self-built suites.
+*Local inference:* E4B class — fits comfortably in ~8 GB VRAM quantized; engine is CPU/GPU-portable.
+Source: r/LocalLLaMA — https://www.reddit.com/r/LocalLLaMA/comments/1xw4thp/basalomni20mini_typed_decision_model/ ; weights https://huggingface.co/Remek/basal-omni-2.0-mini-preview (November 14, 2026)
 
-## Model releases
-No verified new open-weight base releases first disclosed inside this window (Saturday-morning lull; the mrady/bartowski activity above is quant-tier, and SenseNova-Loop-9B-Preview re-surfacing on r/LocalLLaMA today is an Oct 30 event — excluded).
+**Update on previously reported (Unsloth Inkling-2-Small-GGUF): sub-4-bit tiers landed** — Event date: today, November 14 (commits 09:02 and 09:13 ET).
+danielhanchen pushed two "upload-large-folder" commits to unsloth/Inkling-2-Small-GGUF this morning, extending the ladder first reported by this brief yesterday (Q4_K_XL→Q8_K_XL + mmproj). The repo now lists UD-IQ1_M, UD-IQ1_S, UD-IQ2_XXS and UD-IQ3_XXS directories alongside the Q2→Q8_K_XL tiers, plus BF16 and three mmproj variants — giving 594B/17B Inkling-2-Small's serving story its low-bit end.
+*Why it matters:* sub-3-bit i-quants of the Thinking Machines flagship are the tiers that make the model discussable on 16 GB cards with expert offload.
+*Local inference:* IQ2/IQ3 tiers target 16–24 GB cards with host-RAM offload; Q4_K_XL-class remains the 32 GB+ recommendation.
+Source: Hugging Face commits API — https://huggingface.co/unsloth/Inkling-2-Small-GGUF/commits/main (November 14, 2026)
 
 ## AI hardware and silicon
-No verified in-window hardware or silicon announcements. The two freshest candidate headlines on TechPowerUp's board ("RTX 50 up to $500 hike", "AMD data-center-first") turned out to be Nov 3 and Nov 6 articles re-bumped by weekend comment traffic — correctly rejected on event date.
+
+**Update on previously reported (Corsair PinProtect+ / HX1000i SHIFT CRYSTAL): the six-switch torture cable** — Event date: today, November 14 (VideoCardz 08:40 ET).
+VideoCardz reported (source: Profesional Review) a non-commercial Corsair test jig: a 12V-2×6 cable with a control box of six switches that kills one 12V pin at a time while the GPU loads. With ~250 W draw, the PinProtect RM1200e Gen 2 shut down GPU power after five of six pins were dropped; the PinProtect+ HX1000i SHIFT CRYSTAL tripped at the per-pin 9.5 A threshold with two pins left, after a 30-second persistence window. Corsair has no plans to sell the cable.
+*Why it matters:* per-pin OCP is becoming a real design feature for 600 W-class workstation rigs — the same boards this brief's readers stack with RTX PRO and 5090 cards — and Corsair is publishing the failure-mode demo to differentiate from "rated for 600W" sticker compliance.
+*Local inference:* matters to multi-GPU AI workstations and high-TDP Blackwell boards; nothing changes for laptop/single-card builds.
+Source: VideoCardz — "Corsair builds special 12V-2×6 cable with six switches to simulate GPU power pin failures," November 14, 2026 13:40 GMT — https://videocardz.com/newz/corsair-builds-special-12v-2x6-cable-with-six-switches-to-simulate-gpu-power-pin-failures
 
 ## Just missed the window
-- **WSJ: NVIDIA allegedly funded AI startups to absorb excess TSMC silicon rather than lower GPU prices** — reported November 13; TechPowerUp's write-up published 16:31 EST, ~74 minutes before the 17:45 wall (Kress pushed to curb "circular financing"; the $250B OpenAI Ohio plan pared to $120B). Footnoted once, never again. https://www.techpowerup.com/354814/nvidia-allegedly-engineered-scarcity-by-funding-ai-startups-to-buy-its-gpus
+
+- **NVIDIA: "When One GPU Isn't Enough" — GLM-5.3 NVFP4 across two DGX Stations with vLLM** (NVIDIA Developer Blog, November 13). The 753B/40B-active GLM-5.3 NVFP4 checkpoint (~464 GB) served TP=2 over dual ConnectX-8 RDMA rails on two GB300 DGX Stations (252 GB HBM3e each) through one OpenAI-compatible endpoint: peak 607.8 tok/s aggregate at concurrency 16, 385.0 tok/s at C32, with MTP, FP8 KV-cache and prefix caching. Published yesterday afternoon — ~18h before this window opened. — https://developer.nvidia.com/blog/when-one-gpu-isnt-enough-serving-glm-5-3-across-two-nvidia-dgx-stations-with-vllm/
+- **Corsair HX1000i SHIFT CRYSTAL hit retail at $339.99 / €289.90** (VideoCardz, today 06:19 ET — 86 minutes before window open): transparent 1000W Cybenetics Platinum unit with PinProtect+ per-pin OCP (7–10 A threshold, 10–180 s shutdown delay) and integrated iCUE LINK hub. — https://videocardz.com/newz/corsairs-transparent-hx1000i-shift-crystal-psu-is-now-available-for-340
 
 ## Coverage notes
-- Verified: 8 events (5 full items + 3 also-noted), from ≥6 distinct outlets/sources (GitHub, Hugging Face, r/LocalLLaMA, Interconnects, TechPowerUp, WSJ/Wccftech).
-- Ledger dedupe: ~9 candidates suppressed as already reported or out-of-window re-coverage — SOV-Transcribe-1 rL repost (missed-tagged), Nace-vs-Unsloth comparison discussion, ERNIE-5.5-Flash link, SenseNova-Loop-9B repost (Oct 30 event), KittenML kitten-tts-2 mini/nano/pico tiers (created Nov 13 03:34Z, ~19h pre-window — same family as the Oct 23 `missed:` footnote), TPU AMD "data center first" (Nov 6 event), RTX-50 $500 hike (Nov 3), Altman DRAM quote (Oct 29), chip-stock Friday selloff (off-scope).
-- Dead ends (two-strike rule): VideoCardz feed blocked (Cloudflare); "IBM trains two small open models to ignore hidden document instructions" (r/LocalLLaMA 11:33Z) — no primary source found in two attempts (search + thread), excluded; ServeTheHome and Tom's Hardware published no in-window items; The Register AI feed had nothing new.
-- Phase walls respected; window derived once from now_et.py at fire time.
+
+- Verified in-window items: 7 (5 new + 2 "update on previously reported") in this edition's manifest, plus 2 one-time "just missed" footnotes. Counting unit: manifest entries.
+- Ledger dedupe: 11 candidates suppressed as already reported or already-footnoted — Siren Halo GDDR7 (re-coverage of Nov 12), lawyer V100 NVFP4 (reported Nov 9/13), LumaBrowser 150-star post (reported Oct 22), STH "EPYC 9006 Knockout Part Deux" (Venice benchmark event footnoted Nov 11), WSJ Kress $125B AI-financing cap (circular-financing item already footnoted today 07:45), FEVM FNPH1 Panther Lake mini-PC (Nov 11 event), BIOSTAR BIPTL-IHT (Nov 12 event), Meta Muse Ember (Nov 9), "NVIDIA's Jacob Freeman says the end of GeForce is not happening" (pure gaming, out of scope), gpu-unlock sidebar re-coverage (reported Oct 21/Nov 1), Blackwell checkpoint-forensics sidebar (reported Nov 12).
+- Dead ends / limitations: Tom's Hardware's Bessent/NVIDIA-shell-companies and Malaysia GPU-tracking pieces carry no extractable timestamp on fetch and trace to Nov 12–13 statements (out-of-window policy stories — excluded); ARC 1.0 (0.6B routing decision model, rL post 08:20 ET) has no locatable HF repo yet — held back rather than cited unverified; davidAU posted nothing in window; ServeTheHome published nothing on November 14; HF's global newest-models feed was unusable noise.
+- No index was down; Reddit anonymous feed and HN Algolia both healthy.
