@@ -1,87 +1,119 @@
-# Cybersecurity News Briefing — Friday, November 13, 2026, 17:00 Edition
+# Cybersecurity News Briefing — Monday, November 16, 2026 (Weekend Edition)
 
-**Window:** 2026-11-13 12:20 EST → 2026-11-13 17:20 EST (5-hour Friday-afternoon sweep; new items only, ledger-deduped)
+**Window:** Friday, Nov 13, 2026 17:20 EST → Monday, Nov 16, 2026 07:20 EST (weekend sweep; new items only, deduped against the reported ledger)
 
 ## TL;DR
-
-- **FBI FLASH-20261113-001 (Friday):** the FBI formally warns that the open-source ARTEX autonomous pentest framework is driving intrusions from targeting to privileged access in under three hours; some 1,600+ ARTEX consoles are publicly exposed and attacker instances overwhelmingly run DeepSeek-Flash-class models.
-- **FAA nationwide ground stop (Friday afternoon):** the first since January 2023, after communications problems hit the 22 regional air-traffic control centers; DHS says there is no indication yet of a "nefarious attack," FAA technicians are investigating.
-- **Microsoft 365 outage resolved:** after ~27 hours of failed fixes, Microsoft said the underlying Exchange Online issue was fixed, with "broad recovery and stability" — most services back by about 3 p.m. ET.
-- **Quantum Systems confirms active cyberattack:** the German drone maker says its late-October incident was an attack by "hostile actors" via a malicious QBase ground-control update; counterintelligence (MAD), BfV and BSI are responding.
-- **Friday KEV batch (pre-window footnote):** CISA added an actively exploited UnrealIRCd server-authority flaw (CVE-2026-114713) and the Check Point Gaia LPE (CVE-2026-123039) at 07:00 ET this morning.
-
----
-
-## Attacks and campaigns
-
-### FBI FLASH-20261113-001: ARTEX autonomous intrusions reach privileged access in under three hours
-**Event date:** Friday, November 13, 2026 (FBI FLASH, TLP:CLEAR)
-
-The FBI released a FLASH alert Friday detailing TTPs and IOCs for ARTEX, the open-source LLM-driven agentic platform weaponized since at least August 2026 across financial services, government, technology, defense, semiconductor, energy, healthcare, manufacturing, telecom and legal sectors. The alert says ARTEX "significantly reduces the time required to chain attack techniques, with some intrusions progressing from initial targeting to privileged access in under three hours," and cites the ~67,000-person South Korean financial-sector exfiltration and the ConnectWise Cloud Backup supply-chain compromise (>2,250 downstream tenants). Although original developer Li Puhua ("Autumn-27") removed the GitHub repo in October, the FBI stresses the framework "continues to proliferate through community forks, localized variations, archived copies, and a commercial version (ARTEX PRO)" — with researchers counting over 1,600 publicly exposed consoles as of early November. Analysis of attacker-controlled instances found Chinese-origin models most prevalent, "with DeepSeek Flash family models dominating usage due to their balance of capabilities, relatively low cost, and lack of observable guardrails when framed for penetration testing." The FBI says ARTEX agents map trust relationships between organizations and preferentially hit under-hardened estate — partner/supplier portals, mobile backends, employee apps, sales-support systems, legacy services.
-
-**Why it matters:** This is the US government's most authoritative statement to date that agentic AI attack frameworks are an industrialized, criminal-and-state-accessible capability — validating the ARTEX campaign trail this brief has tracked since October (VAPOR PANDA, Storm-0940, WorkOS, 800–1,428 exposed consoles). The "machine speed" sub-3-hour dwell-to-privilege window breaks human-paced IR, and the console-exposure numbers imply the operator population is far larger than the targeted victims reported so far.
-**Action:** The FBI urges organizations — especially those with internet-exposed applications, self-service portals, cloud infrastructure and partner/supplier systems — to implement the FLASH's Mitigations section; defenders should also hunt for unauthenticated ARTEX-family consoles per the Censys/GitGuardian IOCs already published.
-
-Source: Threat Overview of ARTEX Autonomous Penetration Testing Framework — FBI/IC3 FLASH-20261113-001, November 13, 2026 — https://www.ic3.gov/CSA/2026/261113.pdf
-Source: FBI flash alert says Artex tool automating cyberattacks at 'machine speed' — The Record, November 13, 2026 — https://therecord.media/artex-ai-tool-fbi-flash-alert
-
-### FAA orders first nationwide ground stop since 2023 over ATC communications failure
-**Event date:** Friday, November 13, 2026 (ground stop imposed ~3:45 p.m. ET)
-
-The FAA grounded all departing US flights Friday afternoon "due to extraordinary circumstances and for reasons of safety" after communications problems struck the 22 regional air-traffic control centers that direct en-route traffic — the first nationwide ground stop since the January 2023 NOTAM system failure (and before that, only after 9/11). Transportation Secretary Sean Duffy said technicians are investigating the comms issue; Homeland Security Secretary Markwayne Mullin said there was "no indication yet that this was a nefarious attack against us. It's just a telecommunications outage." No cause had been announced as of the 17:20 ET fire time.
-
-**Why it matters:** A nationwide ATC comms outage is exactly the scenario cyber-adjacent risk teams must treat as a potential hostile act until disproven — and the last unexplained NOTAM outage became a national-security story. Whether the root cause is configuration, equipment or intrusion will shape critical-infrastructure comms-hardening requirements; treat "no indication yet" as provisional.
-**Action:** Track the NTSB/FAA cause determination; CNI operators relying on FAA feeds or airspace APIs should validate their fail-open behavior.
-
-Source: Flights halted at airports across US due to air traffic control communications problems — AP News, November 13, 2026 — https://apnews.com/article/flights-halted-airports-faa-f81b0904331dafad6133f291e5f531a8
-Source: FAA Ground Stop Issued Due to 'Extraordinary Circumstances' — SecurityWeek, November 13, 2026 — https://www.securityweek.com/
-
-### Update — Quantum Systems confirms "active cyberattack by hostile actors" via compromised QBase update server
-**Event date:** Friday, November 13, 2026 (vendor confirmation; underlying intrusion late October 2026). Ledger: quantum-systems-drone-relift (reported today 12:20 fire).
-
-BleepingComputer reports the German reconnaissance/interceptor-drone maker confirmed its late-October incident "was part of an active cyberattack by 'hostile actors'," and that the compromise point was the update-distribution server for QBase, its ground-control and mission-planning software — a malicious QBase update file, per Der Spiegel and FT reporting citing internal sources. Quantum Systems says it was likely targeted for its Ukraine support (tens of thousands of interceptor drones funded in October); German military counterintelligence (MAD), the BfV and BSI are engaged. Der Spiegel identified the Vector/Falke drone as one of the affected platforms; how many customers installed the rogue update is unclear.
-
-**Why it matters:** The Bundeswehr lifted the precautionary grounding today (covered at 12:20), but the vendor's own confirmation upgrades this from "malicious update scare" to an acknowledged supply-chain attack on European defense ground-control software — with no attribution and unknown install counts, every QBase customer is still in scope.
-**Action:** QBase/Vector operators should verify update provenance and integrity against vendor hashes and hunt for the rogue update window (late October).
-
-Source: German military drone operations disrupted by cyberattack — BleepingComputer, Bill Toulas, November 13, 2026 12:31 PM ET — https://www.bleepingcomputer.com/news/security/german-military-drone-operations-disrupted-by-cyberattack/
-
-### Update — Microsoft 365 outage fixed after ~27 hours; "broad recovery and stability," cyberattack not ruled out
-**Event date:** Friday, November 13, 2026 (fix announced ~2:00–3:00 p.m. ET). Ledger: M365-outage-MO1550821 (Nov 12 17:20 fire) → m365-outage-20h-nofix (Nov 13 12:20 fire).
-
-Microsoft announced Friday afternoon it had fixed the underlying issue behind the longest-running M365 outage of the year (MO1550821/EX1550543), which began Thursday ~13:00 ET when a failed server-health-check component took Exchange Online — and dependent Outlook, Teams, SharePoint, Copilot connectors — down for 120,000+ Downdetector reporters across ~74 countries. Recovery had repeatedly failed under traffic through this morning; by ~3 p.m. ET most services were back with "broad recovery and stability." Microsoft has still not published a root cause and has not ruled out a cyberattack.
-
-**Why it matters:** The five-hour delta between "fixes keep failing" (12:20 fire) and "fixed" (15:00) closes an incident that disrupted security operations (Defender portal, agent connectors) as much as mail. The unresolved root cause — and Microsoft's refusal to exclude hostile activity — leaves a post-mortem obligation; SLA-credit claims are now the practical action for affected orgs.
-**Action:** File SLA-credit claims for MO1550821/EX1550543 windows; re-validate any mail-flow or connector failover changes made during the outage.
-
-Source: Microsoft 365 Outage Resolving After Nearly 24 Hours — MacRumors, November 13, 2026 (~2:20 p.m. ET) — https://www.macrumors.com/2026-11-13/microsoft-365-outage-resolving/
-Source: Microsoft 365 services slowly come back online after global outage — Computerworld, November 13, 2026 — https://www.computerworld.com/article/4248590/m365-services-slowly-come-back-online-after-global-outage.html
-Source: Microsoft Outlook, 365 mostly fixed after 24-hour outage — USA Today, November 13, 2026 — https://www.usatoday.com/story/tech/2026-11-13/microsoft-outage-outlook-updates-friday/92752697007/
+- **Coles Group (Australia's #2 retailer) confirmed a "cyber security incident"** over the weekend — stores unaffected, and the company says there is no evidence customer data was compromised; global incident-response firms are engaged.
+- **Microsoft shipped emergency out-of-band Windows updates** to fix the activation/licensing failures (0x80041008) caused by November Patch Tuesday — and separately **ruled out a cyberattack** in the Nov 12 M365 outage while warning that phishers exploited the outage with three attacker domains.
+- **NoisyTCP (CVE-2026-99288)** — an 11-year-old Linux kernel NULL-pointer race — lets unauthenticated remote attackers crash servers running default-configured Nginx, Apache, and OpenSSH.
+- **Uber's Fireworks AI-linked breach ballooned to ~150,000 drivers**: 149,346 people in the Texas AG filing, with driver's-license images, names, addresses, DOBs taken; Uber's spokesperson confirmed Fireworks AI was the compromised provider.
+- **Weekend leak-site surge:** N0N opened Monday with a rapid-fire blue-chip listing spree (Walmart, JPMorgan, Visa, Mastercard, P&G, Nielsen, Medline, AS Watson — unverified), PixelLeaks debuted an India/US batch, and ransomware.live logged 42 new in-window victim listings.
 
 ---
 
 ## Vulnerabilities and patches
 
-No new in-window vulnerability disclosures survived verification this cycle. The morning's CISA KEV batch and this morning's Check Point PHP2Shell-ESXi exploitation story predate the 12:20 boundary (see footnotes); SecurityWeek's "Citrix Patches 10 Critical NetScaler Vulnerabilities" (Nov 13) is the same Thursday CTX697305 release already reported on Nov 12 and is suppressed.
+### Microsoft pushes emergency out-of-band Windows updates for activation failures
+**Event date:** Sun Nov 15 – Mon Nov 16 (OOB release) — *Update on "0x80041008-activation" (reported Nov 13)*
 
-## Defensive tools and advisories
+Microsoft released emergency out-of-band (OOB) updates to fix the Windows activation and licensing failures introduced by this month's Patch Tuesday security updates. The original confirmation (Nov 13) covered slmgr/KMS failures with error 0x80041008 on Windows 10 21H2/22H2, Windows 11 23H2, and Server 2019/2022/2025; the OOB fixes land just over two days later.
 
-No new tool releases verified inside the window beyond the advisories above.
+**Why it matters:** Activation breakage isn't a security hole itself, but mass OOB remediation consumes the same patching windows security teams need for the 1,200+ November CVEs — and machines stuck in a failed-activation state often drift out of update compliance.
+**Action:** Apply the OOB updates (or defer the November CU chain) per Microsoft's release-health guidance.
+**Severity:** Not specified by source (servicing bug, not a CVE).
+
+Source: BleepingComputer — "Microsoft pushes Windows emergency updates to fix activation failures," Nov 16 2026 03:26 EST (verified via bleepingcomputer.com RSS; Bing News dated same article Sun 19:26 GMT) — https://www.bleepingcomputer.com/feed/
+
+### NoisyTCP (CVE-2026-99288): 11-year-old Linux kernel flaw remotely crashes Nginx/Apache/SSH servers
+**Event date:** Mon Nov 16 (disclosure by Hyunwoo Kim)
+
+A pre-authenticated remote NULL-pointer dereference in the kernel's TCP subsystem — present for about 11 years — can be triggered by crafted traffic that races SYN-cookie handling against lockless socket hashing, panicking the kernel on servers receiving TCP directly. The researcher (Hyunwoo Kim, who also disclosed Dirty Frag and Januscape this year) showed crashes against default-configured Nginx, Apache and sshd; Red Hat's analysis describes the race as stale ehash lookup concurrent with req-socket free/realloc across multiple RX contexts. A mainline patch was merged ~two weeks ago, before public disclosure.
+
+**Why it matters:** Remote, unauthenticated DoS against stock Linux server configs — and the same race primitive that lands crashes today is the kind of lockless-path bug that can later be groomed into something worse. Exploitation reliability is lower on quiet bare-metal (narrow race window).
+**Action:** Patch/backport now; where not possible, disable SYN cookies (weakens SYN-flood defense) or serialize to a single RX queue to close the race, per the researcher.
+**Severity:** Not specified by source (no CVSS published in coverage).
+
+Source: BleepingComputer — "New NoisyTCP vulnerability lets attackers crash Linux servers," Nov 16 2026 04:30 EST — https://www.bleepingcomputer.com/news/linux/new-noisytcp-linux-kernel-flaw-lets-attackers-crash-servers/
 
 ---
 
-## Also noted
+## Attacks and campaigns
 
-- **Walgreens (Walgreen Co.) listed on a ransomware leak site** — ransomware.live detected the pharmacy-chain listing ~1:20 p.m. ET Friday; group name not confirmed at fire time. Source: https://www.ransomware.live/ (November 13, 2026).
-- **Friday afternoon leak batch (ransomware.live, ~1:20–4:50 p.m. ET):** Sportsman's Guide (outdoor e-commerce), Advantage Archives (community digital records), Frey Properties of Highland LLC (real estate), Tidewater Inn (Maryland hospitality), a new-group debut claiming financial/broker records + "86GB of Outlook" data, and two Pixelleaks pending-publication timers (Nov 16–17) naming International Utility Specialists Inc., BEAM Society (iBeam.hk) and SPI Corp/SPI Energy (Republic of Congo). Groups otherwise unconfirmed; claims unverified. Source: https://www.ransomware.live/ and https://www.recentbreaches.com/ (November 13, 2026).
+### Coles investigates a "cyber security incident"; says no evidence of customer data compromise
+**Event date:** Sun Nov 15 (company statement) – Mon Nov 16
 
-## Just missed the window
+Coles Group, Australia's second-largest retailer, confirmed Sunday it is investigating a cyber security incident. Stores and supply chain are unaffected — the company told customers to "shop as normal" and apologized — and Coles says there is no evidence customer data was compromised. It has engaged global incident-response specialists; reporting linked the news to a fresh wave of retail-sector pressure, including digital gift-card fraud at rival Woolworths. As of the cutoff the initial-access vector and scope are undisclosed.
 
-- **UnrealIRCd CVE-2026-114713 added to CISA KEV (Nov 13, 07:00 ET):** labeled-response module flaw (6.0.0 < 6.2.7.1) lets any ordinary user inject server-to-server commands executed with full server/IRCOp authority on linked-server networks (KILL, GLINE, config changes); maintainer reports active exploitation; fix 6.2.7.1 / `hot-patch bundle-20261107`. Severity: "critical" per maintainer — CVSS not specified by source. CISA alert (two KEV additions) published 2026-11-13T12:00Z, before the 12:20 boundary. Sources: https://www.cisa.gov/news-events/alerts/2026-11-13/cisa-adds-two-known-exploited-vulnerabilities-catalog ; https://forums.unrealircd.org/viewtopic.php?t=9487 ; https://ccb.belgium.be/advisories/warning-actively-exploited-cve-2026-114713-affects-unrealircd-patch-immediately
-- **Same KEV batch — Check Point Gaia CVE-2026-123039 LPE added Nov 13, 07:00 ET** (base PHP2Shell-chain story reported this morning's 07:20 fire). Source: https://www.cisa.gov/news-events/alerts/2026-11-13/cisa-adds-two-known-exploited-vulnerabilities-catalog
+**Why it matters:** The disclosure cadence (fast, low-detail, "no evidence yet") is the now-standard playbook, and Australia's retail sector has been under sustained attack pressure all year. The real test is what the forensics say in two weeks.
+**Action:** Watch for a follow-up disclosure from Coles/Notifiable Data Breaches regime; retailers should re-check third-party and gift-card flows.
+**Severity:** Not specified by source.
+
+Sources: Reuters — "Coles probes cyber security incident, says no evidence customer data compromised," Nov 15 2026 21:31 GMT (via Google News; search backend down — verify via https://news.google.com/rss/search?q=%22Coles%22%20%22cyber%20security%20incident%22) ; The Guardian — "Coles investigates cyber-attack and apologises to customers," Nov 16 2026 00:25 GMT (same route); BleepingComputer — "Australian retail giant Coles investigates cybersecurity incident," Nov 16 2026 06:18 EST (https://www.bleepingcomputer.com/feed/)
+
+### Microsoft: Nov 12 M365 outage was not an attack — and phishers rode the incident with fake "Outage -XXXXXX" notices
+**Event date:** Fri Nov 13 statement / Sun–Mon coverage — *Update on "M365-outage-MO1550543" (reported Nov 12–13)*
+
+Microsoft stated Friday the outage that disrupted Exchange Online, Teams, SharePoint and Copilot for over a day was "a technical issue not related to cyber or AI / agents," traced to an earlier network-capacity upgrade with a subsequent network change exposing the flaw; EX1550543 was marked resolved Nov 13. Microsoft Threat Intelligence then reported a credential-phishing campaign that spoofed M365 service-health notices referencing the real incident ID, with subjects "Outage -" plus a six-character code, sent from moments-notice[.]com, planetmaison[.]com and newbooker[.]com via recipient-specific SendGrid tracking links redirecting to reallifeaccounting[.]com.
+
+**Why it matters:** Outage-servicing impersonation is a high-conversion phishing pretext precisely because recipients expect email about the outage — and the SendGrid-tracked infrastructure makes it look like legitimate transactional mail until the redirect.
+**Action:** Block/report the four domains; audit Nov 13–16 for "Outage -" subject clicks; verify incidents only in the M365 admin center; review Safe Links policies.
+**Severity:** Not specified by source.
+
+Source: SecurityWeek — "Microsoft Rules Out Cyberattack in Outage, Warns of Phishing Campaign," Nov 16 2026 03:15 ET — https://www.securityweek.com/microsoft-rules-out-cyberattack-in-outage-warns-of-phishing-campaign/
+
+### Uber breach via Fireworks AI grows to ~150,000 drivers
+**Event date:** Mon Nov 16 (state notifications) — *Update on "uber-fireworks-dl-breach" (reported Nov 13)*
+
+Uber is notifying roughly 150,000 drivers — 149,346 per its Texas AG filing — that driver's-license images, names, addresses, dates of birth and government ID numbers were stolen. Attackers used compromised credentials at a third-party service provider on Oct 7; Uber detected it Oct 9, and its spokesperson confirmed to TechCrunch the provider was Fireworks AI — the same vendor breach that exposed Notion AI chats and the stolen key behind Cursor's trojanized Claude Code extension. The data sat in an Uber-managed cloud environment whose alerts never fired because the actor presented valid credentials.
+
+**Why it matters:** One vendor-credential blast radius now spans three high-profile platforms (Fireworks→Cursor→Notion→Uber), while "valid credentials, no alerts" keeps defeating cloud telemetry. Driver ID images are prime material for synthetic-identity fraud.
+**Action:** Affected drivers should enroll in the offered credit monitoring/fraud assistance; orgs sharing data with AI-inference vendors should treat those connections as production trust boundaries and validate alert coverage.
+**Severity:** Not specified by source.
+
+Source: SecurityWeek — "Uber Data Breach Impacts 150,000 People," Nov 16 2026 06:02 ET — https://www.securityweek.com/uber-data-breach-impacts-150000-people/ (second source cited therein: TechCrunch)
+
+### Leak-site roundup: N0N's Monday blue-chip spree plus 42 weekend listings
+**Event date:** Nov 13 22:44 → Nov 16 07:20 (site timestamps); N0N spree 07:07–07:20 EST pre-cutoff
+
+ransomware.live logged 42 new victim listings in-window: everest and interlock opened Friday night; EndZone, Barracuda, Scarlettgroup and qilin posted Saturday; PixelLeaks ran a Sunday batch of ~20 mostly US/India/HK firms (Godrej & Boyce, Four Points Financial, Boston Institute of Finance); incransom stayed the most active group (54 in 7 days) and qilin added a US SMB cluster. Then, minutes before the 07:20 cutoff, N0N — with a documented history of backdated and fabricated postings — rapid-fired ~13 mega-brand listings (Walmart, JPMorgan Chase, Visa, Mastercard, P&G, Nielsen, Medline, AS Watson, ODP Corp., EssilorLuxottica, Pandora, Airbnb, BoxLunch) at one-per-minute cadence. Treat every N0N claim as unverified absent a corporate acknowledgment.
+
+**Why it matters:** Weekend leak batches are how extortion groups set the Monday news cycle; the one-per-minute posting pattern is a visibility grab, not new intrusion activity.
+**Action:** Cross-check any listed brand of interest against vendor statements before treating as a breach.
+**Severity:** Not specified by source.
+
+Sources: ransomware.live (homepage + victims API, verified timestamps) — https://ransomware.live/ ; ransomnews (roundup corroboration)
+
+---
+
+## Defensive tools and advisories
+
+### Cloudflare open-sources Kitesurf, its agent-first browser engine
+**Event date:** Mon Nov 16
+
+Cloudflare released the full source of Kitesurf — its stateless browser that parses HTML, applies CSS, runs page JS and renders screenshots on Workers with no Chromium container — under Apache 2.0 on GitHub, so teams can inspect, test locally and self-host against their own Cloudflare account. It speaks Chrome DevTools Protocol, so Puppeteer-class clients work unchanged.
+
+**Why it matters:** Headless-Chromium agents are a chronic supply-chain and resource-hungry attack surface; a CDP-compatible engine with no browser binary shrinks that footprint and gives defenders an auditable alternative for agent web access.
+**Action:** Agent-platform teams should evaluate it as a lower-risk execution path for automated browsing.
+
+Sources: Help Net Security — "You can now self-host Kitesurf, Cloudflare's open-source browser for AI agents," Nov 16 2026 07:00 UTC (feed-verified) ; GitHub — https://github.com/cloudflare/kitesurf
+
+### Also noted
+- **vm2's own repo lists its next sandbox escapes** — deferred nesting fix and a monitoring entry in ATTACKS.md, r/netsec Mon 06:32 EST: https://www.reddit.com/r/netsec/comments/1xxibhv/
+- **Gcore: 1,698 internet-visible AI offensive-security endpoints** (ARTEX/PentAGI/Cairn family) — gcore.com research, surfaced on HN Mon 09:26 UTC: https://gcore.com/blog/ai-offensive-security-endpoints-artex-pentagi-cairn (HN id 50515662)
+
+---
+
+## Just missed the window (footnotes)
+- **Copeland/Dixell XWEB EVO root chain** — VulnCheck's 14-vulnerability disclosure (unauthenticated root on legacy builds; MAC+date "code of the day" creds surviving to current 5.8.8 firmware; NVD record Nov 12 20:18 UTC → first in-the-wild exploitation of CVE-2026-124014 by 22:00 UTC; five worst flaws will NOT be fixed — EOL March 16, 2026) was published Fri Nov 13, hours before this window; SecurityWeek's coverage (Nov 16 06:05 ET) confirms ~2,000 exposed EVO hosts (Onyphe) vs 108 XWEB Pro. Not related to the Iran-blamed October sabotage per VulnCheck. Action: never expose XWEB EVO to the internet; segment; migrate. — https://www.vulncheck.com/blog/copeland-xweb-evo-unauthenticated-root ; https://www.securityweek.com/hackers-probe-newly-disclosed-flaws-in-copeland-refrigeration-controllers/
+- **Amazon MadPot: ARTEX AI agents' own records captured** (Oct 3–Nov 5; self-sustaining AI-credential-theft loop targeting LiteLLM/One API/Dify/New API/RAGFlow; moderate-confidence Chinese-nexus attribution; 11 IOCs published) — AWS Security Blog posted Fri Nov 13: https://aws.amazon.com/blogs/security/amazon-threat-intelligence-observes-threat-actors-running-cybercrime-campaigns-with-artex-ai-agents/ (in-window write-up: The Hacker News, Nov 16)
+- **Tor 0.4.9.17 rapid-response DoS fixes** for the ongoing relay-flood attacks (IPv6-aware DoS defenses; Goulet: relays hit by "massive flood of client circuits"; operators report the attacker switching techniques mid-attack) — announced Fri Nov 13, per SecurityWeek Nov 16: https://www.securityweek.com/tor-updates-dos-defenses-again-as-relay-attacks-continue/
+- **Kaspersky ICS CERT: BO Team (Ukraine-aligned hacktivist cluster) hit a Russian software developer's vCenter 7.0.3 via Log4Shell (CVE-2021-44228)**, reached the code-signing server; hourly pgcache cron backdoor fetching GSocket; supply-chain intent assessed, attack disrupted. Report published Nov 5; The Hacker News re-covered Mon Nov 16: https://thehackernews.com/2026/11/bo-team-exploits-log4shell-in-vmware.html
+- **Cursor's post-mortem** (stolen Fireworks-issued key → <0.01% customer API credentials exposed → archived non-production source, support data, agent-trace summaries; Oct 29 trojanized Claude Code 2.1.312/313 build served ~11h; last attacker activity Nov 1, contained) — posted Fri Nov 13: https://cursor.com/blog/security-incident-update (in-window: BleepingComputer Nov 14, THN Nov 15)
+- **Huntress: exposed GeoVision camera-management software abused to break into 13 orgs, disable Defender, deploy XMRig** (activity from Nov 8; IOCs 45.32.117[.]34, 156.246.94[.]183) — advisory Fri Nov 13: https://www.huntress.com/blog/geovision-camera-software-xmrig-cryptominer (in-window: Help Net Security Nov 16)
+
+---
 
 ## Coverage notes
-
-- **Verified count: 7 qualifying items** (3 new events + 2 material updates + 2 also-noted leak-batch entries), each from fetched pages dated inside 12:20–17:20 EST, plus 2 "Just missed" footnotes (first-time use for both).
-- **Ledger dedupe:** ~13 candidates suppressed as already reported — Trezor 3-implant confirmation (BC 2:38 p.m. re-cover of the Nov 12 `missed:` item), Citrix "10 critical NetScaler" (= Nov 12 CTX697305), Quantum Systems grounding-lift (12:20), M365 MO1550821/EX1550543 ongoing thread, Check Point PHP2Shell-ESXi (11:21 a.m. BC, = 07:20 CVE-2026-123039), plus r/netsec re-covers of wfx-loot, NvRoot/CVE-2026-47591, PostgreSQL CVE-2026-6460, ARTEX sig-pack, OWASP Neocloud Top 10, Qlik reverse shells, PHP2Shell deep-dive, N0n #216.
-- Dead ends / limitations: r/netsec `search.rss` 403'd on the fallback sweep (skill-documented intermittent failure), so post timestamps for two promising community items — "Pwning Home Assistant Green: Pre-Auth RCE in Eclipse Mosquitto" and "Claude Code VSCode Plugin: Workspace Escape Via Misleading Permission Prompt" — could not be pinned to the window; both excluded and logged here rather than chased. The FBI FLASH page shows no publication time (dated November 13); Friday release is corroborated by The Record ("released... on Friday") and the IC3 document ID. BleepingComputer's Trezor story was skipped per the one-time `missed:` rule. DDGS result ages ("22 hours ago") proved unreliable this run (mis-timed on the clearly-afternoon FAA stories) and were disregarded in favor of page bylines.
+- **Verified count:** 8 reportable events (5 in-window items incl. 2 updates + 2 also-noted + roundup) plus 6 "just missed the window" footnotes — counted as distinct underlying events. Every in-window item's URL was fetched and read; lead stories read in full.
+- **Ledger dedupe:** ~16 candidates suppressed as already reported or already footnoted once — incl. FBI ARTEX FLASH re-coverage (BleepingComputer Sun), TSMC Sunday confirmation (missed: tag used), UnrealIRCd KEV (missed:), PostgreSQL 52 CVEs (missed:), Mior/Skyfall AMD SEV-SNP (missed:), SilentAir (missed:), Trezor implants, FaceStealer takedown, wfx-loot, SignDrop, Operation Endgame, Project Zero "Full X" re-covers, Quantum Systems, 4EverAble2Shell, FAA ground-stop original.
+- **Dead ends / limitations:** the search backend failed intermittently (5 queries returned no results/timeouts); Reuters/Guardian/HNS per-article URLs could not be resolved to slugs (Google News and Bing routes returned no usable links), so those items are cited via the outlet RSS feeds actually fetched; Tor's forum was cert-blocked; no CISA KEV additions were made Sat/Sun (catalog check: last adds Nov 13, both already footnoted); ransomware.live's recentvictims API lagged N0N's pre-cutoff spree, verified from the homepage instead.
