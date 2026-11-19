@@ -1,53 +1,78 @@
-# AI News Briefing — Anthropic hits the tape; Superhuman makes Go its centerpiece
+# AI News Briefing — Thursday, 19 November 2026, Afternoon (17:00 ET)
 
-**Window:** 2026-11-19 07:00 → 12:00 EST (the 5 hours since this job's 07:00 fire; ET-anchored). New-items-only: events first disclosed in this window, deduped against the reported ledger.
+**Window:** 2026-11-19 12:00 ET → 2026-11-19 17:00 ET (previous fire → this fire). New-items-only: events first disclosed in this window, deduped against the reported ledger.
 
 **TL;DR**
-- **Anthropic (ANT) began trading on Nasdaq Thursday morning, opening at $111.50 — about 34% above its $83 IPO price — and briefly carries a ~$2T market cap.** A material new step in the already-reported IPO story, not a new event to re-list wholesale. CEO Dario Amodei used the opening bell to recommit to pacing AI development.
-- **Superhuman (formerly Grammarly) is making "Go" its central work agent** across Docs and Mail, adding 20 third-party agents via a new Go SDK and repositioning Go as a proactive, cross-app executor with 1M+ active users.
-- **Inference-engine churn continued within the window:** llama.cpp shipped a large OpenVINO backend fix and Inkling 2 attention-mask corrections; vLLM landed ROCm MXFP4 and Rust-frontend fixes. No new versioned release from llama.cpp, vLLM, SGLang or Ollama in-window.
-Several high-profile stories trending today were already filed by this job's 07:00 fire.
+- **Microsoft previews RDMA over USB4 on Windows** — two or more USB4 PCs pool memory and GPU compute to run open-weight models that don't fit on one machine; the NetworkDirect provider and a llama.cpp testbed are open source. The window's standout local-inference item.
+- **Google ships Tool Retrieval in the Gemini API (preview)** — agents load tool schemas on demand instead of sending a full library every request, cutting input tokens and latency for tool-heavy agents.
+- **Google brings computer use to the Gemini desktop app on macOS** — the agent drives native apps, files and the web in an isolated background window; US, paid tiers, Apple Silicon only.
+- **Update on previously reported (Anthropic IPO):** ANT closed its first session at $97.17, up 17% — giving back more than half the opening pop of 34%.
+- **Engine wave:** llama.cpp, vLLM and SGLang landed dozens of in-window commits, including a vLLM DoS-hardening fix; Ollama was quiet.
 
 ---
 
 ## Models and local inference
 
-No qualifying new model release or hardware item in this window. HF's newest uploads (17:34–17:41 UTC) land after the 12:00 EST close, and would be routine community quant/RL repos in any case. The ledger's open-weight threads from the last two days (Inkling 2, Gemini 4 Neon, Kimi K3.1 Pro, Qwen4-Max) are all already reported.
+**Microsoft previews RDMA over USB4 on Windows — pool multiple PCs to run oversized open-weight models**
+*Event date: 19 November 2026 (in-window).*
 
-**In-window engine builds (also noted).**
-*Event date: 2026-11-19, 12:58–16:58 UTC.* llama.cpp's afternoon wave included PR #32590, a substantial OpenVINO backend pass (rounds GPU KV length to a power of two, optimizes prefill recompiles, fixes LFM2/DSpark and Qwen3.6-A3B static-shape paths, adds Mamba models on OV CPU-GPU) and PR #32429, Inkling 2 attention-mask corrections. Builds b12546/b12547 were tagged in-window. vLLM merged PR #65251 (ROCm AITER MXFP4 linear op registration), #68584 (Rust-frontend Mooncake lookup-lease stats) and #68510 (dead-code cleanup).
-**Why it matters:** the OpenVINO work broadens practical CPU/NPU execution of small open models, and the Inkling 2 fixes matter for anyone running Nous's new release locally. Nothing here is a headline feature, but it is the real state of local inference between releases.
-Sources: [llama.cpp commits, 12:00–17:00 UTC](https://api.github.com/repos/ggml-org/llama.cpp/commits?since=2026-11-19T12:00:00Z&until=2026-11-19T17:00:00Z&per_page=40) · [vLLM commits, 12:00–17:00 UTC](https://api.github.com/repos/vllm-project/vllm/commits?since=2026-11-19T12:00:00Z&until=2026-11-19T17:00:00Z&per_page=40) · [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases) (retrieved 2026-11-19 ~12:00 EST).
+Microsoft's USB team opened a developer preview of **RDMA over USB4** for Windows. Connect two or more USB4-capable Windows PCs with USB4/Thunderbolt 4/5 cables and a compatible inference framework can split one model across their combined memory and GPU compute, using **NetworkDirect** — the same RDMA API Windows uses with datacenter NICs, so no RDMA adapter, switch or third-party driver is needed. Microsoft measured small-message round-trip latency of roughly **28–50 µs, about 4× lower than UDP over the same USB4 link**. In company tests, three AMD PCs ran Qwen3-235B-A22B at ~18.5 tok/s; Intel's GPT-OSS-120B went from 49.4 tok/s on three PCs to 54.2 on four. The NetworkDirect provider, samples and link-test tools are open source, with a llama.cpp-based testbed; access arrives "soon" to Windows Insiders in the Experimental channel and requires test signing (which disables Secure Boot). AMD and Intel collaborated on the work.
+
+**Why it matters:** This attacks the central local-inference ceiling — a model too big for one card or one machine. RDMA over commodity USB4 ports offers a cheaper on-desk alternative to a server-class cluster, and an open-source provider plus llama.cpp testbed means the community can validate and extend it immediately.
+
+**Local inference note:** Directly relevant. It is a developer preview (test signing, manual static addressing, full-mesh cabling) — a starting point, not plug-and-play.
+
+Source: "Introducing RDMA over USB4® on Windows: run larger local AI models across PCs," Microsoft USB Blog, 19 Nov 2026 — https://techcommunity.microsoft.com/blog/microsoftusbblog/introducing-rdma-over-usb4%C2%AE-on-windows-run-larger-local-ai-models-across-pcs/4574602
+Source: "Microsoft previews linking Windows PCs over USB4 to run larger AI models," Superpower Daily, ~14:00 ET 19 Nov 2026 — https://superpowerdaily.com/posts/microsoft-previews-linking-windows-pcs-over-usb4-to-run-larger-ai-models
+
+**Engine wave (also noted, in-window).** Between 12:03 and 16:55 ET, llama.cpp landed three commits (OpenCL dp4a KQ matmul in decomposed attention #32577, BF16 for ROPE/SET_ROWS #32387, YuE2 projector fix #32606); vLLM merged ~18, including GLM-5.3-Flash FP8 on SM90 Mega MoE #66812, Kimi K3.1 GQA DSpark drafts #68701, a mixed-page-size KV layout for Nemotron Shortcut #67941, and **a DoS hardening fix enforcing `max_tokenize_tokens`** #67348; SGLang merged ~10, including an sgl-router least-tokens KV rank policy #51415 and FP4 indexer-key fusion #51515. Ollama was quiet. Source: GitHub commit histories, 19 Nov 2026 17:03–21:55 UTC — https://github.com/ggml-org/llama.cpp/commits/master , https://github.com/vllm-project/vllm/commits/main , https://github.com/sgl-project/sglang/commits/main
+
+---
 
 ## Agent tools
 
-**Superhuman makes Go the center of its agent stack.**
-*Event date: 2026-11-19 (morning ET; TechCrunch posted ~3 hours before the 12:00 fire).* Superhuman, the company formerly known as Grammarly, is elevating its "Go" assistant from a feature to the central agent across its products. Go now works inline in Docs and Mail, learns context across apps, and runs proactively — watching calendars and email and drafting responses. A new Go SDK adds 20 connected third-party agents including DeepL, Legora, Amplitude, Databricks and Blackboard. CEO Shishir Mehrotra says Go has passed 1 million active users and is positioning it against OpenAI's Dots and Claude Duet rather than consumer companions.
-**Why it matters:** this is a concrete example of a productivity suite consolidating on a single persistent, cross-app agent with an extension SDK — the pattern to watch for enterprise agent tooling. It also signals that "assistant as the OS layer" is now a mainstream product bet, not a startup demo.
-**Local inference:** none claimed — Go is a hosted, proprietary agent.
-Source: [Superhuman pushes its Go assistant everywhere — TechCrunch, 2026-11-19](https://techcrunch.com/2026/11/19/superhuman-pushes-its-go-assistant-everywhere/).
+**Google adds Tool Retrieval to the Gemini API (preview)**
+*Event date: 19 November 2026 (in-window, ~13:38 ET).*
+
+Google launched **Tool Retrieval** in preview in the Gemini Interactions API. Add a `tool_search` tool and set `defer_loading: true` on selected tools; the model still sees each tool's name and description but not its parameter schema. When a tool is needed, the model requests it by name, the API loads the schema, and the function is called — all in one request, with each step exposed in `interaction.steps` for debugging. Google says the design cuts input-token bloat, latency and tool-selection errors that grow with large tool libraries, and preserves the prefix cache because deferred schemas stay out of the prompt head. It works with remote MCP servers and supports client-side retrieval; there is no separate charge. Requires Gemini 3.6 or later, including all Gemini 4 models.
+
+**Why it matters:** Tool selection is the main scaling wall for production agents with dozens or hundreds of tools. Server-side, on-demand schema loading with no index to host is a pragmatic fix that keeps accuracy from degrading as the toolset grows — especially relevant where tool registries are large or MCP servers expose many functions.
+
+Source: "Introducing Tool Retrieval in the Gemini API," Google Developer Blog, 19 Nov 2026 — https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/
+Source: "Google adds Tool Retrieval to the Gemini API to tame tool-heavy AI agents," Crypto Briefing, 13:38 ET 19 Nov 2026 — https://cryptobriefing.com/gemini-api-tool-retrieval-preview/
+
+**Google brings computer use to the Gemini desktop app on macOS**
+*Event date: 19 November 2026 (in-window, ~14:57 ET).*
+
+Google announced **computer use** for the Gemini app on Mac. The agent navigates native macOS apps, local files and websites to complete multistep tasks — filling forms, batch-processing files, organizing folders, building slideshows from dashboard data — inside an isolated background window with a live preview, leaving the screen and cursor free. Users choose which apps Gemini may access, watch each step, pause at any time and approve key actions; logins and payments pause by default. It is English-only, US-only, requires an Apple Silicon Mac on macOS Sequoia 15.0+, a personal Google account for users 18+, and an AI Plus, Pro or Ultra subscription.
+
+**Why it matters:** Computer use is moving from demos into mainstream desktop subscriptions. Google's gated, approval-first rollout is a bet that trust controls — not raw capability — will decide which agent users let drive their machine; its late arrival intensifies pressure on Apple to offer an equivalent.
+
+Source: "Automate Mac tasks with Gemini computer use," Google Keyword blog, 19 Nov 2026 — https://blog.google/innovation-and-ai/products/gemini-app/computer-use-mac/
+Source: "Google gives Gemini the ability to use your Mac for you," TechCrunch (Sarah Perez), 19 Nov 2026 — https://techcrunch.com/2026/11/19/google-gives-gemini-the-ability-to-use-your-mac-for-you/
+Source: "Google Turns On Gemini Computer Use for Mac Paid Plans," AI Weekly, 19:57 UTC 19 Nov 2026 — https://aiweekly.co/alerts/google-turns-on-gemini-computer-use-for-mac-paid-plans
+
+---
 
 ## AI security and governance
 
-**Update on previously reported — Anthropic (ANT) makes its Nasdaq debut.**
-*Event date: 2026-11-19, 09:30 ET opening bell.* Building directly on the IPO pricing already filed in this ledger ($83/share, raised $81.3B), Anthropic's stock began trading Thursday: it opened at $111.50, roughly 34% above the offer, and the company briefly cleared a ~$2 trillion market capitalization — surpassing SpaceX's debut and becoming by far the largest US-listed public benefit corporation, overseen by a five-member long-term benefit trust. The order book was reported to have left more than half of bidding institutional investors with no allocation, with fill rates favoring US investors. At the opening bell Amodei recommitted to "pacing" frontier AI development, echoing early investor Dustin Moskovitz's line that he backed Anthropic "to promote safety, not racing." Allocation detail (US retail $1.1B, ~$3B Japan tranche) was already in the previous fire's ledger and is not re-reported here.
-**Why it matters:** the debut turns a heavily analyzed private fundraising saga into a live public-market instrument, and puts the "circular financing" question (hyperscaler revenue recycling back into compute) in front of public shareholders on day one. The PBC/long-term-benefit-trust structure also becomes a real governance test rather than a filing footnote.
-**Local inference:** none.
-Sources: [TechCrunch AI wire — "Anthropic hits NASDAQ exchanges at $111, 33 percent above IPO price" and "At Nasdaq opening bell, Anthropic CEO recommits to pacing AI development," 2026-11-19](https://techcrunch.com/category/artificial-intelligence/) · [Techmeme top-of-river, 2026-11-19](https://www.techmeme.com/) · [The Decoder — "Anthropic's $81.3 billion IPO shatters SpaceX's record," 2026-11-19](https://the-decoder.com/).
+No new AI security or governance development was first disclosed inside this 5-hour window that clears the in-window and dedupe gates. The one in-window security-adjacent change is vLLM's `max_tokenize_tokens` DoS-hardening merge noted above. The most prominent security stories in circulation (the EU Commission's confirmation of an ARTEX-driven cyberattack, the GAO chatbot-attack-plans report, and OpenAI's internal "email-surveillance agent" report) were disclosed before the window or are already in the ledger — see footnotes and Coverage notes.
 
 ---
 
 ## Also noted
 
-- No qualifying AI-security disclosure originated in this window. The Hacker News's Nov 19 items (phpAfterShell / PHP RCE set, VMware vCenter CVE-2026-123890, Drupal, N-able, CISA KEV with LiteLLM LLMjacking) are either general-security rather than AI-security, or were already footnoted/filed by the 07:00 fire (LiteLLM KEV, Ruby2Shell).
-- The OpenAI "researchers value their AI tools more than nearly half their colleagues" piece (The Decoder, Nov 19) re-packages the same internal research-acceleration report already filed at 07:00 as `jagged-frontier` (46% of 2–4h tasks, $2,400/day). Not re-listed.
+- **Update on previously reported (anthropic-s1-ant):** ANT closed its Nasdaq debut at **$97.17**, up 17% from the $83 offering price, after opening at $111.50 (+34%) — giving back more than half the opening gain. Fully diluted market cap ~$1.8T at the close (~$1.27T by one measure); >846M shares traded. Amazon and Google together own ~28% post-offering. (CNBC live, updated 16:51 ET 19 Nov 2026 — https://www.cnbc.com/2026/11/19/anthropic-ipo-ant-live-updates.html )
+- **Open-model cost check (self-published):** a HN-shared analysis, "Five agent chores: $258 on a top model, $11 on open models," argues routine agent tasks run far cheaper on open weights — directional, vendor-unverified (https://bitdepth.dev/blog/five-routine-ai-jobs ).
 
 ## Just missed the window
 
-- **Frostbite — an AI-designed CPU architecture** (Architect Labs blog, dated Nov 18, before this window's 07:00 EST open): a general-purpose CPU built on interaction nets that the company says its agent swarms took end-to-end from exploration through GDS, claiming 4.59× the performance-per-watt of a modern superscalar core. Genuinely on-theme for AI-designed silicon, but the underlying disclosure predates the window — footnoted once here, not counted as an in-window item. It surfaced on Hacker News inside the window. [Source](https://architectlabs.com/blog/frostbite) (2026-11-18).
+- EU Commission confirms it was hit by an AI-driven cyberattack using the ARTEX penetration-testing tool; systems disrupted 10+ days (Politico/Commission briefing 19 Nov, before the 12:00 ET cut).
+- OpenAI internal "email-surveillance agent" misalignment report (report public 18 Nov) — re-covered in-window by The Decoder.
 
 ## Coverage notes
 
-- **Verified in-window items: 2 substantive** (Anthropic Nasdaq debut as an update on a reported event; Superhuman Go), **1 also-noted** engine line (llama.cpp + vLLM in-window commits), and **1 just-missed footnote** (Frostbite). Counting unit: distinct underlying events.
-- **Dedupe gate:** ~8 trending candidates suppressed as already reported in the ledger and not re-listed — Gemini 4 Neon, the OpenAI `jagged-frontier` report, the TSMC/Samsung China shipment hold + Moonshot/NYT export-control cluster, CISA KEV LiteLLM (already footnoted), Anthropic IPO allocation detail, Microsoft in-house MAI model replacements (Ignite), Meta's ads-ranking agent blog (dated Nov 18), and the PHP2Shell/Ruby2Shell follow-ons. Repeat "just missed" footnotes were not permitted.
-- **Limitations:** Reddit's public RSS ended Nov 13, 2026, so the r/LocalLLaMA lane returned 404 this run; the HN river, Techmeme, GitHub commit APIs, Hugging Face model API and outlet homepages were walked instead. General web search returned mostly trackers. Several secondary links (individual TechCrunch/The Verge article pages, Techmeme history) failed to fetch; those items were corroborated through the outlet's own wire page rather than cited to an unverified slug. No padding with stale or adjacent-day material.
+- **Verified count:** 3 substantive new in-window items (Microsoft RDMA over USB4; Gemini Tool Retrieval; Gemini macOS computer use), 1 material update on a previously reported item (Anthropic IPO close), plus 1 in-window engine-commit wave (also-noted). Counting unit = distinct underlying event.
+- **Ledger dedupe:** 9 candidates suppressed as already reported — chiefly the Anthropic IPO saga, Gemini 4 Neon, Nvidia's H200 China halt, Superhuman Go, the OpenAI "jagged frontier" report, the CISA KEV/LiteLLM footnote, and earlier engine waves.
+- **Community lanes:** HN river walked (in-window items above); Reddit was unavailable this run (anonymous Atom feed returned 404/429), so no Reddit-sourced items are included.
+- **Dead ends:** tool/model-release trackers and several search queries returned no additional in-window, in-scope items; the OpenAI "agent builds email-surveillance tool," GAO attack-plans report, Intel 18A customer, Olala mini 7A1B, Kling Image 4.0 and Aion 1.0 Instruct 2.3B all predate the window.
