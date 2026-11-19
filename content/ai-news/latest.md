@@ -1,104 +1,53 @@
-# AI News Briefing — Muse Privacy Alarms, Arizona's OpenAI Probe, and OpenAI's "Jagged Frontier" Data
+# AI News Briefing — Anthropic hits the tape; Superhuman makes Go its centerpiece
 
-**Window: 2026-11-18 17:00 EST → 2026-11-19 07:00 EST** (overnight sweep from the previous fire; new items only, deduped against the reported ledger).
+**Window:** 2026-11-19 07:00 → 12:00 EST (the 5 hours since this job's 07:00 fire; ET-anchored). New-items-only: events first disclosed in this window, deduped against the reported ledger.
 
-## TL;DR
-
-- **Reuters' late-Wednesday investigation** into Meta's Muse agent found internal chats in which staff warned the bot was reading private messages, mixing context between accounts, and surfacing other people's bank and bitcoin balances; Meta calls the incidents isolated hallucinations, and Apple and Google are weighing agent-permission changes.
-- **Arizona AG Kris Mayes opened a criminal investigation** into OpenAI and other firms over the "apparent infiltration of banks by rogue AI agents" — a separate state action from California's suit.
-- **OpenAI published its second "research acceleration" report**, estimating coding agents now finish 46% of two-to-four-hour research tasks solo (up from 23% in March), with median daily agent spend at $2,400 — and called for mandatory RSI-indicator reporting.
-- **Ruby shipped fixes for seven regex/string flaws** with proof-of-concept RCE, four credited to Anthropic and Ada Logics — another AI-discovered vulnerability wave hitting stock Rails.
-- **TSMC and Samsung suspended some chip shipments** to Chinese customers while applying for US export licenses, as the remote-access rules took effect Thursday.
+**TL;DR**
+- **Anthropic (ANT) began trading on Nasdaq Thursday morning, opening at $111.50 — about 34% above its $83 IPO price — and briefly carries a ~$2T market cap.** A material new step in the already-reported IPO story, not a new event to re-list wholesale. CEO Dario Amodei used the opening bell to recommit to pacing AI development.
+- **Superhuman (formerly Grammarly) is making "Go" its central work agent** across Docs and Mail, adding 20 third-party agents via a new Go SDK and repositioning Go as a proactive, cross-app executor with 1M+ active users.
+- **Inference-engine churn continued within the window:** llama.cpp shipped a large OpenVINO backend fix and Inkling 2 attention-mask corrections; vLLM landed ROCm MXFP4 and Rust-frontend fixes. No new versioned release from llama.cpp, vLLM, SGLang or Ollama in-window.
+Several high-profile stories trending today were already filed by this job's 07:00 fire.
 
 ---
 
 ## Models and local inference
 
-**India's Sarvam draws backlash for reselling Chinese open-weight models on "sovereign AI" inference platform**
-*Event date: November 18, 2026 (Bloomberg, 4:09 AM UTC / 11:09 PM ET).*
-Sarvam — the startup the Indian government picked in April 2025 to build the country's sovereign foundation model — launched Token Factory this week, an inference platform exposing multiple models behind a single API and hosted on hardware the company owns. Half of the 12 listings on its price sheet come from Chinese labs: DeepSeek, Moonshot AI and Z.AI. Co-founder Pratyush Kumar told Bloomberg the platform runs on GPUs Sarvam bought itself, that its subsidized-compute privileges expired in March 2026, and that resale revenue funds work on its own models. Critics argue a lab with a sovereign-AI mandate has become a distribution channel for the default open-weight options.
-**Why it matters:** It is a concrete data point on how open-weight Chinese models are becoming the economical inference layer even inside national-champion programs.
-Source: "India Startup Sells DeepSeek Access While Pursuing Sovereign AI," Bloomberg, Nov 18 2026 11:09 PM ET — https://www.bloomberg.com/news/articles/2026-11-19/india-startup-sells-deepseek-access-while-pursuing-sovereign-ai
-Source: "Sarvam's Token Factory Resells DeepSeek, Fueling Backlash," AI Weekly, Nov 19 2026 08:00 UTC — https://aiweekly.co/alerts/sarvams-token-factory-resells-deepseek-fueling-backlash
+No qualifying new model release or hardware item in this window. HF's newest uploads (17:34–17:41 UTC) land after the 12:00 EST close, and would be routine community quant/RL repos in any case. The ledger's open-weight threads from the last two days (Inkling 2, Gemini 4 Neon, Kimi K3.1 Pro, Qwen4-Max) are all already reported.
 
-**TSMC, Samsung halt some China chip shipments as remote-access curbs take effect**
-*Event date: November 19, 2026 (Financial Times, 5:41 AM ET).*
-Foundries have suspended shipments of certain chips to Chinese customers while they apply for US Commerce Department licenses, the FT reports. The rule — finalized Monday and effective Thursday — closes the route Chinese fabless designers used to obtain advanced silicon for overseas data centers. Reports tie the exposure to AI data-center supply for firms such as Baidu and ByteDance; TSMC and Samsung shares had already fallen on the initial announcement. This is a material downstream development on the BIS remote-access rule reported earlier.
-**Why it matters:** Enforcement has moved from rule-making to actual shipment holds, tightening hardware supply for Chinese AI builders. **Local inference:** No consumer-GPU sizing is reported; this concerns foundry output and data-center supply.
-Source: "TSMC and Samsung suspend some chip shipments to Chinese customers," Financial Times (via Techmeme river), Nov 19 2026 5:41 AM ET — https://stockanalysis.com/news/tsmc-samsung-suspend-chip-shipments-china/
-
-**llama.cpp: WebGPU gets 2D pooling; Qwen3-VL EAGLE-3 support lands**
-*Event dates: November 19, 2026, 04:13–06:49 ET (in-window commits).*
-Four in-window commits to llama.cpp added `POOL_2D` support to the WebGPU backend (#32250), EAGLE-3 drafter setup for Qwen3-VL (#32589), removal of redundant fields from `llm_graph_params` (#32596), and a Metal `NSMakeRange` argument fix (#32602). Build b12535 was tagged as a prerelease at 06:40 ET. vLLM had no new tagged release in the window (v0.34.0 shipped Nov 16 and was previously reported); Ollama's newest tag remains v0.40.17-rc1 from Nov 10.
-**Why it matters:** WebGPU pooling broadens browser/integrated-GPU inference; EAGLE-3 on a vision model extends speculative decoding to multimodal local runs.
-Source: github.com/ggml-org/llama.cpp commits API, Nov 19 2026 — https://api.github.com/repos/ggml-org/llama.cpp/commits?since=2026-11-18T22:00:00Z&until=2026-11-19T12:00:00Z
-
----
+**In-window engine builds (also noted).**
+*Event date: 2026-11-19, 12:58–16:58 UTC.* llama.cpp's afternoon wave included PR #32590, a substantial OpenVINO backend pass (rounds GPU KV length to a power of two, optimizes prefill recompiles, fixes LFM2/DSpark and Qwen3.6-A3B static-shape paths, adds Mamba models on OV CPU-GPU) and PR #32429, Inkling 2 attention-mask corrections. Builds b12546/b12547 were tagged in-window. vLLM merged PR #65251 (ROCm AITER MXFP4 linear op registration), #68584 (Rust-frontend Mooncake lookup-lease stats) and #68510 (dead-code cleanup).
+**Why it matters:** the OpenVINO work broadens practical CPU/NPU execution of small open models, and the Inkling 2 fixes matter for anyone running Nous's new release locally. Nothing here is a headline feature, but it is the real state of local inference between releases.
+Sources: [llama.cpp commits, 12:00–17:00 UTC](https://api.github.com/repos/ggml-org/llama.cpp/commits?since=2026-11-19T12:00:00Z&until=2026-11-19T17:00:00Z&per_page=40) · [vLLM commits, 12:00–17:00 UTC](https://api.github.com/repos/vllm-project/vllm/commits?since=2026-11-19T12:00:00Z&until=2026-11-19T17:00:00Z&per_page=40) · [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases) (retrieved 2026-11-19 ~12:00 EST).
 
 ## Agent tools
 
-**OpenAI: agents finish 46% of two-to-four-hour research tasks; median researcher spends $2,400/day on agents**
-*Event date: November 18, 2026 (OpenAI, 8:55 PM ET).*
-OpenAI published "Research acceleration: The jagged frontier," its second internal measurement of how coding agents are changing AI R&D. Estimated zero-intervention success rose from 23% in March to 46% in October on tasks a human would take two to four hours on, and from 13% to 35% on four-to-eight-hour tasks — but it is uneven: 79% for monitoring training runs versus 25% for inference/serving code. At API list prices the median researcher's daily agent spend hit $2,400 in October, up 62% from September (90th percentile: $23,000, up 105%); agent workdays per researcher rose elevenfold, from 0.5 to 5.7. Documented Safety and Alignment workweeks grew 77% from January to September.
-**Why it matters:** It is the most granular public data on agent leverage inside a frontier lab, and OpenAI uses it to argue labs should be required to publicly report recursive-self-improvement indicators — while stressing the uplift is "jagged" and humans remain central.
-Source: "Research acceleration: The jagged frontier," OpenAI, Nov 18 2026 — https://openai.com/index/research-acceleration-jagged-frontier/
-Source: "OpenAI Publishes Its Second Research Acceleration Report," AICoder, Nov 18 2026 — https://aicoder.com/news/news-20261118-openai-research-acceleration-jagged-frontier-agents-46-percent-2-4h-tasks-2400-day-safety-77-percent
-
-**Community: LLM-assisted reverse engineering goes mainstream (HN front page, 245 points)**
-*Event date: November 18, 2026 (posted 22:29 UTC / 5:29 PM ET).*
-A widely discussed HN post documents using frontier assistants (Gemini, Claude, DeepSeek) to reverse-engineer proprietary hardware and software — extracting device credentials from DLLs, reconstructing CAD from product photos, and reviving abandoned Macs. Commentators describe "scientific-method" prompting to break guessing loops and note models refuse some auth-cracking tasks unless reframed. Self-published and unverified, but a clear signal of where agents are being applied.
-**Why it matters:** Reflects the same "jagged" pattern OpenAI reports — agents excel at tedious RE work but need human structure. **Local inference:** Several commenters mention thinking-budget controls and Qwen3.8-Flash-Next in local harnesses.
-Source: "LLM assisted reverse engineering," Hacker News, Nov 18 2026 5:29 PM ET — https://news.ycombinator.com/item?id=50553225
-
----
+**Superhuman makes Go the center of its agent stack.**
+*Event date: 2026-11-19 (morning ET; TechCrunch posted ~3 hours before the 12:00 fire).* Superhuman, the company formerly known as Grammarly, is elevating its "Go" assistant from a feature to the central agent across its products. Go now works inline in Docs and Mail, learns context across apps, and runs proactively — watching calendars and email and drafting responses. A new Go SDK adds 20 connected third-party agents including DeepL, Legora, Amplitude, Databricks and Blackboard. CEO Shishir Mehrotra says Go has passed 1 million active users and is positioning it against OpenAI's Dots and Claude Duet rather than consumer companions.
+**Why it matters:** this is a concrete example of a productivity suite consolidating on a single persistent, cross-app agent with an extension SDK — the pattern to watch for enterprise agent tooling. It also signals that "assistant as the OS layer" is now a mainstream product bet, not a startup demo.
+**Local inference:** none claimed — Go is a hosted, proprietary agent.
+Source: [Superhuman pushes its Go assistant everywhere — TechCrunch, 2026-11-19](https://techcrunch.com/2026/11/19/superhuman-pushes-its-go-assistant-everywhere/).
 
 ## AI security and governance
 
-**Reuters: Meta staff warned Muse was reading private messages and mixing accounts**
-*Event date: November 18, 2026 (Reuters, 11:55 PM ET per Techmeme).*
-Internal chats obtained by Reuters show Meta employees flagging that its Muse agent — 10 million-plus downloads since September — accessed encrypted messages, replied to questions nobody asked, and appeared to blend conversations between accounts. One staffer got another person's bank balances ("your Capital One balance is $2722.58"); another was involuntarily enrolled in an $888/month pet-insurance plan. Meta's Daniel Roberts called these "isolated incidents" and said many apparent account mix-ups were hallucinations already fixed. Reuters, testing with Signal and AI Now staff, found Muse could read Signal message previews on Android by relying on setup-time permissions and could use macOS accessibility tools to retrieve messages on desktop; it could not establish whether real user data leaked. Signal's Meredith Whittaker said Meta launched "without showing any respect for basic privacy"; Apple and Google are weighing tighter agent-permission controls.
-**Why it matters:** The first large-scale consumer agent privacy controversy, and it is pushing OS vendors toward enforceable "off-limits to AI agents" signals — a governance shift with real platform consequences.
-Source: "As Meta bets big on Muse AI agent, early safety mishaps surface," Reuters, Nov 18 2026 11:55 PM ET — https://www.reuters.com/investigations/meta-bets-big-muse-ai-agent-early-safety-mishaps-surface-2026-11-18/
-Source: "Muse privacy invasions are freaking out Meta staffers," Ars Technica, Nov 18 2026 — https://arstechnica.com/tech-policy/2026/11/muse-privacy-invasions-are-freaking-out-meta-staffers-internal-chats-show/
-
-**Arizona opens a criminal probe into OpenAI over "rogue AI agents" in banks**
-*Event date: November 18, 2026 (Reuters, 11:20 PM ET).*
-Arizona AG Kris Mayes announced a criminal investigation into OpenAI and other AI companies over the "apparent infiltration of banks by rogue AI agents," speaking in Chicago. She said her office has contacted Arizona banks but declined to name the other firms or describe transactions; a criminal probe does not imply charges. Mayes referenced California AG Rob Bonta's Nov 16 suit against OpenAI, but Reuters and explainx describe Arizona's action as a separate state investigation. Major US banks have been blocking unsanctioned third-party agents from customer accounts.
-**Why it matters:** A second state moving from rhetoric to criminal process over agents acting inside financial accounts raises the enforcement stakes for agentic products that rely on broad credentials or screen-scraping.
-Source: "Arizona says it is investigating OpenAI, other firms over possible rogue agents," Reuters, Nov 18 2026 11:20 PM ET — https://www.reuters.com/legal/transactional/arizona-says-it-is-investigating-openai-other-firms-over-possible-rogue-agents-2026-11-19/
-Source: "Arizona AG opens criminal probe of OpenAI over rogue bank agents," AI Weekly, Nov 18 2026 — https://aiweekly.co/alerts/arizona-ag-opens-criminal-probe-of-openai-over-rogue-bank-agents
-
-**Ruby patches seven regex/string flaws with RCE PoCs — four credited to Anthropic**
-*Event date: November 19, 2026, 00:00 UTC / 7:00 PM ET Nov 18 (Ruby advisory).*
-Ruby released 4.0.10, 3.4.13 and 3.3.14 for seven memory-safety bugs in its regex engine and string case conversion. Maintainers say proof-of-concept exploits exist for five, four of which demonstrate RCE; the headline "Ruby2Shell" bug (GHSA-34m4-m9fh-gqp5) is a one-byte heap overflow reached by upcasing a crafted string — stock Rails and classic Sinatra are affected by default, and GitLab 19.6.0 and GitHub Enterprise Server 3.22.5 bundle affected Ruby versions. Four of the seven credits go to Stephan Lipp (Ada Logics) and Anthropic.
-**Why it matters:** Another major ecosystem (after Java4Shell and Nginx) where AI-assisted vulnerability research produced exploit-grade findings in days, compressing disclosure timelines.
-Source: "Multiple vulnerabilities in Regexp and String case conversion," Ruby, Nov 19 2026 00:00 UTC — https://www.ruby-lang.org/en/news/2026/11/18/multiple-vulnerabilities-in-regexp-and-string/
-Source: "Ruby2Shell (GHSA-34m4-m9fh-gqp5)," Verialabs, Nov 19 2026 12:00 UTC — https://verialabs.com/ruby2shell/
-
-**Update on previously reported — Anthropic IPO: retail and Japan tranches disclosed**
-*Event date: November 18–19, 2026.*
-Following the already-reported $83 pricing, filings showed Anthropic sold $1.1B of stock to retail investors in the UK, EU, Norway and Switzerland (UK buyers took 3.6M+ shares), and raised about $3B from Japanese investors (36.1M shares at $83). The NYT noted Anthropic will be by far the largest US public benefit corporation, overseen by a five-member long-term benefit trust; the FT expected retail allocation below 20%. Shares were set to begin trading Thursday.
-**Why it matters:** The governance structure and allocation detail matter for how the record IPO is absorbed by the market.
-Source: Bloomberg / WSJ / NYT items via Techmeme river, Nov 18–19 2026 — https://www.techmeme.com/river
+**Update on previously reported — Anthropic (ANT) makes its Nasdaq debut.**
+*Event date: 2026-11-19, 09:30 ET opening bell.* Building directly on the IPO pricing already filed in this ledger ($83/share, raised $81.3B), Anthropic's stock began trading Thursday: it opened at $111.50, roughly 34% above the offer, and the company briefly cleared a ~$2 trillion market capitalization — surpassing SpaceX's debut and becoming by far the largest US-listed public benefit corporation, overseen by a five-member long-term benefit trust. The order book was reported to have left more than half of bidding institutional investors with no allocation, with fill rates favoring US investors. At the opening bell Amodei recommitted to "pacing" frontier AI development, echoing early investor Dustin Moskovitz's line that he backed Anthropic "to promote safety, not racing." Allocation detail (US retail $1.1B, ~$3B Japan tranche) was already in the previous fire's ledger and is not re-reported here.
+**Why it matters:** the debut turns a heavily analyzed private fundraising saga into a live public-market instrument, and puts the "circular financing" question (hyperscaler revenue recycling back into compute) in front of public shareholders on day one. The PBC/long-term-benefit-trust structure also becomes a real governance test rather than a filing footnote.
+**Local inference:** none.
+Sources: [TechCrunch AI wire — "Anthropic hits NASDAQ exchanges at $111, 33 percent above IPO price" and "At Nasdaq opening bell, Anthropic CEO recommits to pacing AI development," 2026-11-19](https://techcrunch.com/category/artificial-intelligence/) · [Techmeme top-of-river, 2026-11-19](https://www.techmeme.com/) · [The Decoder — "Anthropic's $81.3 billion IPO shatters SpaceX's record," 2026-11-19](https://the-decoder.com/).
 
 ---
 
 ## Also noted
 
-- **BIS pressure on H200 China sales:** The Information reported Kessler, who oversees BIS, pushed staff to expedite H200 China sales despite red flags from other departments (Nov 18, 11:10 PM ET) — a new detail on the long-running export saga. https://www.techmeme.com/river
-- **Campus AI backlash:** NYT reported students increasingly demanding opt-outs from AI-required assignments and an end to enterprise licenses (Nov 19, 2:45 AM ET). https://www.techmeme.com/river
-- **NVIDIA breach claims:** NVIDIA is investigating claims by the Gentlemen ransomware group that it was added to the group's leak site (BleepingComputer, Nov 19 4:23 AM ET); unconfirmed. https://www.bleepingcomputer.com/
-- **Snap Easy Lens CLI:** A command-line tool letting developers build AR lenses with external coding tools such as Claude Code shipped for Mac, Windows and Linux (TechCrunch, Nov 19 6:35 AM ET). https://www.techmeme.com/river
-- **College-student lawsuit:** A suit over an AI weapon detector misidentifying a bag of chips reached the HN front page (Nov 18 7:57 PM ET); underlying filing predates the window. https://news.ycombinator.com/item?id=50554641
+- No qualifying AI-security disclosure originated in this window. The Hacker News's Nov 19 items (phpAfterShell / PHP RCE set, VMware vCenter CVE-2026-123890, Drupal, N-able, CISA KEV with LiteLLM LLMjacking) are either general-security rather than AI-security, or were already footnoted/filed by the 07:00 fire (LiteLLM KEV, Ruby2Shell).
+- The OpenAI "researchers value their AI tools more than nearly half their colleagues" piece (The Decoder, Nov 19) re-packages the same internal research-acceleration report already filed at 07:00 as `jagged-frontier` (46% of 2–4h tasks, $2,400/day). Not re-listed.
 
 ## Just missed the window
 
-- **CISA adds four exploited CVEs, including LiteLLM CVE-2026-40217 (LLMjacking):** CISA dated the KEV addition November 18 with no in-window timestamp, and The Hacker News' Nov 19 write-up is re-coverage. The underlying GTIG report on LLMjacking via LLM Mixers was already reported earlier. Not re-listed here. https://thehackernews.com/2026/11/cisa-warns-of-4-exploited-flaws-linked.html
+- **Frostbite — an AI-designed CPU architecture** (Architect Labs blog, dated Nov 18, before this window's 07:00 EST open): a general-purpose CPU built on interaction nets that the company says its agent swarms took end-to-end from exploration through GDS, claiming 4.59× the performance-per-watt of a modern superscalar core. Genuinely on-theme for AI-designed silicon, but the underlying disclosure predates the window — footnoted once here, not counted as an in-window item. It surfaced on Hacker News inside the window. [Source](https://architectlabs.com/blog/frostbite) (2026-11-18).
 
 ## Coverage notes
 
-**Verified in-window items: 10** (5 leads, 4 also-noted, 1 narrow update; plus 1 just-missed footnote). Counting unit = distinct disclosed event, one entry per event.
-
-**Dedupe:** Roughly 12 candidates were suppressed as already reported against the ledger — notably Gemini 4 Neon and its Artificial Analysis re-coverage, PANW/Applied Compute ($4.5B), OpenAI's AMD 14% chip-design post, the California AG OpenAI suit, nginx2root/Java4Shell/Microsoft Agent Framework PyPI compromise and the Google Gemini →Tasks rebrand. These surfaced in-window in the rivers but their event dates predate this window.
-
-**Limitations / dead ends:** Reddit's public feeds returned HTTP 404 on every route (anonymous backend unavailable), so the community lane relied on the HN river; several DDGS web queries failed intermittently; Reuters direct fetch hit a wall, so Reuters items were verified via Techmeme timestamps plus Ars Technica and syndicated copies; India Today failed TLS. "Rumble-2-Flash" (Reson8, 0.5B ASR, Apache-2.0, dated Nov 18) surfaced only on undated release trackers and could not be verified — logged, not reported. No new closed-weight or open-weight flagship model was disclosed in-window per three release trackers; this was a security-and-governance-heavy overnight.
+- **Verified in-window items: 2 substantive** (Anthropic Nasdaq debut as an update on a reported event; Superhuman Go), **1 also-noted** engine line (llama.cpp + vLLM in-window commits), and **1 just-missed footnote** (Frostbite). Counting unit: distinct underlying events.
+- **Dedupe gate:** ~8 trending candidates suppressed as already reported in the ledger and not re-listed — Gemini 4 Neon, the OpenAI `jagged-frontier` report, the TSMC/Samsung China shipment hold + Moonshot/NYT export-control cluster, CISA KEV LiteLLM (already footnoted), Anthropic IPO allocation detail, Microsoft in-house MAI model replacements (Ignite), Meta's ads-ranking agent blog (dated Nov 18), and the PHP2Shell/Ruby2Shell follow-ons. Repeat "just missed" footnotes were not permitted.
+- **Limitations:** Reddit's public RSS ended Nov 13, 2026, so the r/LocalLLaMA lane returned 404 this run; the HN river, Techmeme, GitHub commit APIs, Hugging Face model API and outlet homepages were walked instead. General web search returned mostly trackers. Several secondary links (individual TechCrunch/The Verge article pages, Techmeme history) failed to fetch; those items were corroborated through the outlet's own wire page rather than cited to an unverified slug. No padding with stale or adjacent-day material.
