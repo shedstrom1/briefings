@@ -1,78 +1,90 @@
-# AI Hardware & Local Models Brief — Nov 19, 2026 (12:45 ET)
+# AI Hardware & Local Models Brief — Hy4 flagship weights land, OpenAI's 14% PPA AMD tape, TensorRT-LLM 1.3.0 GA
 
-**Window:** 2026-11-19 08:27 → 13:08 EST (the 12:45 fire ran ~23 min late; the prior 07:45 slot itself fired at 08:27, so 07:45–08:27 was already covered by the previous edition). New-items-only; deduped against the reported ledger.
+**Window:** 2026-11-19 17:45 → 2026-11-20 08:06 EST (overnight slot; previous fire Nov 19 17:45)
 
-- **Day-0 GGUFs of the harness-adapted Qwen3.8-27B landed** — standalone OpenCode and Hermes RL-adapted checkpoints, MTP intact, 10.5–29 GB, Apache-2.0. The Hermes build reports SWE-bench Pro 29.4→43.1%.
-- **Chimera puts Qwen3.6-35B-A3B on a CPU in 7 GB of RAM** via a patched `ik_llama.cpp` with SSD expert streaming — 12.8–13.3 tok/s on a laptop i5.
-- **llama.cpp shipped ten builds (b12541–b12550)**, headlined by a Metal CONV_2D tensor API for M5, WebGPU POOL_2D, and Inkling-2 attention-mask fixes.
-- **vLLM, SGLang and TensorRT-LLM merged in-window kernel waves** — Inkling-2 Humming expert GEMMs on Hopper, a ROCm W4A16 path worth up to +44% decode, and GLM-5.3-Flash FP8 on sm_103.
-- **AMD's Adrenalin 26.11.2 WHQL driver adds ROCm 10.2 support**, extending the idle-SSD-write fix to RX 5000/6000.
+**TL;DR**
+- Tencent's Hy4 flagship — a ~774B-parameter multimodal MoE — finally has open weights on the Hub, with day-0 vLLM and SGLang recipes landing within twenty minutes of the checkpoint becoming public.
+- OpenAI says its models rewrote AMD flagship-GPU RTL for up to 14% PPA, condensing "a year of chip-design work into under 5 months," with some changes already sent to manufacturing; gains also flowed to OpenAI's own Jalapeño inference chip.
+- TensorRT-LLM v1.3.0 hit GA overnight: Rubin SM107 preview, NVFP4-as-W4A16 on Hopper/Ada via Marlin, KV-cache compression, and DSpark/DFlash drafters.
+- The 12× used V100 "lawyer rig" now fits every one of DeepSeek V4.1 Flash's 15,360 experts in 4-bit NVFP4 on $9,450 of 2018 silicon: 157–184 tok/s on code, first token on a 256K document in 58 seconds.
+- Overnight stack waves: vLLM shipped W4A8 MoE decode kernels for RDNA3/3.5 and W4A16 skinny GEMMs for gfx1151 (consumer Radeon), SGLang brought Kimi-K3.1 and DeepSeek-V4.1 to Huawei Ascend, and llama.cpp b12565–b12567 landed Domyn Edge 4B support, Vulkan GDN chunking and CUDA Orin fast paths.
 
 ## AI hardware and silicon
 
-**AMD Adrenalin 26.11.2 WHQL adds ROCm 10.2 support (update on previously reported)**
-*Event date: 2026-11-19 (driver covered 09:04 EST).*
-TechPowerUp reports AMD released Adrenalin 26.11.2, whose headline new-feature entry is support for ROCm 10.2 — the AMD compute stack that local-inference users rely on for PyTorch/vLLM on Radeon. It also extends the idle system-drive write fix (previously only RX 7000 and newer on 26.11.1) to RX 5000 and RX 6000 on Windows 10, and fixes a memory leak and Smart Access Memory disabling itself after install. This is a material update to the ledger's 26.11.1 / radeon-ssd-write-blocker entry, not a new driver family.
-**Why it matters:** ROCm 10.2 support landing in a WHQL branch is the difference between a Radeon card being a viable local-inference target or a gaming-only one; the SSD-write fix matters for any box doing heavy model/checkpoint I/O.
-**Local inference:** Targets all Radeon RX 5000–9000 and Ryzen AI iGPUs; ROCm 10.2 is the stack used by R9700/B70-class 16–32 GB cards.
-Source: TechPowerUp, "AMD Software Adrenalin 26.11.2 WHQL Drivers Released," 2026-11-19 14:04 UTC — https://www.techpowerup.com/355010/amd-software-adrenalin-26-11-2-whql-drivers-released
-Source: Guru3D, "AMD Adrenalin 26.11.2 fixes more Radeon SSD writes and game crashes," 2026-11-19 — https://www.guru3d.com/story/amd-adrenalin-26112-fixes-more-radeon-ssd-writes-and-game-crashes/
+**OpenAI's models give AMD's upcoming flagship GPU up to 14% PPA — some changes already at manufacturing** (event date Nov 20)
+OpenAI published new details of its ongoing collaboration with AMD: its models rewrote SystemVerilog RTL on AMD's upcoming flagship GPU circuitry and found up to 14% power/performance/area improvement on IP that AMD's engineers had already spent years optimizing, describing it as roughly a year of conventional design work compressed into under five months. AMD's new CPUs got unspecified single-digit PPA gains from the same flow. OpenAI also reported gains on Jalapeño, its own Broadcom-designed inference ASIC (earlier disclosures: ~13% vector-unit and ~10% matrix-unit standard-cell area reductions, verified on silicon), and benchmarked the capability by having models optimize PicoRV32 and OpenTitan Ibex cores — GPT-6.2 Astra scored best on both cost and optimization. Tom's Hardware notes OpenAI is separately training a "GPT-Synopsys" with Synopsys for EDA tool use, and it's unconfirmed whether stock or fine-tuned models did the AMD work.
+
+- *Why it matters:* This is the clearest vendor-confirmed case yet that agentic RTL optimization is moving from demo to tape-out. If PPA is being squeezed by models, the moat shifts from "who has the best designers" to "who has the best design-agent loop" — and the same tooling that touches AMD's flagship is now within reach of smaller custom-silicon efforts.
+- *Local inference:* No immediate 16GB-class impact; the payoff lands in future Instinct-generation parts (better perf/W for rented frontier inference) and in validating the RTL-agent toolchains that community/open-silicon projects are starting to adopt.
+- Source: Tom's Hardware, "OpenAI helped AMD improve its upcoming flagship GPU design by 14% PPA," Nov 20 2026 10:30 UTC — https://www.tomshardware.com/tech-industry/artificial-intelligence/openai-helped-amd-improve-its-upcoming-flagship-gpu-design-by-14-percent-ppa-gpt-models-also-helping-lisa-sus-outfit-boost-its-new-cpus
+- Second source: Wccftech, "OpenAI Models Deliver Up To 14% PPA Gains On AMD Flagship GPU Designs, With Some Changes Already Sent To Manufacturing," Nov 20 2026 — https://wccftech.com/openai-models-deliver-up-to-14-ppa-gains-on-amd-flagship-gpu-designs-with-some-changes-already-sent-to-manufacturing/
 
 ## Model releases
 
-No qualifying new open-weight base-model release was first disclosed inside this window. The two items below are conversions/merges of already-reported adapters and are placed under Community spins as updates, not new base releases.
+**Tencent Hy4 flagship: ~774B open weights on the Hub, day-0 vLLM/SGLang support** (event date Nov 20)
+The tencent/Hy4 repository went public with weights early Nov 20 (lastModified 03:05 UTC): 774.4B parameters in BF16 across 245 shards, architecture hy_v4_vl — the multimodal (image-text-to-text) flagship with 8 experts per token, under Tencent's "other" license. vLLM merged an HY4 recipe within twenty minutes (#68844, 03:24 UTC) and later registered tencent/Hy4 as the public checkpoint while documenting tencent/Hy4-FP8 (#68875, 12:36 UTC); SGLang landed its Hy4 cookbook at 03:17 UTC. This closes the promise from the Nov 4 API launch, where weights were announced "in coming days," and follows the Hy4-flash 220B repo that appeared Nov 17.
+
+- *Why it matters:* Hy4 is the largest frontier-lab open-weights drop since Mistral Large 4, and the FP8 tier plus day-0 engine support signals Tencent is running a MiniMax/Kimi-style open-flagship cadence rather than API-only. Benchmark numbers in the open checkpoint still need independent verification.
+- *Local inference:* Not a DGX Spark or 5060 Ti-class model — BF16 is ~1.55 TB and FP8 ~775 GB, just past a single 748 GB coherent 2×GB300 DGX Station; watch for community 2–4-bit expert quantizations (~195 GB at 2-bit), which would land it in Ryzen AI Max 256GB / multi-Spark territory.
+- Source: Hugging Face API record for tencent/Hy4 (lastModified 2026-11-20T03:05:49Z) — https://huggingface.co/tencent/Hy4
+- Second sources: vLLM PR #68875 (merged Nov 20 12:36 UTC) — https://github.com/vllm-project/vllm/pull/68875 ; SGLang PR #51691 (Nov 20 03:17 UTC) — https://github.com/sgl-project/sglang/pull/51691
 
 ## Community spins and quantizations
 
-**Day-0 GGUFs of the harness-adapted Qwen3.8-27B (OpenCode + Hermes) — update on harness-adapters**
-*Event date: 2026-11-19 (HF createdAt 18:00–18:01 UTC).*
-Two independent conversions put harness-hub's RL-trained adapters into standalone, LoRA-free Qwen3.8-27B GGUFs with multi-token-prediction (MTP) heads and vision projectors intact. `netprojects/Qwen3.8-27B-hermes-adapted-GGUF` merges the Hermes adapter (rank 32, alpha 64, AsyncGRPO in TRL) and reports SWE-bench Pro (hard 51) 29.4%→43.1% and Terminal-Bench 2.1 44.7%→58.8% with thinking off; its Q6_K is 22.4 GB at 98.9% next-token agreement with BF16 (KL 0.0031), with Q4_K_M at 16.8 GB and IQ2_M at 10.5 GB. `prithivMLmods/Qwen3.8-27B-opencode-adapted-GGUF` merges the OpenCode adapter (AsyncGRPO in Harbor/OpenEnv) and cites SWE-bench Pro 35.3%→51.0% and Terminal-Bench 2.1 46.4%→52.4%, with 6–8× fewer tokens per task; Q4_K_M is 17 GB. Both are Apache-2.0 and the reported scores were measured on the BF16 adapter/base, not re-evaluated on the merged GGUFs.
-**Why it matters:** These are the first ready-to-run local GGUFs of the per-harness RL adapters first reported on Nov 6 — the user's own Hermes Agent has a matching 27B build with documented SWE-bench/TB2.1 gains and a copy-paste `llama-server` config.
-**Local inference:** 27B at Q6_K 22.4 GB / Q8_0 29 GB fits a 24–32 GB card or DGX Spark 128 GB; Q4_K_M 16.8 GB / IQ2_M 10.5 GB fits a 16 GB RTX 5060 Ti–class card with offload. MLX builds exist for Apple Silicon.
-Source: Hugging Face, "Qwen3.8-27B-hermes-adapted-GGUF," 2026-11-19 18:00 UTC — https://huggingface.co/netprojects/Qwen3.8-27B-hermes-adapted-GGUF
-Source: Hugging Face, "Qwen3.8-27B-opencode-adapted-GGUF," 2026-11-19 18:01 UTC — https://huggingface.co/prithivMLmods/Qwen3.8-27B-opencode-adapted-GGUF
+**mradermacher in-window ladder: Phai-A1-35B-1M, Tenet-32B-Unslop, Cerberus-24B** (event date Nov 20)
+Fresh GGUF ladders, all uploaded overnight: Phai-A1-35B-1M (a Qwen3.6-35B-A3B fine-tune pitched at coding agents, RL-trained with a 1M-token context, Apache-2.0 — mradermacher's plain GGUF at 04:14 UTC plus imatrix i1 tier at 12:33 UTC, on top of first-party GGUFs from Nov 18); Tenet-32B-Qwen2.5-Unslop-v1-i1 (08:00 UTC, agentic coding + FP8/GRPO/abliterated lineage on a Qwen2.5-32B base); and Cerberus-24B in GGUF + i1 (07:05/09:46 UTC, an ORPO/QLoRA uncensored Mistral-line chat model).
 
-**Chimera: Qwen3.6-35B-A3B in 7 GB of RAM on a CPU, no GPU**
-*Event date: 2026-11-19 (HF createdAt 15:30 UTC).*
-`samueltm/Chimera-Qwen3.6-35B-A3B-GGUF` runs the 35B-total/3B-active MoE on a stock x86 CPU with the server and page cache capped at 7 GB, using a patched `ik_llama.cpp` that streams packed experts from NVMe on demand (~24 MB read per token), skips low-mass experts, and applies a 153 MB RL-trained LoRA for concise reasoning. The author measured 12.8–13.3 tok/s on a 4-core i5-8265U and 7.7–8.1 tok/s on a network-disk cloud VM, with ~42–50 tok/s estimated on a 6-core Zen 3; quality held within +0.18% perplexity and 15/28 on AIME 2026. It requires AVX2 Linux/WSL2, 16 GB system RAM, ~40 GB disk, and the patched engine (a stock llama.cpp will not fit in 7 GB).
-**Why it matters:** It is a concrete, reproducible data point that a 35B-class MoE is CPU-viable well below the usual 16 GB VRAM floor — expert-offload and MTP are doing the heavy lifting.
-**Local inference:** CPU-only, no GPU; 7 GB server cap + 16 GB host RAM, NVMe required. Apache-2.0.
-Source: Hugging Face, "Chimera-Qwen3.6-35B-A3B-GGUF," 2026-11-19 15:30 UTC — https://huggingface.co/samueltm/Chimera-Qwen3.6-35B-A3B-GGUF
-
-**SenseNova-Loop-9B-heretic with a DGX Spark NVFP4 recipe**
-*Event date: 2026-11-19 (HF createdAt 15:26 UTC).*
-`Kaleto/SenseNova-Loop-9B-heretic` applies Heretic 2.1.0 Arbitrary-Rank Ablation to the looped 9B model (layers 4–27 execute twice), cutting refusals from 100/100 to 5/100 at KL 0.1001 while holding GSM8K at 90.7 (vs 91.7 original). The card ships an NVIDIA ModelOpt 0.43.0 W4A16 NVFP4 recipe served under vLLM 0.31.0, with the vision tower, MTP and loop gates left unquantized, and benchmarks tracked on DGX Spark in the DX10 space. Apache-2.0.
-**Why it matters:** A low-VRAM, looped-architecture model with a validated 4-bit path is unusual; the abliteration is measured, not asserted.
-**Local inference:** 9B class; NVFP4 path targets DGX Spark / 16 GB-class GPUs.
-Source: Hugging Face, "SenseNova-Loop-9B-heretic," 2026-11-19 15:26 UTC — https://huggingface.co/Kaleto/SenseNova-Loop-9B-heretic
-
-**Also noted (community):** `HexaSpaghetti/Qwen3.8-27B-Heretic-oQ8e` — an oMLX mixed-precision quant (affine-8 group-64 plus BF16, 8.627 effective bpw, 27.5 GiB) for Apple Silicon, created 15:19 UTC (https://huggingface.co/HexaSpaghetti/Qwen3.8-27B-Heretic-oQ8e). `Austriani/Orion-26B-A4B-v1.1-ik_llama.cpp` (15:52 UTC), `diffutfy/Qwen3.5-9B-GGUF` (15:23 UTC), and `thquangpc/gpt-oss-20B-vietnamese-GGUF` (17:34 UTC) were smaller in-window uploads; a batch of `loom-draft/*` auto-generated drafter repos appeared at 14:49 UTC.
+- *Why it matters:* Phai-A1-35B-1M is the interesting one — a 35B-A3B MoE coding agent with trained 1M-context support is exactly the profile that becomes usable locally once quants stabilize, and imatrix coverage from day one shortens that runway.
+- *Local inference:* These 24–35B-A3B quants target 16–24GB GPUs with host-RAM expert offload (llama.cpp --n-cpu-moe, Strata, ik_llama.cpp); the 1M-context claim is RAM-bound in practice — KV has to live in system DRAM on consumer boxes.
+- Sources: https://huggingface.co/mradermacher/Phai-A1-35B-1M-GGUF , https://huggingface.co/mradermacher/Tenet-32B-Qwen2.5-Unslop-v1-i1-GGUF , https://huggingface.co/mradermacher/Cerberus-24B-i1-GGUF (base: https://huggingface.co/PhaiModelLab/Phai-A1-35B-1M)
 
 ## Inference software and benchmarks
 
-**llama.cpp: ten in-window builds, b12541–b12550**
-*Event dates: 2026-11-19, 08:57–12:51 EST (13:57–17:51 UTC).*
-The release stream carried Metal CONV_2D tensor-API support for M5 with split-K for all chips (#32542), WebGPU POOL_2D (#32250), Inkling-2 attention-mask fixes that give it its own relative-position input (#32429), and a backend-scheduler test harness with an experimental Vulkan `GGML_OP_SLEEP` (#27258). Also in the set: IQ2 quant-creation speedup via caching (#31910), qwen3vl `t_layer_inp` for EAGLE-3 (#32589), and small Metal/graph-parameter cleanups. These are the first builds after the ledger's b12528–b12540 wave.
-**Why it matters:** M5 tensor-core convolution and WebGPU pooling expand which Apple and browser backends get accelerated ops; the Inkling-2 fixes matter because the 594B model's day-0 GGUF wave is still fresh.
-**Local inference:** Apple Silicon (Metal/M5), WebGPU browsers, and Vulkan/CPU backends; no single new VRAM floor.
-Source: llama.cpp releases feed, b12541–b12550, 2026-11-19 13:57–17:51 UTC — https://github.com/ggml-org/llama.cpp/releases
+**Update on the 12× V100 lawyer rig: all 15,360 DeepSeek V4.1 Flash experts in 4-bit NVFP4, 157–184 tok/s on code** (event date Nov 20)
+Nick Mermiges added a third 4-slot V100-32GB board (12 cards, $9,450 total, 384 GiB HBM2) so every expert of DeepSeek-V4.1-Flash now sits on cards at full NVFP4 precision (278.9 GiB used, "none compressed further"), versus ~38.7% previously. Measured: first code token on a 256K context dropped from 108.4 s to 58 s; prompt reading past 32K is ~4,500 tok/s (up from ~2,200); code decode is 23% faster at 1K context but flat at 32K+; three concurrent 128K requests aggregate 360 tok/s (code) / 213 tok/s (legal). The V100 has no FP4/FP8 tensor cores, so NVFP4 is unpacked in software to half precision — the gain is bytes-read, not compute. Layers are pipelined 0–13 / 14–27 / 28–39 per board with NVLink inside boards and PEX88096/PLX8749 PCIe switches between them; cards run 175 W, and 200 W tripped the host. He claims it beats published 4× DGX Spark stacks on single-request decode at half the price of three Sparks, and says batched decode — "the one thing the Sparks have" — is next. (Update on the Nov 9 / Nov 13 ledger line V100-8x-lawyer-rig.)
 
-**vLLM / SGLang / TensorRT-LLM: in-window kernel and model-enablement merges**
-*Event dates: 2026-11-19, merged 13:27–18:08 UTC.*
-vLLM merged "[Model][Perf] Inkling 2: Humming expert GEMMs on Hopper" (#68761), a ROCm W4A16 fix for the gfx1151 bf16 tile cliff worth up to +44% decode (#66133), Rust-frontend EPD metadata-only capability (#68565), and a fused `qk_norm_rope` int32-overflow/NeoX partial-rotary fix (#68386). SGLang added Inkling-2-Small support (#50186), pinned the AMD mono-kernel for a Qwen3.5 FP8 state-layer-cache fix (#51518), and added NPU multimodal JPEG decode (#45792) and MindIE-SD sparse attention (#40580). TensorRT-LLM merged GLM-5.3-Flash FP8 Modeling V2 on sm_103 (#22621) and a DeepSeek-V4.1 SM107 MXFP8 prefill-GEMM/CSA2/GVR-decode path (#22358). These sit on top of — not duplicate — the overnight waves already in the ledger.
-**Why it matters:** The ROCm +44% decode and the Hopper/H100-class Inkling-2 kernels change tokens/sec and $/token on the exact hardware readers run; the sm_103 GLM-5.3 path extends TensorRT-LLM to newer Blackwell SKUs.
-**Local inference:** vLLM/SGLang W4A16 and Inkling-2 paths target 8–80 GB cards and DGX Spark; TRT-LLM sm_103 targets Blackwell workstation/server GPUs (Inkling-2 itself needs ≥500 GB multi-GPU).
-Source: vLLM merged PRs, 2026-11-19 — https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-19
-Source: SGLang merged PRs, 2026-11-19 — https://github.com/sgl-project/sglang/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-19
-Source: TensorRT-LLM merged PRs, 2026-11-19 — https://github.com/NVIDIA/TensorRT-LLM/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-19
+- *Why it matters:* The strongest field evidence yet that used datacenter HBM2 pools plus aggressive 4-bit expert quantization beat new edge devices on long-context decode per dollar — and a live demonstration that Blackwell-era formats are viable on pre-FP8 silicon when you're bandwidth-bound.
+- *Local inference:* V100-32GB cards run ~$250–400 used, but the rig needs three SXM4 boards, dual PCIe switches and ~1 TB of RAM — homelab at extreme. The portable idea is the format: NVFP4 experts on bandwidth-rich old cards.
+- Source: Tom's Hardware, Nov 20 2026 12:30 UTC — https://www.tomshardware.com/tech-industry/artificial-intelligence/lawyers-usd9-450-private-ai-server-of-12-used-nvidia-v100s-now-runs-every-deepseek-v4-1-flash-expert-at-4-bit-nvfp4-up-to-184-tokens-per-second-on-code-and-long-documents-start-answering-in-about-half-the-time
+- Second source: Gate.com News (syndicated read of the primary write-up), Nov 20 2026 — https://www.gate.com/news/detail/lawyer-upgrades-private-ai-server-to-12-nvidia-v100-gpus-for-deepseek-v41-25752904
+
+**TensorRT-LLM v1.3.0 goes GA** (event date Nov 20, published 02:45 UTC)
+NVIDIA published the v1.3.0 tag overnight with the largest feature list in the line's history: preview Rubin (SM107) support validated on Vera Rubin (DeepSeek-V4 and Kimi K3 included); Blackwell support for Qwen3.5 (incl. MTP + NVFP4), Qwen3.6/3.8-Flash-Next, MiniMax-M3, GLM-5/5.2, Gemma 4 multimodal, Step-3.7-Flash; W4A16 NVFP4 weight-only quantization through Marlin so NVFP4 checkpoints run on Hopper and Ada; MXFP8 W8A8 for linears and MoE; KV-cache compression (TriAttention, NVFP4 cold-page compression, NVFP4 KV and disk cache); DSpark, DFlash, Suffix-Automaton and PARD drafters; DWDP distributed weight data-parallelism; up to 2,048 experts via NCCL-EP; an Anthropic Messages API (/v1/messages); and prefix-aware scheduling enabled by default.
+
+- *Why it matters:* Marlin-based W4A16 NVFP4 officially extends Blackwell-native quants back two architectures — Ada and Hopper owners get a supported path for the NVFP4 checkpoints the ecosystem is standardizing on, and the release consolidates weeks of the 1.4-rc material we've been tracking.
+- *Local inference:* Still datacenter-class, but Ada (RTX 4090/4500) and Hopper users are now first-class NVFP4 targets; nothing here changes the 16GB-class picture yet.
+- Source: GitHub release NVIDIA/TensorRT-LLM v1.3.0, Nov 20 2026 02:45 UTC — https://github.com/NVIDIA/TensorRT-LLM/releases/tag/v1.3.0
+
+**llama.cpp overnight: builds b12565–b12567, Domyn Edge 4B, Vulkan GDN chunking, Orin fast paths** (event date Nov 20)
+Merges in window: Domyn Edge 4B model support (#32559); CUDA optimizations for Orin single-column MMVQ (#31268) and per-expert MUL_MAT_ID precision in the fallback path (#31345); a chunked GATED_DELTA_NET implementation for Vulkan (#30207) plus RMS_NORM_MUL_ROPE loop tuning (#31149); OpenCL folds GQA heads into f16 flash-attention (#32631); llamafile gains QK data types on s390x (#32600); KleidiAI allows OHOS/HarmonyOS AArch64 targets (#32265); Vulkan disables subgroup arithmetic on Qualcomm's driver (#30826); webgpu COL2IM_1D (#31708); graph-node budget/reservation plumbing for the MoE cache (#32648/#32636) and ffn_gate_up_exps scale loading (#32657). Releases b12565–b12567 published 12:18–12:59 UTC.
+
+- *Why it matters:* The Vulkan GDN chunking is the sleeper — it brings hybrid-attention models (Qwen3-Next-lineage) closer to efficient prefill on AMD/Intel iGPUs, and the Orin work keeps Jetson in the loop.
+- *Local inference:* Directly improves 16GB-class and below: Orin Nano/AGX (MMVQ), Strix/Alchemist iGPUs via Vulkan (GDN), Snapdragon Windows-on-ARM (Qualcomm Vulkan guard), and the CPU-MoE cache line gets its scheduler plumbing.
+- Source: ggml-org/llama.cpp commit log + releases, Nov 20 2026 (22:45–13:06 UTC window) — https://github.com/ggml-org/llama.cpp/releases
+
+**vLLM wave: RDNA3/3.5 W4A8 MoE decode, gfx1151 W4A16 skinny GEMM, online NVFP4→MXFP4, Engram pooling over NVLink/RDMA** (event date Nov 20)
+Key in-window merges: #62480 adds a W4A8 MoE decode kernel for RDNA3/RDNA3.5 (gfx11); #65911 serves 6–8 decode rows via a HIP skinny GEMM for W4A16 on gfx1151; #61620 converts online linear NVFP4 to MXFP4; #67539 splits DeepSeek-V4.1 Engram tables across engines over NVLink or RDMA; #64289 enables SM90 MXFP4 MegaMoE through FlashInfer MoE-EP; #60153 fuses the gfx942 mHC seam; #68479 lets Transformers-backend vision towers offload to CPU via --cpu-offload-gb; #68864 adds an Inkling-2-Small H200 recipe.
+
+- *Why it matters:* vLLM keeps threading the needle for consumer AMD: official W4A8 MoE decode kernels for RX 7900 XTX-class parts and W4A16 row-scaling on Strix Halo's gfx1151 iGPU are the kind of features that previously only showed up in forks (Saber, Loom, XeMaya).
+- *Local inference:* Two-Radeon MoE serving gets a first-party path; Strix Halo owners get more decode rows in the iGPU; online NVFP4→MXFP4 conversion eases checkpoint portability between Blackwell and Hopper/AMD.
+- Source: vllm-project/vllm commit log, Nov 20 2026 — https://github.com/vllm-project/vllm/commits/main
+
+**SGLang wave: Kimi-K3.1 + DeepSeek-V4.1 on Ascend, SynthID watermarking, AVX10.2 CPU FP8, Hy4 cookbook** (event date Nov 20)
+In window: #48420 adds Kimi-K3.1 model support with the DSA attention path routed on Huawei Ascend; #47660 supports DeepSeek-V4.1 on Ascend A5; #45894 ships per-request SynthID Text watermarking; #51459 adds per-token FP8 quantization for CPU inference with AVX10.2 runtime dispatch; #51691/#51700 land the Hy4 cookbook and install docs; #43279 ports Wan2.2-S2V-14B speech-to-video with XPU support; #48314 adds H20-3e fused-MoE configs for GLM-5.3-Flash TP8/TP4; #49554 speeds small-M segmented BF16 matmuls on gfx950.
+
+- *Why it matters:* The Ascend enablement of frontier open models (K3.1, DSv4.1, Hy4 the same week) is the strongest sign yet that the Huawei stack is a real second ecosystem for open-weight serving outside CUDA; SynthID watermarking is the first mainstream serving-level text watermark opt-in.
+- *Local inference:* AVX10.2-gated CPU FP8 matters for next-gen Xeon-class boxes serving quants at the margins; consumer AMD sees gfx950 (Radeon AI Pro) decode-side work.
+- Source: sgl-project/sglang commit log, Nov 20 2026 — https://github.com/sgl-project/sglang/commits/main
+
+**Also noted:**
+- Hugging Face Daily Papers for Nov 20 surfaced three local-serving-relevant items: NarrowSpec (speculative-decode drafters don't need the target's hidden width), "Training Vision Models for LLM-Driven Weight-Space Programming" (a WSP follow-up), and "On-Policy Morphing into Hybrid Attention Models" (post-training conversion to hybrid attention) — https://huggingface.co/papers
 
 ## Just missed the window
-
-- Intel put 18A yields at 70% and named Microsoft its first external 18A/EMIB customer under a multi-year Xeon supply deal — Lip-Bu Tan's remarks circulated ~20:25 EST Nov 18 and Tom's Hardware's write-up ran 08:00 EST, both before this window (and distinct from the already-footnoted EMIB-T-Maia-Cobalt item). https://www.tomshardware.com/pc-components/cpus/intel-18a-yields-hit-70-as-company-signs-microsoft-as-emib-customer
-- Architect Labs' Frostbite — an AI-discovered CPU architecture claiming 4.59× perf/W — is dated Nov 18; its HN re-surfacing fell in-window but the underlying disclosure did not. https://architectlabs.com/blog/frostbite
+- TrendForce says NAND contract prices start falling in 1Q27 (0–5% QoQ, all categories downward from 2Q27) as Chinese cloud operators cut enterprise SSD orders more than US providers add — disclosed Nov 19; The Register pickup Nov 19 17:02 UTC was ~5.7 hours pre-window — https://www.theregister.com/systems/2026/11/19/nand-prices-tipped-to-fall-as-chinese-cloud-giants-cut-ssd-orders/5311116 (missed)
+- Qualcomm opened Cirrascale AI Innovation Cloud trials of its rack-scale Dragonfly AI200 inference system (768 GB LPDDR per card, 43 TB per 140 kW liquid-cooled rack, targets up to 10T-parameter models); Qualcomm PR Nov 17, Register coverage Nov 19 14:03 UTC, pre-window — https://www.theregister.com/systems/2026/11/19/qualcomm-offers-test-drive-of-its-rack-scale-nvidia-ai-challenger/5310966 (missed)
+- ComfyUI v0.46.0 released Nov 18 22:55 UTC (17:55 EST, between reported runs): MiniMax-H3-Image partner nodes, LTX AlphaGen/SDR-to-HDR/reframe/upscale nodes — and it removes DirectML, notable for AMD users on older Windows stacks — https://github.com/Comfy-Org/ComfyUI/releases/tag/v0.46.0 (missed)
 
 ## Coverage notes
-
-**10 candidates suppressed by the ledger dedupe gate** (already reported or already footnoted): Top500/LineShine (Nov 16), 3x-V100 e-waste rig and the llama.cpp b12528–b12540 / vLLM-SGLang-TRT-LLM overnight waves (08:27 fire), DDR6 JEDEC preview (Nov 18), Adrenalin 26.11.1 / radeon-ssd-write-blocker, EMIB-T-Maia-Cobalt and Edge0-145B-NVFP4 (footnoted once, not repeated), the harness-adapters base announcement (Nov 6 — surfaced here only as the new GGUF conversion), SenseNova-Loop-9B base, and Hy4-flash. Verified in this window: 6 qualifying items (3 hardware/software leads + 3 community leads), plus 4 also-noted and 2 once-only footnotes.
-
-**Limitations:** r/LocalLLaMA is unavailable this run — the reddit-reading skill returned HTTP 404 on the subreddit listing, search and `--json` fallback paths (anonymous feeds blocked). Hugging Face trending was read through the browser and the creation stream via HF's API; the broader web search backend returned "no results" on several hardware queries. No item was padded in from outside the window.
+- **Verified: 9 in-window items** (4 lead stories read in full), unit = underlying event; 3 "just missed" footnotes, each tagged for the ledger so they can never recur.
+- **Ledger dedupe:** 8 candidates suppressed as already reported or already-footnoted: STH November-Top500 recap (missed-tagged Nov 19), MSI EdgeMesa review wave (product itself reported Nov 18; reviews Nov 18–20 are re-coverage), Hy4-flash repo trending (repo Nov 17; model reported Nov 16), NVIDIA CEO-transition items (out of scope), Intel 18A-yield/EMIB (footnoted once Nov 19), HF×OpenRouter partnership (Nov 16), wccftech V100 part-5 re-coverage (today's is the material update instead), ComfyUI Nov 19 commit coverage (reported Nov 19).
+- **Dead ends:** r/LocalLLaMA anonymous feeds returned 404 on /new/.rss, /hot.rss and /top.rss (community Reddit lane unavailable this run); VideoCardz and TechPowerUp RSS failed to fetch; Tom's "power/cooling limits force 100k+ accelerator clusters into multiple data centers" (Nov 20 11:30 UTC, in-window) failed two URL resolutions and was logged, not chased; HN river in-window was low-signal (max 7 points on fetched stories).
