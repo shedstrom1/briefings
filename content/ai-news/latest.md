@@ -1,78 +1,77 @@
-# AI News Briefing — Thursday, 19 November 2026, Afternoon (17:00 ET)
+# AI News Briefing — Friday, November 20, 2026 (overnight edition)
 
-**Window:** 2026-11-19 12:00 ET → 2026-11-19 17:00 ET (previous fire → this fire). New-items-only: events first disclosed in this window, deduped against the reported ledger.
+**Window:** Wed-cutoff rule applied — 2026-11-19 17:00 EST → 2026-11-20 07:00 EST (overnight sweep, 14 hours). New-items-only; ledger-deduped.
 
 **TL;DR**
-- **Microsoft previews RDMA over USB4 on Windows** — two or more USB4 PCs pool memory and GPU compute to run open-weight models that don't fit on one machine; the NetworkDirect provider and a llama.cpp testbed are open source. The window's standout local-inference item.
-- **Google ships Tool Retrieval in the Gemini API (preview)** — agents load tool schemas on demand instead of sending a full library every request, cutting input tokens and latency for tool-heavy agents.
-- **Google brings computer use to the Gemini desktop app on macOS** — the agent drives native apps, files and the web in an isolated background window; US, paid tiers, Apple Silicon only.
-- **Update on previously reported (Anthropic IPO):** ANT closed its first session at $97.17, up 17% — giving back more than half the opening pop of 34%.
-- **Engine wave:** llama.cpp, vLLM and SGLang landed dozens of in-window commits, including a vLLM DoS-hardening fix; Ollama was quiet.
-
----
+- Signal is restricting screenshots by default on phones, calling OS-level AI agents an "existential threat" — the first major platform countermeasure against screen-reading assistants.
+- Bloomberg found Apple hiring for a dedicated autonomous-agent team: an agent that browses, codes, controls apps and coordinates sub-agents.
+- OpenAI opened GPT-Live-1.1 to the API with a new "standby" mode that bills idle voice sessions at $0.02/min.
+- California's attorney general served Nvidia with an investigative subpoena over China chip diversion and investor disclosure — a new legal front in the Huang/Megaspeed saga.
+- Anthropic's record IPO flipped into a catalyst: Asian AI stocks bled Friday morning, with SoftBank down ~16%.
 
 ## Models and local inference
 
-**Microsoft previews RDMA over USB4 on Windows — pool multiple PCs to run oversized open-weight models**
-*Event date: 19 November 2026 (in-window).*
+**OpenAI's GPT-Live-1.1 voice model reaches the API with per-minute standby pricing** — event date: late Thursday (Nov 19, evening ET).
+GPT-Live-1.1 (model ID `gpt-live-1.1`), the full-duplex voice model that has powered ChatGPT Plus/Pro voice since Oct 15, is now generally available in the API. The notable piece is "standby," available for both GPT-Live-1 and 1.1: after a configurable 5–60 second silence the model pauses inference while the WebRTC call stays open, billing at $0.02/min versus $0.05/min active; backend model and tool usage bill separately. OpenAI claims better cross-language accents, and more reliable letter/number dictation and instruction-following.
+*Why it matters:* voice-agent economics — most real calls contain long silences, and OpenAI just cut idle cost 60%. For agent builders this makes always-open voice pipelines materially cheaper, and the standby/active split is a template other realtime APIs will likely copy. Closed weights; no local-inference path.
+*Local inference:* none — API only.
+Source: OpenAI developer forum, "GPT-Live-1.1 has arrived in the API" (Nov 19, evening): https://community.openai.com/t/gpt-live-1-1-has-arrived-in-the-api/1418537
+Source: OpenAI model docs (gpt-live-1.1, standby pricing): https://developers.openai.com/api/docs/models/gpt-live-1.1
+Source: AI Weekly alert (Nov 20, ~03:20 ET): https://aiweekly.co/alerts/openai-opens-gpt-live-11-to-api-with-002min-standby
 
-Microsoft's USB team opened a developer preview of **RDMA over USB4** for Windows. Connect two or more USB4-capable Windows PCs with USB4/Thunderbolt 4/5 cables and a compatible inference framework can split one model across their combined memory and GPU compute, using **NetworkDirect** — the same RDMA API Windows uses with datacenter NICs, so no RDMA adapter, switch or third-party driver is needed. Microsoft measured small-message round-trip latency of roughly **28–50 µs, about 4× lower than UDP over the same USB4 link**. In company tests, three AMD PCs ran Qwen3-235B-A22B at ~18.5 tok/s; Intel's GPT-OSS-120B went from 49.4 tok/s on three PCs to 54.2 on four. The NetworkDirect provider, samples and link-test tools are open source, with a llama.cpp-based testbed; access arrives "soon" to Windows Insiders in the Experimental channel and requires test signing (which disables Secure Boot). AMD and Intel collaborated on the work.
-
-**Why it matters:** This attacks the central local-inference ceiling — a model too big for one card or one machine. RDMA over commodity USB4 ports offers a cheaper on-desk alternative to a server-class cluster, and an open-source provider plus llama.cpp testbed means the community can validate and extend it immediately.
-
-**Local inference note:** Directly relevant. It is a developer preview (test signing, manual static addressing, full-mesh cabling) — a starting point, not plug-and-play.
-
-Source: "Introducing RDMA over USB4® on Windows: run larger local AI models across PCs," Microsoft USB Blog, 19 Nov 2026 — https://techcommunity.microsoft.com/blog/microsoftusbblog/introducing-rdma-over-usb4%C2%AE-on-windows-run-larger-local-ai-models-across-pcs/4574602
-Source: "Microsoft previews linking Windows PCs over USB4 to run larger AI models," Superpower Daily, ~14:00 ET 19 Nov 2026 — https://superpowerdaily.com/posts/microsoft-previews-linking-windows-pcs-over-usb4-to-run-larger-ai-models
-
-**Engine wave (also noted, in-window).** Between 12:03 and 16:55 ET, llama.cpp landed three commits (OpenCL dp4a KQ matmul in decomposed attention #32577, BF16 for ROPE/SET_ROWS #32387, YuE2 projector fix #32606); vLLM merged ~18, including GLM-5.3-Flash FP8 on SM90 Mega MoE #66812, Kimi K3.1 GQA DSpark drafts #68701, a mixed-page-size KV layout for Nemotron Shortcut #67941, and **a DoS hardening fix enforcing `max_tokenize_tokens`** #67348; SGLang merged ~10, including an sgl-router least-tokens KV rank policy #51415 and FP4 indexer-key fusion #51515. Ollama was quiet. Source: GitHub commit histories, 19 Nov 2026 17:03–21:55 UTC — https://github.com/ggml-org/llama.cpp/commits/master , https://github.com/vllm-project/vllm/commits/main , https://github.com/sgl-project/sglang/commits/main
-
----
+**Inference engines: llama.cpp ships 8 overnight builds; vLLM 79 in-window merges; SGLang preps v1.0** — event dates: in-window (Nov 19 22:00 UTC → Nov 20 07:00 ET).
+llama.cpp merged 21 commits and tagged b12556–b12564, including CUDA Orin single-column MMVQ optimization (#31268), MoE duplicate-expert-ID support (#32505), OpenCL GQA-folded f16 flash attention (#32631), a chunked gated-delta-net Vulkan kernel (#30207), a Qualcomm subgroup-ops workaround (#30826), HarmonyOS/OHOS KleidiAI support (#32265), and mainline support for the October Domyn Edge 4B model (#32559). vLLM took 79 merges: an HY4 recipe (#68844), Qwen4Exp QSA sm_100 split-K launch configs (#68842), an Inkling 2 Small H200 recipe (#68864), a Rust-frontend wave (alias errors, LoRA unload, Muse tool-call argument streaming), an ICNS-input security reject (#68245) and ModelOpt INT8 fast-start support (#68176). SGLang merged 84 PRs with a steady stream of cherry-picks onto a `release/v1.0.0` branch — first-party v1.0 stabilization — plus AMD AITER fixes, Kimi-K3 sequence-parallel LayerNorm (#51520) and MiniMax-M3 shared-expert MegaMoE overlap (#51382). Ollama: one merge (MLX runner history/memory-pressure adaptation #19678).
+*Why it matters:* the Qwen4Exp sm_100 work confirms open-weight Qwen4 quant-path preparation is ongoing, and SGLang's release/v1.0.0 branch suggests a 1.0 milestone is imminent for the second-biggest serving engine.
+Note: no new open-weight model releases crossed this window; the only OpenRouter "release" Friday was a re-listing of Mistral's Feb-2025 Pixtral Large 2502.
+Source: GitHub, ggml-org/llama.cpp commits & releases (in-window): https://github.com/ggml-org/llama.cpp/releases
+Source: GitHub, vllm-project/vllm merged PRs (search, Nov 19–20): https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged
+Source: GitHub, sgl-project/sglang release/v1.0.0 cherry-pick merges: https://github.com/sgl-project/sglang/pulls?q=is%3Apr+is%3Amerged
 
 ## Agent tools
 
-**Google adds Tool Retrieval to the Gemini API (preview)**
-*Event date: 19 November 2026 (in-window, ~13:38 ET).*
+**Bloomberg: Apple job listings reveal a dedicated autonomous-AI-agent team** — event date: Thursday, Nov 19 (Bloomberg report; evening ET coverage).
+New Apple postings — headlined by a "Senior Engineering Manager, Agentic AI – Proactive" role — describe an agent that "browses the web, works across apps, runs commands, writes and debugs code, and calls services, and chooses the right tool for each step," plans multi-step tasks "across apps, browsers, command lines, code, and APIs," and "coordinates specialized sub-agents." The role sits across the Siri, UI Frameworks and Apple Foundation Models teams, days after Bloomberg reported Apple wants Siri to act proactively without step-by-step prompts, possibly next year.
+*Why it matters:* Apple has been the last major platform without an answer to Meta's Muse (10M installs in 40 days, per Sensor Tower via 9to5Mac), OpenAI's Dots, Anthropic's Duet and Google's just-announced Gemini macOS computer use. The listing is the first concrete evidence of a first-party, cross-app agent program with sub-agent orchestration — and it lands while Apple simultaneously tightens third-party agent access to Macs (macOS 27.3 Full Disk Access controls).
+Source: Bloomberg (Nov 19): https://www.bloomberg.com/news/articles/2026-11-19/apple-is-working-on-ai-agent-for-device-control-apps-browsing-and-coding
+Source: The Verge, Emma Roth (Nov 19, 5:31 PM ET): https://www.theverge.com/tech/1038227/apple-ai-agent-engineer-job-listing
+Source: 9to5Mac (Nov 19, 2:21 PM PT): https://9to5mac.com/2026/11/19/report-apple-job-listings-detail-plans-for-autonomous-ai-agents/
 
-Google launched **Tool Retrieval** in preview in the Gemini Interactions API. Add a `tool_search` tool and set `defer_loading: true` on selected tools; the model still sees each tool's name and description but not its parameter schema. When a tool is needed, the model requests it by name, the API loads the schema, and the function is called — all in one request, with each step exposed in `interaction.steps` for debugging. Google says the design cuts input-token bloat, latency and tool-selection errors that grow with large tool libraries, and preserves the prefix cache because deferred schemas stay out of the prompt head. It works with remote MCP servers and supports client-side retrieval; there is no separate charge. Requires Gemini 3.6 or later, including all Gemini 4 models.
-
-**Why it matters:** Tool selection is the main scaling wall for production agents with dozens or hundreds of tools. Server-side, on-demand schema loading with no index to host is a pragmatic fix that keeps accuracy from degrading as the toolset grows — especially relevant where tool registries are large or MCP servers expose many functions.
-
-Source: "Introducing Tool Retrieval in the Gemini API," Google Developer Blog, 19 Nov 2026 — https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/
-Source: "Google adds Tool Retrieval to the Gemini API to tame tool-heavy AI agents," Crypto Briefing, 13:38 ET 19 Nov 2026 — https://cryptobriefing.com/gemini-api-tool-retrieval-preview/
-
-**Google brings computer use to the Gemini desktop app on macOS**
-*Event date: 19 November 2026 (in-window, ~14:57 ET).*
-
-Google announced **computer use** for the Gemini app on Mac. The agent navigates native macOS apps, local files and websites to complete multistep tasks — filling forms, batch-processing files, organizing folders, building slideshows from dashboard data — inside an isolated background window with a live preview, leaving the screen and cursor free. Users choose which apps Gemini may access, watch each step, pause at any time and approve key actions; logins and payments pause by default. It is English-only, US-only, requires an Apple Silicon Mac on macOS Sequoia 15.0+, a personal Google account for users 18+, and an AI Plus, Pro or Ultra subscription.
-
-**Why it matters:** Computer use is moving from demos into mainstream desktop subscriptions. Google's gated, approval-first rollout is a bet that trust controls — not raw capability — will decide which agent users let drive their machine; its late arrival intensifies pressure on Apple to offer an equivalent.
-
-Source: "Automate Mac tasks with Gemini computer use," Google Keyword blog, 19 Nov 2026 — https://blog.google/innovation-and-ai/products/gemini-app/computer-use-mac/
-Source: "Google gives Gemini the ability to use your Mac for you," TechCrunch (Sarah Perez), 19 Nov 2026 — https://techcrunch.com/2026/11/19/google-gives-gemini-the-ability-to-use-your-mac-for-you/
-Source: "Google Turns On Gemini Computer Use for Mac Paid Plans," AI Weekly, 19:57 UTC 19 Nov 2026 — https://aiweekly.co/alerts/google-turns-on-gemini-computer-use-for-mac-paid-plans
-
----
+**Nous Research brings Hermes Agent to Microsoft Teams, the Microsoft Store and Azure** — event date: Friday, Nov 20 (Decoder; Nous blog).
+Nous announced a partnership putting Hermes Agent inside Microsoft Teams for enterprise use — employees hand off tasks like financial analysis, document drafting or inbox sorting and review results in-chat — with the desktop app now on the Microsoft Store and agent sessions running in Azure Container Apps Sandboxes (isolated microVMs). Hermes converts successful workflows into reusable skills, and a new "Collective Wisdom" feature shares reviewed skills across a team; Nous stresses the knowledge stays inside the company and never feeds provider training data. Nous cites Hermes as the most-used open agent on OpenRouter, near two trillion tokens/day.
+*Why it matters:* this is the strongest distribution deal yet for an open-weight agent harness into the enterprise, and it normalizes two things this brief tracks closely: microVM isolation as the default agent runtime, and on-prem skill libraries as the counter-model to provider-side memory. (Disclosure: this briefing is produced with Hermes Agent.)
+Source: The Decoder (Nov 20): https://the-decoder.com/
+Source: Nous Research blog (top post): https://nousresearch.com/blog/
 
 ## AI security and governance
 
-No new AI security or governance development was first disclosed inside this 5-hour window that clears the in-window and dedupe gates. The one in-window security-adjacent change is vLLM's `max_tokenize_tokens` DoS-hardening merge noted above. The most prominent security stories in circulation (the EU Commission's confirmation of an ARTEX-driven cyberattack, the GAO chatbot-attack-plans report, and OpenAI's internal "email-surveillance agent" report) were disclosed before the window or are already in the ledger — see footnotes and Coverage notes.
+**Signal restricts screenshots by default, calling phone AI agents an "existential threat"** — event date: Friday, Nov 20 (in-window).
+In a post from President Meredith Whittaker, Signal announced it will block screenshots inside the app on iOS 27 (plus a new "Block Siri AI" setting) and will auto-arm its Android "Screen Security" whenever it detects an OS AI assistant reading the screen. Signal says OS agents "scan" on-screen content to answer questions and act for users, which captures Signal data at the endpoint where encryption ends; the company explicitly calls the protections "incomplete" (content already on the device remains reachable, and macOS screenshot blocking isn't reliably possible, so users are directed to Siri's excluded-apps list). Signal is pressing Apple, Google and Microsoft for documented developer opt-out controls.
+*Why it matters:* this is the first significant platform-vs-platform defense against OS-level agents, and it directly follows the Reuters investigation (reported by this brief) that Meta's Muse surfaced private information read from Signal push notifications. Expect app categories holding genuinely sensitive data (banks, health, messaging) to follow with screen-capture defenses, and expect Apple/Google to respond with agent-scoping APIs — the negotiation over who controls agent access to the screen has just started.
+Source: Digital Trends (Nov 20, 2:07 AM ET): https://www.digitaltrends.com/phones/signal-adds-screenshot-protections-to-stop-ai-agents-reading-chats/
+Source: Reuters, "Signal restricts screenshots to block AI agents from reading messages" (Nov 20): https://www.reuters.com/legal/litigation/signal-restricts-screenshots-block-ai-agents-reading-messages-2026-11-20/
 
----
+**Update on the Nvidia/Megaspeed saga (ledger: 2026-11-12 Huang resignation cluster): California AG subpoenas Nvidia** — event date: Thursday, Nov 19 (announced Thursday; coverage ran into Friday early hours).
+Attorney General Rob Bonta served an investigative subpoena asking whether Nvidia's advanced chips or confidential information reached China in violation of export restrictions, and whether the company misled investors and the public about that risk. "The conduct of Nvidia and its former CEO raises bright red flags," Bonta said. The subpoena lands a week after Jensen Huang's resignation, with NVDA down 22% in the nine trading days since his affair admission and on pace for a seventh straight weekly loss (-38%).
+*Why it matters:* this converts the Megaspeed affair from a federal export-control and board question into a state securities-enforcement matter — a second front that typically brings document demands, depositions and disclosure scrutiny. For the ecosystem, it compounds the compliance chill around China-linked compute deals already visible in BIS's remote-access rule and the TSMC/Samsung shipment suspensions.
+Source: California DOJ press release (Nov 19): https://oag.ca.gov/news/press-releases/attorney-general-bonta-serves-investigative-subpoena-nvidia
+Source: CNBC (Nov 19): https://www.cnbc.com/2026/11/19/nvidia-california-bonta-subpoena-china-chips.html
+
+**Anthropic's record IPO turns into a sell-off catalyst across Asian AI stocks** — event date: Friday, Nov 20 (Asian session).
+Friday morning Asia: SoftBank fell 16.2% (down ~31% in November), TSMC lost 5%+, and Samsung and SK Hynix slid 6%+, as Anthropic's debut — now closed +17% at $97.17 on ~$1.3–2T valuations — failed to calm doubts about AI capex sustainability; Bloomberg framed the IPO as "a catalyst for a savage selloff," with Nasdaq futures pointing lower after Thursday's 2%-plus decline.
+*Why it matters:* the public scoreboard effect cuts both ways: a $81B raise at triple-digit revenue multiples sets an anchor private AI firms must clear, and equity markets are now repricing the financing that buys GPUs. Watch credit spreads and neocloud financings next — the same market that shut out CoreWeave/Nebius/Nscale in late October.
+Source: CNBC (Nov 20): https://www.cnbc.com/2026/11/20/softbank-ai-tech-stocks-slide-anthropic-debut.html
+Source: WSJ (Nov 20): https://www.wsj.com/finance/investing/asian-equities-fall-as-anthropics-ipo-fails-to-staunch-ai-stock-selloff-c47592b0
 
 ## Also noted
+- SGLang's `release/v1.0.0` branch cherry-pick wave (dozens of AMD/AITER and Kimi-K3 fixes) indicates an imminent first major release of the serving engine (no tag yet as of 07:00 ET).
 
-- **Update on previously reported (anthropic-s1-ant):** ANT closed its Nasdaq debut at **$97.17**, up 17% from the $83 offering price, after opening at $111.50 (+34%) — giving back more than half the opening gain. Fully diluted market cap ~$1.8T at the close (~$1.27T by one measure); >846M shares traded. Amazon and Google together own ~28% post-offering. (CNBC live, updated 16:51 ET 19 Nov 2026 — https://www.cnbc.com/2026/11/19/anthropic-ipo-ant-live-updates.html )
-- **Open-model cost check (self-published):** a HN-shared analysis, "Five agent chores: $258 on a top model, $11 on open models," argues routine agent tasks run far cheaper on open weights — directional, vendor-unverified (https://bitdepth.dev/blog/five-routine-ai-jobs ).
-
-## Just missed the window
-
-- EU Commission confirms it was hit by an AI-driven cyberattack using the ARTEX penetration-testing tool; systems disrupted 10+ days (Politico/Commission briefing 19 Nov, before the 12:00 ET cut).
-- OpenAI internal "email-surveillance agent" misalignment report (report public 18 Nov) — re-covered in-window by The Decoder.
+## Just missed the window (footnotes)
+- **OpenAI "Performance Factory"** (openai.com blog + VentureBeat exclusive, Thursday daytime): Codex agents ran 1,700+ automated investigations of ChatGPT performance regressions in three months, root-caused 600+, and shipped 15 fully agent-authored PRs as written with ~50 more agent-influenced fixes. https://openai.com/index/how-openai-performance-factory-keeps-chatgpt-fast/
+- **UK regulators' AI-cyber package** (BoE/FCA/PRA, Thursday London morning): sector-wide cyber-resilience guidance consultation (closes Feb 26, 2027) plus non-binding "effective practices" naming prompt injection, model/data poisoning, jailbreaking, autonomous-agent attacks and deepfakes; survey shows 88% of firms expect frontier-AI cyber capabilities to have moderate/high impact within 2 years. https://www.bankofengland.co.uk/news/2026/november/cyber-resilience-guidance-consultation-and-ai-and-quantum-effective-practices
+- **Moonshot AI walked away from a ~$150M Nvidia B300 rental in Indonesia** after BIS's remote-access rule closed the Southeast-Asia loophole (The Information, Thursday morning). https://aiweekly.co/alerts/moonshot-ai-cancels-150m-nvidia-b300-rental-in-indonesia
+- **DeepMind Institute essay "What Comes After AGI?"** (Tim Genewein, with Shane Legg and co-authors; Thursday): argues AGI→ASI is moving from philosophy to measurable research, citing ≥10x/yr effective-compute growth. https://institute.deepmind.com/essays/what-comes-after-agi/
 
 ## Coverage notes
-
-- **Verified count:** 3 substantive new in-window items (Microsoft RDMA over USB4; Gemini Tool Retrieval; Gemini macOS computer use), 1 material update on a previously reported item (Anthropic IPO close), plus 1 in-window engine-commit wave (also-noted). Counting unit = distinct underlying event.
-- **Ledger dedupe:** 9 candidates suppressed as already reported — chiefly the Anthropic IPO saga, Gemini 4 Neon, Nvidia's H200 China halt, Superhuman Go, the OpenAI "jagged frontier" report, the CISA KEV/LiteLLM footnote, and earlier engine waves.
-- **Community lanes:** HN river walked (in-window items above); Reddit was unavailable this run (anonymous Atom feed returned 404/429), so no Reddit-sourced items are included.
-- **Dead ends:** tool/model-release trackers and several search queries returned no additional in-window, in-scope items; the OpenAI "agent builds email-surveillance tool," GAO attack-plans report, Intel 18A customer, Olala mini 7A1B, Kling Image 4.0 and Aion 1.0 Instruct 2.3B all predate the window.
+- **Verified count:** 6 new items (2 models/inference incl. engine cluster, 2 agent tools, 2 security/governance) + 1 "update on previously reported" (CA AG subpoena) + 4 single-use "just missed" footnotes. Every main item's source page was fetched; Signal, Apple, GPT-Live-1.1, Hermes-Teams and the Asia selloff carry two or more independent sources.
+- **Ledger dedupe count:** 10 candidate events suppressed as already reported (Anthropic debut/first-close/allocation details; Muse privacy investigation; Gemini 4 Neon and macOS computer use; Frostbite AI-designed CPU re-spike; Kokoro HF-account hijack; Citi/PNC/Citizens agent-terms shift; SenseNova Loop-9B repeat; arXiv browser-embedded-LLM abuse paper — submitted Nov 18, pre-window and ledger-adjacent).
+- **Dead ends / limitations:** Reddit community lane failed from this host (anonymous `.rss` feeds now 404 on `sub` and `search` routes; pullpush.io 429) — logged per procedure, no third attempt; Reuters Signal article sat behind a fetch wall (substituted DigitalTrends page with in-window timestamp plus Reuters slug confirmation); Bloomberg/WSJ items cited via their own slugs and syndicated copies; Pragmatik Labs' reported $5B round (Bloomberg alert) could not be corroborated outside the paywall (two strikes); the HN community lane was fully walked in-window (Gemini Neon "Models Engineering Index" #1 claim, 352 pts, personal-site benchmark — unverified, excluded).
