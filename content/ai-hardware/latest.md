@@ -1,76 +1,141 @@
-# AI Hardware & Local Models Brief — November 20, 2026
+# AI Hardware & Local Models Brief — Sat AM Nov 21: Inkling 2 Mini goes local
 
-**Window:** 2026-11-20 08:06 → 12:45 EST (previous fire → this fire)
+**Window:** 2026-11-20 17:45 → 2026-11-21 07:49 EST (previous fire → this fire; new items only).
 
 ## TL;DR
-- First independent review of an NVIDIA RTX Spark laptop is out: TechPowerUp rates the Microsoft Surface Laptop Ultra ($2,600 base, $5,900 top) a class-of-its-own mobile AI workstation on the N1X with up to 128 GB unified memory.
-- Microsoft's RDMA-over-USB4 developer preview (disclosed Nov 19, just missed the window) showed 235B-class MoE models at ~22 t/s across three Ryzen AI Max mini-PCs — footnoted below.
-- Unsloth Desktop adds AMD XDNA 2 NPU acceleration (also Nov 19, footnoted): Qwen3.6-35B-A3B running on the NPU with ~28 GB shared memory.
-- Tencent Hy4 day-0 quant wave keeps landing in-window: Grawnch's 2.50 bpw SM120 trellis variant plus fresh FP8 tiers.
-- Heavy in-window merge waves across llama.cpp (b12572–b12589), vLLM (Hy4 fixes), SGLang (Foundry CUDA-graph save/load) and TensorRT-LLM (Rubin SM107 merges).
 
-## AI hardware and silicon
+- **Inkling 2 Mini turned into a local-inference story overnight.** The quant ladder landed in waves — nace-ai's native NVFP4 GGUF (01:57 UTC), bartowski's 27-file imatrix set (05:45–06:59 UTC), Unsloth's Dynamic ladder down to 7.76 GB, plus EXL3 at 3.33 bpw — and SGLang published a verified single-GPU support matrix covering DGX Spark, RTX 5090 and RTX PRO 6000.
+- **llama.cpp burned eight builds** (b12597 → b12606) with RDNA4 Vulkan MMVQ improvements, new SYCL gated-delta-net and grouped-XMX GEMM kernels, a looped-model (inkling2_loop) fix, and the fused lightning indexer now always on.
+- **vLLM shipped an unusually large security batch** (int64 pointer arithmetic, prompt-count bounds, auth-path fixes) alongside HiSparse support for Hy4 Flash, a faster fused CUDA MTP decode kernel for 16-bit recurrent state, and a gfx942 AITER Triton MXFP8 MoE backend.
+- **TensorRT-LLM took the Inkling 2 architecture into the tree** (operators, kernels, Inkling-2-Small target, merged 18:51 EST) and added a native static-FP8 MiniMax-H3 scenario on Rubin.
+- **Hardware was thin in an overnight Saturday window.** The one in-window product launch was SilverStone's HELA 1350Rz (1350 W, three EPS cables, first PSU advertising Intel Nova Lake-S); the week's tempting silicon story — Moore Threads' "Lushan" record-VRAM tease — traces to November 18–20 and is footnoted, not counted.
 
-**TechPowerUp publishes first detailed RTX Spark laptop review — Microsoft Surface Laptop Ultra** — event date: November 20, 2026 (review published this morning)
-The review covers the full NVIDIA RTX Spark/N1X platform: 20-core Arm CPU (10× Cortex-X925 + 10× Cortex-A725, up to 4.1 GHz), a Blackwell GPU with 6,144 CUDA and 192 Tensor cores, and up to 128 GB of shared LPDDR5X-9400 memory (18-core models get a 5,120-core GPU with 24–32 GB). The NVIDIA App lets you set the CPU/GPU memory split — 64/64 by default — and TPU's verdict is that no other Windows laptop offers this much GPU-accessible memory with the full CUDA stack in such a refined package, while flagging the price: $2,600 entry, $5,900 for the 128 GB/1 TB unit. Gaming is a wash, but for local model work it "sits in a class of its own for efficiency and capability."
-- **Why it matters:** RTX Spark units (DGX Spark, ASUS/Dell/MSI desktops) have been sold out or allocation-locked since launch; this is the first independent, full platform review with pricing context, and it validates the 128 GB unified-memory thesis for local inference — the same silicon class as the DGX Spark dev boards homelab builders are waiting on.
-- **Local inference:** N1X = 6,144-core Blackwell with 64 GB GPU-default VRAM split (up to the full 128 GB), enough for Q4-class 70B models fully resident and 200B-class MoEs with light offload at the $2,600–$5,900 price point; 3× USB4 40 Gbps for expansion/clustering.
-- Source: TechPowerUp, "Microsoft Surface Laptop Ultra Review – The next-gen Arm laptop," Nov 20, 2026 — https://www.techpowerup.com/review/microsoft-surface-laptop-ultra/
+---
 
 ## Model releases
 
-No new open-weight model disclosures met the window this run (Tencent Hy4 weights landed before the 07:45 fire and are reported there).
+### **Inkling 2 Mini's day-0 local stack: verified Spark/5090/PRO-6000 support, DSpark drafter bundled, quants down to 7.8 GB** — event date 2026-11-21 (overnight roll-out)
+
+SGLang merged its Inkling-2-Mini cookbook at 03:24 EST (`#52042`), listing *verified* launch images for B300/GB300, B200/GB200, H200, RTX PRO 6000, RTX 5090 and DGX Spark, and describing the model as "26B total and 5.4B active parameters per token… layers 6–17 run three passes per token," with "a 3-layer DSpark draft head bundled for speculative decoding" and weights of "about 18 GB," served on a single GPU including desktop and workstation cards. Ollama merged MLX-runner support (`#19799`, 21:38 EST Nov 20) plus an Inkling follow-up and a Metal fusion of Inkling's residual mixing (`#19806`, `#19808`). llama.cpp fixed loop-slot sharing after the scale pass in `inkling2_loop` (`#32704`, merged 06:10 EST), which is the arch-specific bug that the day-0 GGUF tier depends on.
+
+The official model card sets the sizing envelope: a single ~20 GB checkpoint in mixed NVFP4 (most weights, trained and deployed natively) and MXFP8 (last four layers), 1M-token context, Apache 2.0 with a Model Acceptable Use Policy, and stated support for 1x NVIDIA DGX Spark or Apple silicon with 32 GB+. LM Studio's listing pegs the smallest downloadable GGUF at a minimum of 18 GB of system memory, with 32 GB+ unified (Apple) or 32 GB+ VRAM recommended, and warns that "support for this looped architecture in local runtimes is new, so performance varies by hardware and runtime."
+
+*Why it matters:* this is the first genuinely small looped transformer the community can run, and it arrives pre-quantized at the precision it was trained in. The trade-off is explicit in the lab's own results: looping buys reasoning efficiency (DeepSWE v1.1 48.2%, SWE-bench Verified 79.2%, BrowseComp 79.0% with compaction, Artificial Analysis Index v5.0 of 20.1 — tying Qwen3.8-27B) but not knowledge capacity, and Thinking Machines flags weaker factual recall, repetitive reasoning while debugging, and shorter chains of thought as loop depth rises.
+
+*Local inference:* the native 20 GB checkpoint targets 1x DGX Spark or any 32 GB+ VRAM card; the quant ladder changes who gets in — Unsloth UD-IQ3_XXS at 11.66 GB and UD-Q4_K_M at 16.61 GB put the model inside the RTX 5060 Ti 16 GB / 4060 Ti 16 GB class, and UD-IQ1_S at 7.76 GB makes it viable on 8–12 GB cards, at KLD 0.0911 vs Q8_K_XL (89.4% same-top-token). Expect throughput to be worse than an equivalent 3.4B-active model, because three passes through 12 shared layers means roughly 5.4B effective active parameters per token.
+
+**Source:** SGLang cookbook PR #52042 (merged 2026-11-21 08:24 UTC) — https://github.com/sgl-project/sglang/pull/52042
+**Source:** Unsloth quant ladder + KLD table — https://huggingface.co/unsloth/Inkling-2-Mini-GGUF (tier files refreshed 2026-11-21 08:35 UTC)
+**Source:** llama.cpp #32704 (merged 2026-11-21 11:10 UTC) — https://github.com/ggml-org/llama.cpp/pull/32704
+**Source:** Ollama #19799 / #19808 (merged 2026-11-21 02:38 / 04:05 UTC) — https://github.com/ollama/ollama/pull/19799
+**Corroboration:** LM Studio model page (updated ~2026-11-21 02:00 UTC) — https://lmstudio.ai/models/inkling-2-mini
+
+---
 
 ## Community spins and quantizations
 
-**Update on previously reported (Hy4, reported today 08:06): day-0 quant wave keeps landing** — event dates: Nov 20, 14:46–17:19 UTC
-Community quantizers kept working Tencent's ~774B Hy4 flagship through the window: Grawnch published Hy4-Flash-WV-v6.6 at 2.50 bpw targeting SM120 (RTX 50-series) hardware (16:25 UTC), and FamilyOrang shipped Hy4 and Hy4-flash mirrors plus FP8 tiers (14:46 and 17:18 UTC). Earlier pre-window day-0 tiers (MLX 3.1–4.6-bit from nace-ai/Xylolabs, W4A4/W8A8 variants, EXL3 builds) frame how fast the ladder is filling in — with vLLM already merging Hy4 mxfp4/DFly fixes this morning.
-- **Why it matters:** Hy4 is the biggest new open-weight flagship in weeks, and a 2.5 bpw SM120 tier signals people are seriously attempting it on consumer Blackwell rigs rather than waiting for datacenter FP8 clusters.
-- **Local inference:** at ~2.50 bpw the flash variant still implies ~240+ GB of weights — multi-GPU/multi-Spark territory, not a single card; the FP8 tiers (~775 GB) sit at DGX Station/2×GB300 class. SM120 tags make RTX 5060 Ti 16 GB–class machines part of the conversation as expert-offload nodes.
-- Sources: https://huggingface.co/Grawnch/Hy4-Flash-WV-v6.6-2.50bpw-SM120 (created Nov 20 16:25 UTC); https://huggingface.co/FamilyOrang/Hy4-FP8 (created Nov 20 17:18 UTC)
+### **Inkling 2 Mini quant stampede: native-NVFP4 GGUF, MLX, EXL3 3.33 bpw, and a 5.4 GB tier** — event date 2026-11-21
 
-**mradermacher in-window GGUF ladder, including the trending harness-adapted Qwen3.8-27B** — event dates: Nov 20, 13:39–17:05 UTC
-Five imatrix/quant ladders landed inside the window: CalibForge-35B-A3B-v2-i1 (13:39 UTC), Gemma3NPC-4B-pre-thinking-i1 (14:07), Next-3-Pro-i1 (16:47 — a quant of thelamapi's 27B "next3-pro" qwen35-arch mystery model), Climb-1.2-Photon-i1 (16:53), and Qwen3.8-27B-pi-adapted-bf16-i1 (17:05), a new tier for the harness-adapted model that is currently #2 on HF trending (832 likes).
-- **Why it matters:** the pi/opencode harness-adapted Qwen3.8-27B line is the community's current answer to "which quant runs my coding agent best," and its rise to #2 trending means broad 16 GB-class experimentation; Next-3-Pro continues the mystery-model-quant pattern.
-- **Local inference:** the 27B ladder fits 10.5–30 GB (RTX 5060 Ti 16 GB at Q4_K_XL with light offload; 24 GB+ cards fully resident); Gemma3NPC-4B is sub-4 GB CPU/edge class.
-- Sources: https://huggingface.co/mradermacher/Qwen3.8-27B-pi-adapted-bf16-i1-GGUF (Nov 20 17:05 UTC); https://huggingface.co/mradermacher/Next-3-Pro-i1-GGUF (Nov 20 16:47 UTC); https://huggingface.co/mradermacher/CalibForge-35B-A3B-v2-i1-GGUF (Nov 20 13:39 UTC)
+nace-ai published `Inkling-2-Mini-GGUF` containing a single `Inkling-2-Mini-NVFP4.gguf` at 20:57 EST, plus an MLX 5.8-bit pack at 21:46 EST — the native-precision GGUF route rather than a requant. bartowski followed at 00:45 EST with a 27-file imatrix ladder (IQ2_XXS/IQ2_S/IQ2_M/IQ3_XS/IQ3_XXS/IQ3_M … plus f16 and bf16 `mmproj` vision files). Unsloth's Dynamic 3.x ladder spans UD-IQ1_S 7.76 GB → UD-Q8_K_XL 22.87 GB with a published KLD-vs-Q8_K_XL table and same-top-token agreement (IQ3_XXS 11.66 GB / 0.0269 / 94.7%; Q4_K_XL 17.63 GB / 0.0107 / 98.0%), and ships separate DSpark drafters (Q8_0 0.40 GB, BF16 0.65 GB). By the end of the window the long tail had started: `0xzknw/Inkling-2-Mini-EXL3-3.33bpw` (07:36 EST) and `shinmegamiboson/Inkling-2-Mini-LookAtMyQuant` at 5.4 GB and 8.9 GB with a matching drafter (07:48 EST).
+
+*Why it matters:* the fastest thing about a small open-weight release is now the ladder, not the benchmarks — within ~12 hours of weights landing you have GGUF, i1 imatrix, MLX, EXL3 and 5–9 GB "fits-anywhere" tiers, plus draft heads. That matters for looped models specifically, because llama.cpp/SGLang support is days old and every tier is effectively a test artifact for the runtime.
+
+*Local inference:* the practical tiers are 7.8–8.5 GB (any 8–12 GB card or a 16 GB Mac), 11.7–13.6 GB (16 GB cards, this machine's 5060 Ti included), and 16.6–17.6 GB for near-lossless 4-bit, which needs a 20–24 GB card or generous CPU offload.
+
+**Source:** nace-ai/Inkling-2-Mini-GGUF (created 2026-11-21 01:57 UTC) — https://huggingface.co/nace-ai/Inkling-2-Mini-GGUF
+**Source:** bartowski/thinkingmachines_Inkling-2-Mini-GGUF (created 2026-11-21 05:45 UTC) — https://huggingface.co/bartowski/thinkingmachines_Inkling-2-Mini-GGUF
+**Source:** 0xzknw/Inkling-2-Mini-EXL3-3.33bpw (created 2026-11-21 12:36 UTC) — https://huggingface.co/0xzknw/Inkling-2-Mini-EXL3-3.33bpw
+
+### **Also noted — mradermacher's overnight ladder** — 2026-11-20 22:21 → 2026-11-21 12:42 UTC
+
+Roughly 45 GGUF repos in-window, the notable ones being `higgs-audio-v3-stt-v2` and `higgs-audio-v3-8b-stt-v2` (ASR), `granite-vision-4.1-4b` (+ heretic), `MiniMax-Music3-GGUF`, `LLaVA-OneVision-2-8B-Instruct`, `DaisyRose-27B` (RadixArk RL agent FT), `ThinkingBomb-gemma-4-26B-A4B`, `Mistral-Heretica-12B-RP-Evolved`, the `Wukong-4B/9B` Opus/DeepSeek SLERP 2x-merges, `Refusal-Judge-Qwen3-0.6B` (text-classification), and an i1-imatrix pass over the evening's releases from 10:28 UTC onward. All are llama.cpp-loadable; the audio/vision files carry `mmproj` companions.
+
+**Source:** https://huggingface.co/mradermacher (repos created 2026-11-20 22:21 UTC → 2026-11-21 12:42 UTC)
+
+---
 
 ## Inference software and benchmarks
 
-**llama.cpp ships nine builds (b12572–b12589) with Vulkan, multimodal and UI gains** — event date: Nov 20, 2026 (14:07–17:42 UTC builds; 12 PRs merged in-window)
-Highlights from the in-window merges: Vulkan COL2IM_1D support with misaligned bytes and split workgroups (#32673, 17:11 UTC), mtmd drama3 voice cloning (#32586, 17:34 UTC), Gemma 4 optimized prompt processing for multi-sequence queries (#32342, 15:41 UTC — meaningful for concurrent agent sessions), server --ui-mcp-proxy-allow-private-urls (#32633), voice messages/dictation with live waveforms in the web UI (#32531), and ggml deprecating ggml_ftype with major-version-bump reminders (#32647).
-- **Why it matters:** the Gemma4 multi-sequence prompt-processing work directly improves throughput for anyone serving several agent conversations on one desktop GPU, and the UI gains voice I/O without a third-party frontend.
-- **Local inference:** all consumer-side — Vulkan COL2IM helps RDNA/Intel iGPU image paths; Gemma4 optimization benefits 12–32 GB cards running E4B/26B-A4B variants.
-- Source: https://github.com/ggml-org/llama.cpp/releases (b12572 14:07 UTC → b12589 17:42 UTC, Nov 20)
+### **llama.cpp b12597 → b12606: RDNA4 Vulkan MMVQ speedups, new SYCL kernels, always-fused lightning indexer** — event date 2026-11-21
 
-**vLLM merges Hy4 day-1 fixes plus cross-machine snapshot groundwork** — event date: Nov 20, 2026 (18 PRs merged 13:23–17:15 UTC)
-The Hy4 support PR merged at 07:45 fire got immediate post-landing fixes: hy-v4 mxfp4/DFly, data-parallel and cudagraph_mm_encoder, and reasoning-parser errors (#68689, 14:09 UTC). Also in-window: DeepSeek-V3.2 NVFP4 loading fix via upstream DeepseekV32Config (#68948, 14:52 UTC), the first step of cross-machine snapshot support with portable attachments (#61544, 16:00 UTC), an SM89 int8 CUTLASS scaled_mm fix under batch-invariance (#67687, 15:49 UTC), Kimi-K2.5 video-chunk ViT fixes, and a security bound on batch chat conversations (#68904).
-- **Why it matters:** cross-machine snapshot support is the serving-side answer to fast cold-starts on clustered consumer rigs — same problem space as Microsoft's USB4 RDMA push (footnoted below); the SM89 fix keeps RTX 40-series int8 paths healthy.
-- **Local inference:** vLLM on RTX 4090/5090 (SM89/120) benefits directly from the CUTLASS and NVFP4 fixes; Hy4 fixes make multi-GPU Hy4 attempts more stable.
-- Sources: https://github.com/vllm-project/vllm/pull/68689; https://github.com/vllm-project/vllm/pull/61544 (merged Nov 20, 2026)
+Eight builds in the window (22:57 UTC Nov 20 → 10:28 UTC Nov 21). The performance-bearing merges: `#31804` improves Vulkan RDNA4 MMVQ for Q3_K, Q5_K and IQ4_XS (06:41 EST); `#32456` adds a column-blocked `gated_delta_net` SYCL kernel and `#31753` fuses ADD/RMS_NORM/MUL with a vectorized RMS norm on SYCL; `#31428` reworks grouped XMX GEMM to avoid SLM staging; `#32466` unrolls the FA coopmat1 array to dodge an AMD-Windows driver bug; `#32519` scores only the k-pools of the ubatch sequences in QSA; `#32650` drops the flags, auto-probe and non-fused fallbacks so the fused lightning indexer is always used; plus a grammar integer-overflow fix (`#32551`), a ppc64le tinyBLAS alignment fix, a zDNN load-race fix, and CUDA fastdiv UB abort.
 
-**SGLang adds Foundry fast CUDA-graph save/load and megakernel bindings** — event date: Nov 20, 2026 (12 PRs merged 13:29–17:41 UTC)
-The notable merges: an adapter for Foundry enabling fast CUDA graph save/load (#42254, 17:26 UTC) — graph persistence across process restarts cuts warm-up time on long-running servers; megakernels gained DSA/MLA binding views, EAGLE draft capture checks and early draft-embedding sharing (#46210, 17:41 UTC); Gemma 4 streaming tool-call ordering and text-preservation fixes (#51592/#51616); Kimi-K3.1 gfx950 module isolation for AMD (#51366); BLAKE3-based multimodal item identity in rust-server (#50846).
-- **Why it matters:** graph save/load moves serving frameworks toward instant resume, which matters for GPU-time-sliced home servers that load different engines per request; tool-call fixes keep Gemma 4 agents reliable in local stacks.
-- **Local inference:** rust-server improvements land on single-box deployments; AMD gfx950 isolation matters for MI350X-class prosumer rigs.
-- Sources: https://github.com/sgl-project/sglang/pull/42254; https://github.com/sgl-project/sglang/pull/46210 (merged Nov 20, 2026)
+*Why it matters:* RDNA4 and Intel Arc are the two backends getting the most attention in this batch, and the "always fused" lightning-indexer change removes a silent performance cliff for DeepSeek-Flash-class sparse attention on the CPU/Metal paths.
 
-**TensorRT-LLM merges Rubin SM107 path for MiniMax-M3.1-Flash plus GLM-5.3-Flash NVFP4 and WinoVae** — event date: Nov 20, 2026 (12 commits, 13:17–16:12 UTC)
-A mass merge brought MiniMax-M3.1-Flash optimizations to Rubin (SM107) Modeling V2 (#22261, 15:07 UTC); GLM-5.3-Flash NVFP4 landed on sm_10x (B200/GB300) with TP4 + MTP (#21019, 15:12 UTC); Gemma4 decode got norm/RoPE, FP8 input-quant, PLE-tail and assistant-head fusions (#22497, 14:58 UTC); and WinoVae — an optimized Wan 2.2 VAE with fused norms, Winograd convolutions and spatial sharding — merged (#21576, 16:12 UTC).
-- **Why it matters:** Rubin is now actively taking model optimizations months before hardware ships, and WinoVae matters to anyone running video-diffusion locally — VAE decode is a memory-bandwidth wall on 16–32 GB cards.
-- **Local inference:** NVFP4/fusion work on B200/GB300 pushes the ceiling down-market as Marlin W4A16 NVFP4 (v1.3.0 GA, reported 08:06) covers Hopper+Ada; Wan 2.2 VAE sharding helps multi-GPU desktop video pipelines.
-- Source: https://github.com/NVIDIA/TensorRT-LLM (commits #22261, #21019, #22497, #21576, Nov 20, 2026)
+*Local inference:* direct benefit for RX 7900 XTX / R9700-class and RX 9000-series Vulkan users (improved small-batch quantized GEMV), and for Arc A770/B580/B60 users on SYCL. b12606 ships Windows CUDA 12.4 and 13.5 binaries, Linux ROCm 10.0, OpenVINO 2026.4.1, SYCL FP16/FP32, and Snapdragon (CPU+Adreno+Hexagon) builds.
+
+**Source:** llama.cpp releases b12606 (2026-11-21 10:28 UTC) — https://github.com/ggml-org/llama.cpp/releases
+**Source:** PR list merged in window — https://github.com/ggml-org/llama.cpp/pull/31804
+
+### **vLLM: security-hardening batch plus Hy4 Flash HiSparse, faster MTP decode and a gfx942 MXFP8 MoE backend** — event date 2026-11-20/21
+
+Six security/bounds PRs landed in-window: `#53131` widens int32 pointer arithmetic to int64 in CUDA kernels (02:52 EST), `#54721` completes input-bound hardening left incomplete by `#51447` (07:18 EST), `#53473` enforces a prompt-count bound on pooling and scoring routes, `#52794` fixes root-path matching in auth middleware, `#68249` shares media byte budgets across batched requests, and `#69101` adds a vLLM security-review skill to the docs. On the feature side: `#69026` adds HiSparse support for HY4 Flash, `#69065` ships a faster fused CUDA MTP decode kernel for 16-bit recurrent state, `#68831` gives the Qwen3-Omni / Qwen3-ASR audio tower encoder CUDA graphs, `#68921` exports ZAYA1 CCA prefill checkpoints, `#62516` enables mixed causal/bidirectional attention for DiffusionGemma on TRTLLM-Gen and makes it the default for text-only SM100/SM103, `#61214` adds an AITER Triton MXFP8 MoE backend for gfx942, and `#68351` prefetches the whole checkpoint into every node's page cache (multi-node load times).
+
+*Why it matters:* the int64/KV bounds work is the unglamorous fix for a real failure mode — long-context servers on big KV pools overflowing 32-bit addressing — and `#68351` attacks the "cold start costs 10 minutes" problem on clusters with shared storage.
+
+*Local inference:* `#61214` matters for MI250/MI300-era gfx942 owners running MoE models; the encoder-graph work lowers first-token latency for local Qwen3-Omni/ASR pipelines on any CUDA card; `#62516` is SM100/SM103-only, i.e. Blackwell workstation/Spark-class.
+
+**Source:** https://github.com/vllm-project/vllm/pull/69026 (merged 2026-11-21 00:23 UTC), #69065 (08:55 UTC), #53131 (07:52 UTC), #61214 (2026-11-20 23:47 UTC)
+
+### **SGLang: Hunyuan-4-Flash vision-language support, prefill CUDA graphs for CuTe-DSL MoE/MegaMoE, shortest-prefill-first scheduler** — event date 2026-11-21
+
+Beyond the Inkling cookbook, the in-window merges that change behavior: `#51937` adds Hunyuan-4-Flash vision-language support (20:24 EST Nov 20); `#50684` adds prefill CUDA graphs for FlashInfer CuTe-DSL MoE and MegaMoE on NVIDIA; `#51688` switches beam search to a tiny FP32 router GEMM for NVFP4 checkpoints; `#51929` lets a JIT module build for its architecture *family* (sm_100f) rather than one exact arch; `#51957` (merged 07:45 EST) adds a load-scaled class boundary and token budget for shortest-prefill-first scheduling; `#51983` lets the K3.1 verify megakernel serve its own request buckets; and on AMD diffusion, `#51933` runs MiniMax-H3 packed attention on aiter's batch/MHA-v4 kernels while `#51934` runs the BigVGAN vocoder's convolutions in MIOpen's summation orders from Triton. Storage-side, `#46540` fixes NIXL HiCache moves for pages that are not whole O_DIRECT blocks and `#49537` adds L2→L3 KV write-latency metrics.
+
+*Why it matters:* the sm_100f family-JIT change is the quiet one — it means a single wheel can serve Blackwell variants instead of shipping arch-specific builds — and shortest-prefill-first directly changes p95 TTFT under mixed agent loads.
+
+*Local inference:* the scheduler and CUDA-graph work lands in the RTX 50-class/DGX Spark sweet spot; NIXL/O_DIRECT fixes matter for anyone tiering KV to NVMe on a workstation.
+
+**Source:** https://github.com/sgl-project/sglang/pull/51957 (merged 2026-11-21 12:45 UTC), #50684 (23:25 UTC Nov 20), #51937 (00:24 UTC)
+
+### **TensorRT-LLM takes Inkling 2 into the tree; adds native static-FP8 MiniMax-H3 on Rubin** — event date 2026-11-20/21
+
+`#22627` "Add the Inkling 2 Modeling V2 family: operators, kernels and the Inkling-2-Small target" merged 18:51 EST. Also in-window: `#22658` adds a native static-FP8 MiniMax-H3 scenario on Rubin, `#22363`/`#22354` rework DeepSeek-V4.1 MoE decode at attention TP with FC1-only TRTLLM-Gen runs, a CuTe-DSL FC2, one-cluster routing and dynamic EP, `#19395` promotes PrimTS MLA prefill with MTP/Helix integration and Rubin support, and `#22695` fixes FlashMLA builds for SM107-only targets.
+
+*Why it matters:* NVIDIA's own stack now carries first-party kernels for the looped-architecture family the community is only a day into supporting, which usually means the consumer-side runtimes get a reference implementation to chase.
+
+*Local inference:* SM107 is the Rubin preview target (server), but the DSpark/MTP and MLA kernels propagate to Blackwell workstation cards; Inkling-2-Mini itself fits a 32 GB card as shipped.
+
+**Source:** https://github.com/NVIDIA/TensorRT-LLM/pull/22627 (merged 2026-11-20 23:51 UTC)
+
+### **Ollama opens a preview install channel** — event date 2026-11-20 22:47 UTC
+
+`#19801` "install: support preview channel" merged two minutes into this window (17:47 EST Nov 20), alongside the Inkling MLX work. Small quality-of-life change with real consequence: users can now opt into day-0 MLX engine paths (like the Inkling residual-mix fusion) without living on dev builds.
+
+*Local inference:* Apple-silicon-only for now (the merged MLX work is `mlxrunner`), no effect on CUDA/ROCm installs.
+
+**Source:** https://github.com/ollama/ollama/pull/19801
+
+---
+
+## AI hardware and silicon
+
+### **SilverStone HELA 1350Rz: first PSU advertising Intel Nova Lake-S, with three EPS cables** — event date 2026-11-21
+
+SilverStone's new 1350 W ATX 3.1 / PCIe 5 unit is 80 PLUS Platinum, 150 × 86 × 160 mm, ships **three** 4+4-pin EPS CPU cables "to support the high power demands of Intel NVL-S CPUs," two native 12V-2×6 GPU connectors, Japanese capacitors, a 135 mm FDB fan with semi-fanless mode, and 50 °C continuous rating (VideoCardz, 11:19 UTC).
+
+*Why it matters:* three EPS connectors is a signal that the next Intel desktop platform is being designed with server-class CPU power draw, which is exactly the direction homelab AI boxes have gone (EPYC/Threadripper-class boards already do this).
+
+*Local inference:* 1350 W with only two 12V-2×6 is adequate for a 2-GPU rig; three-GPU+ inference builds will still want splitter-free headroom or a 1600 W-class unit.
+
+**Source:** VideoCardz, 2026-11-21 11:19 UTC — https://videocardz.com/newz/silverstone-hela-1350w-psu-officially-supports-intel-nova-lake-s-cpus-features-three-eps-power-cables
+
+---
 
 ## Also noted
-- Nothing else reached the verified-item bar this window.
 
-## Just missed the window (footnoted once, never again)
-- **Microsoft previews RDMA over USB4 on Windows for multi-PC local AI** (disclosed Nov 19): two or more USB4-linked Windows PCs split one model across combined memory + GPU compute using NetworkDirect; measured 28–50 µs round-trip, ~4× lower than UDP Ethernet on the same link. Three Ryzen AI Max+ 395 mini-PCs (128 GB each, 40 Gbps full mesh) ran Qwen3-235B-A22B Q4_K_M at ~18.5 t/s (AMD's own run: 21.98 t/s decode / 117.98 t/s prefill); three/four Intel Core Ultra Series 3 (Panther Lake) 64 GB TB4 PCs hit 49.4/54.2 t/s on GPT-OSS-120B at 1K context. Open-source NetworkDirect provider + llama.cpp fork available; Insider Experimental build "coming soon." — https://techcommunity.microsoft.com/blog/microsoftusbblog/introducing-rdma-over-usb4%C2%AE-on-windows-run-larger-local-ai-models-across-pcs/4574602 (Nov 19, 2026); https://videocardz.com/newz/microsoft-brings-rdma-over-usb4-to-windows-allowing-multiple-pcs-to-run-one-local-ai-model (recovered Nov 20)
-- **AMD × Unsloth Desktop bring XDNA 2 NPU inference to Unsloth** (disclosed Nov 19): first NPU architecture supported by Unsloth Desktop, running via Lemonade + FastFlowLM; demoed Qwen3.6-35B-A3B needing ~28 GB NPU-available shared memory (64 GB RAM recommended), exposed to 100+ agent apps through Unsloth's OpenAI-compatible API. Efficiency play: frees CPU/GPU on Strix/Ryzen AI machines. — https://www.amd.com/en/blogs/2026/unlocking-the-amd-ryzen-ai-npu-for-unsloth-desktop.html (Nov 19, 2026); https://videocardz.com/newz/amd-xdna-2-npus-can-now-run-35b-parameter-ai-models-through-unsloth-desktop (Nov 19, 16:42 GMT)
+- **mradermacher's overnight GGUF ladder** (~45 repos, 22:21 UTC → 12:42 UTC) — higgs-audio-v3 STT v2 (2B and 8B), granite-vision-4.1-4b, MiniMax-Music3, LLaVA-OneVision-2-8B, DaisyRose-27B, ThinkingBomb-gemma-4-26B-A4B, Wukong 4B/9B SLERP merges. https://huggingface.co/mradermacher
+- **GitHub day-0 Inkling 2 Mini ports** (all created in-window, most are skeleton/wip): DGX Spark packages (tonyd2wild NVFP4-DGX-Spark 20:58 UTC, thefullctx sglang-dgx-spark, aarsh21, dedene), `inkling2-mini-strixhalo-gufo` (02:43 UTC, still being pushed at 07:42 UTC), `inkling-2-mini-2x3060`, `Inkling-2-Mini-RTX-5090`, `inkling-2-mini-sm80`, `intel-b70-inkling2-mini-vllm`, `Inkling-2-Mini-2xRTXPro6000`, `inkling2mini-sm120-speculator-fix`. No credible benchmark numbers published yet — treat as ports-in-progress, not results.
+
+## Just missed the window
+
+- **Inkling 2 Mini itself** was released on November 20, before this window: Thinking Machines' post and model card are dated Nov 20, and Unsloth's GGUF repo was created 13:09 UTC (08:09 EST) — roughly 9½ hours before the 17:45 EST window opened. The job's 17:45 Nov 20 run recorded `last_status: error`, so the release was never reported; the ecosystem response above (quants, runtimes, verified hardware) is all in-window.
+
+- **Moore Threads "Lushan" record-VRAM tease.** The claim itself is not an in-window event: the product manager's Bilibili post dates to November 18 and Wccftech reported it on November 20, before this window opened. VideoCardz published a fresh write-up of the teaser artwork at 10:03 UTC today (https://videocardz.com/newz/moore-threads-teases-new-gpu-with-highest-vram-capacity-on-a-consumer-graphics-card), and Forge PC (21 November 2026, https://forgepc.co.uk/news/moore-threads-lushan-gpu-teaser) confirms the November 18 origin and the December 29 MDC 2026 reveal, with no capacity, price or availability confirmed. Treated as out-of-window coverage of an out-of-window disclosure; footnoted once.
 
 ## Coverage notes
-- **Verified items in window: 7** (1 hardware review, 0 new model releases, 2 community/quant items [1 of them an update on today's Hy4 entry], 4 inference-software waves) + 2 once-ever footnotes.
-- Ledger dedupe: 6 candidates suppressed as already reported (Hy4 weights, TRT-LLM v1.3.0 GA, ComfyUI v0.46.0, TrendForce NAND, Qualcomm Dragonfly AI200 Cirrascale, STH Nov 2026 TOP500 recap); 5 suppressed on disclosure-date grounds (arXiv "Language Models Can Rewrite Their Own Weights" v1 Nov 16 despite today's HN front-page surge at 123 points; GPU-Z 2.72; Zen 6 desktop delay rumor; NAND spot-price slide; HP Wildcat Lake mini PC — all Nov 19 disclosures) plus repeat-footnote policy applied to the two missed items above.
-- r/LocalLLaMA community lane unavailable: both anonymous Reddit feeds (new.rss/hot.rss) returned 404 from this host this run — logged, not chased.
-- The Register AI section index failed local fetch twice; homepage sweep done instead, nothing in-window met the bar (Anthropic IPO = market news, out of scope).
-- HN Algolia, GitHub release/PR APIs, HF model API, VideoCardz and TechPowerUp front pages all healthy.
+
+- **Verified items in this edition:** 10 counted units = 6 lead items (Inkling 2 Mini roll-out, Inkling quant stampede, llama.cpp builds, vLLM wave, SGLang wave, TensorRT-LLM), 2 secondary (Ollama preview channel, SilverStone HELA 1350Rz) and 2 also-noted clusters (mradermacher ladder, day-0 GitHub Inkling ports). The Inkling roll-out counts as one event with three milestone units (quant tiers / runtime merges / verified hardware matrix), not three events.
+- **Ledger dedupe:** 5 candidates suppressed as already reported — Microsoft RDMA-over-USB4 (`rdma-over-usb4-preview`, footnoted once 11-20), Unsloth Desktop XDNA2 NPU 35B (`unsloth-desktop-xdna2-npu`, footnoted once 11-20), ServeTheHome DDR6 follow-up (event reported 11-18 as `DDR6-preview`), the 12x V100 NVFP4 lawyer rig (reported 11-20), and the AMD Adrenalin 26.11.2 driver line (reported 11-19). Both "Just missed" footnotes above are new items with no prior `missed:` tag; nothing already footnoted was footnoted again.
+- **Excluded on window:** NVIDIA GeForce hotfix 621.35 (SSD-write fix) published 2026-11-20 22:12 UTC — 33 minutes pre-window; GPD WIN Mini Ultra pricing ($1,699) at 19:51 UTC Nov 20, pre-window (and the underlying product is already on the ledger from 11-16); the Tom's Hardware Optane PMem 200 + 2x RTX 3090 Kimi K3 update (~22:10 UTC, 35 min pre-window, and its parent thread was footnoted once on 11-08 so it cannot be footnoted again).
+- **Dead ends / down lanes:** r/LocalLLaMA was unavailable for the whole run — `search.rss` and `sub … new.rss` both returned HTTP 404 behind a 429 window, so no Reddit community sweep happened (known intermittent lane; not a negative finding). TechPowerUp `review-news.asp` and The Register `/ai_and_ml` returned 404 through the fetcher; wccftech failed TLS verification. HN Algolia returned nothing with traction in-window (Saturday morning). Two search queries returned zero results and were not reworded-retried.
+- **Ledger note:** the 17:45 EST Nov 20 fire errored, which is why yesterday's headline release is arriving as a footnote plus an in-window ecosystem story rather than as a day-0 item.
