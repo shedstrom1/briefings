@@ -1,53 +1,50 @@
-# AI Hardware & Local Models Brief — Nov 22, 2026 (07:45 ET)
+# AI Hardware & Local Models Brief — 2026-11-22 12:45 ET (12:45 fire)
 
-Window: 2026-11-21 17:45 EST → 2026-11-22 07:45 EST (5h, fire 07:45 Sun ET). New-items-only; ledger dedupe applied.
+Window: 2026-11-22 07:45 ET → 12:45 ET (5 hours). This run's headline is inference software, not silicon — no new hardware or silicon events were disclosed in-window.
 
 ## TL;DR
-- New open-weight release: China Telecom's **Xing4.1-Preview** — 285B total / 17B active MoE with MLA+DSA, 1M ctx, Apache 2.0, no benchmarks published (repo created Nov 22, 02:47 EST).
-- **Hy4-GGUF** (Xylolabs): IQ2_XXS tier (219 GB) and the Q6_K tier (~390 GB so far, 8 of 13 shards) landed/were added in-window — a quant update on the Nov 20 Hy4 event.
-- llama.cpp **b12626–b12631** in-window builds: Adreno 850 (Qualcomm) coopmat GEMMs for six quantization types.
-- vLLM in-window: Inkling-2-Mini small-M GEMM on RTX 5090 (sm120); KV-offload and multimodal-processing fixes.
+
+- **llama.cpp: token-aware chat parsing merged (#29307)** — chat parsers can now match `<think>`/`</think>` as tokens, not literal text, so reasoning boundaries for Qwen-family templates parse correctly.
+- **vLLM: anchor-first DFlash/DFlash2 support merged (#68827)** — checkpoint-configured anchor-first layouts (e.g. `DaoCloud/Qwen3.8-27B-DFlash2-Exp`) are no longer rejected at startup; GSM8K acceptance 0.920 / avg length 6.03 (B200).
+- **vLLM: Kimi-K3.1-Pro B300 presets moved to the released DSpark draft** (#69182, #69264) — `gb300_agentx_pd` / `pd_hybrid` / `pd_dep32` / `c1` presets updated to the released draft at revision `e4e6e626`; `gb300_agentx_pd` now points 1/20/48/96/660 on the `kimi-k31-mc-f4c9618` image, with 1P5D/5-draft tokens at 44 and 104.
+- **llama.cpp b12632 / b12633** (published 14:37Z and 14:53Z) — HIP NVFP4 scale halving fix on CDNA3 (#32790, merged in-window) and WebGPU nonzero-clear fix for non-UMA devices (#32727 via b12633).
+- No new hardware, new model releases, or new community spins verified in-window; the report is inference-software-heavy by honest design.
+
+## AI hardware and silicon
+
+**No events in-window.** No new GPU/APU/accelerator launch, recall, firmware or driver branch change, price move, or interconnect/clustering development was disclosed between 07:45 and 12:45 ET. The 07:45 fire already covered the day's hardware-adjacent items (Xing4.1-Preview weights, Hy4-GGUF quant refresh, llama.cpp b12626–b12631, vLLM `#69168` small-M GEMM on SM120); none re-appear here.
 
 ## Model releases
 
-**Xing4.1-Preview (China Telecom / XingChen-AGI)** — Nov 22, 2026 (repo created 02:47 EST)
-China Telecom's Xing4.1-Preview is a new open-weight model in the Xing 4 family: a 45-layer sparse MoE (3 dense layers + 42 MoE layers) with Multi-head Latent Attention plus DeepSeek Sparse Attention, 256 routed experts (1 shared), 8 routed experts per token, 1M maximum context, 131,072 vocab, Apache 2.0. Total parameters ~285B with ~17B active per token; hidden 4096, qk head dim 192 (NoPE 128 + RoPE 64), v head dim 128, MLA q LoRA rank 1536 / kv LoRA rank 512, DSA index heads 64/head dim 128/top-k 2048, YaRN factor 32 (base 32,768), BF16, checkpoint format safetensors (261 shards, ~2.15 GB each ≈ 550+ GB on disk). The repo deliberately refuses to quote third-party benchmark numbers before the technical report — "no scores are quoted before they are confirmed and published through official channels." Lead story.
-Why it matters: The only 285B-class open weights landing this week — a fourth Xing 4-family release with a genuinely different architectural configuration (cross-layer IndexShare) from Xing4.0. The lineage is China Telecom-trained on domestic Ascend silicon per the Nov 17 tech report (285B, 8,192× Ascend 910C, MindSpore). No GGUF tier exists yet.
-Local inference: BF16 is far beyond a 16 GB card — this is GB300/H200-class or heavily quantized work; no consumer-GPU-class GGUF published day-0. Running 17B-active at ~285B total still needs ~550 GB BF16 / ~350–400 GB at Q4-class; not DGX Spark-128GB-class without quantization.
-Source: Hugging Face — XingChen-AGI/Xing4.1-Preview, https://huggingface.co/XingChen-AGI/Xing4.1-Preview (created 2026-11-22T07:47:49Z; config + model card)
+**No new model releases in-window.** The only model-adjacent items surfaced were (a) the in-window llama.cpp merges, (b) in-window vLLM merges, and (c) the already-covered Nov 22 early-morning releases, which the ledger dedupe suppresses (Xing4.1-Preview, 02:47 EST; Hy4-GGUF refresh). Xing4.1-Preview and Hy4 GGUF tier drops were reported at the 07:45 fire and are not re-listed.
 
 ## Community spins and quantizations
 
-**Hy4-GGUF — Q6_K tier + IQ2_XXS updates (Update on Nov 20 Hy4 event)** — Nov 22, 2026
-Xylolabs' imatrix GGUF ladder for Tencent's ~774B/A49B multimodal MoE (tencent/Hy4, hy_v4_vl, Tencent Hy License, cat-weight work only) has grown in-window: the **IQ2_XXS** tier (219.36 GB, 13 parts; WikiText-2 KL 0.888 vs Q4_K_M 0.092, top-1 70.1% vs 90.8%; Chat KL 0.561, top-1 80.7%) was added 2026-11-22, and a **Q6_K** tier (8 of 13 shards in-window, ~390 GB so far, ~495 GB/shard at completion) landed 2026-11-22 11:29Z–13:04Z, plus accuracy-table/chart updates 08:48Z and a files-table fix 05:33Z. Prior tiers stand: Q8_0 818.49 GB (WikiText-2 KL 0.037, top-1 94.6%), Q4_K_M 464.10 GB (KL 0.092 / top-1 90.8%), IQ3_S 328.03 GB (KL 0.324 / top-1 82.8%), with `mmproj-Hy4-BF16.gguf` (2.68 GB) and `mmproj-Hy4-Q8_0.gguf` (1.61 GB); production for llama.cpp requires PR #32517 (not yet merged).
-Why it matters: Hy4 is the largest MoE this job has tracked (~774B/A49B, 1M ctx multimodal); a Q6_K tier at ~390 GB in flight is the first consumer-end-adjacent quant stack for it — Q4_K_M already fits a multi-DGX-Spark-GB10 class box (the 1× 2×GB300-station FP8 recipe was ~775 GB).
-Local inference: 219–818 GB total model — not a consumer-GPU single-card fit; Q4_K_M ~464 GB fits a 4× GB300-class system; IQ2_XXS at 219 GB is the largest single-GPU-class store, still a multi-GPU or DGX Spark-class-plus setup, not a 16 GB card.
-Source: Hugging Face — Xylolabs/Hy4-GGUF, https://huggingface.co/Xylolabs/Hy4-GGUF (created 2026-11-20T10:45Z; Q6_K shards added 2026-11-22T11:29Z–13:04Z; README + accuracy table)
+**No new community spins in-window.** Searches across Hugging Face community repos, r/LocalLLaMA and HN for in-window quant uploads, merges, or fine-tunes returned nothing new beyond what the 07:45 fire reported (Xing4.1-Preview, Hy4-GGUF). No verified HF repo creation time in-window. This is logged as a reporting gap, not a skim of records.
 
 ## Inference software and benchmarks
 
-**llama.cpp b12626–b12631 (in-window builds)** — Nov 22, 2026
-In-window: vulkan memset fix for unaligned ranges on non-UMA devices (#32725, b12626 02:20Z); server fits non-causal batches in one ubatch (#32713, b12627 03:51Z); vulkan supports non-contiguous src in SCALE (#32735, b12628 06:53Z); **OpenCL coopmat GEMM for Adreno 850 (Qualcomm) covering Q4_0, Q5_0, Q8_0, Q4_K, Q5_K, Q6_K** (#32686, merged 08:01Z, b12629 08:43Z); webgpu GDN supports_op check (#32782, b12631 09:03Z). Also in-window post-b12631 ggml fixes: SIGMOID backward pass (#32126), HIP fix for double halving of NVFP4 scales on CDNA3 (#32790), invalid-enum rejection for untrusted GGUF data (#32641), grammar lazy-trigger for bare JSON tool calls (#32497). The Adreno 850 coopmat adds the feature to the Qualcomm/edge inference path — significant for Android/NPU-side experimentation.
-Why it matters: Adreno gains real GEMV/GEMM acceleration across the six most-used quant families — day 1 for Qualcomm-class NPU/SoC deployment experiments; the vulkan fixes unblock non-UMA systems (e.g. multi-GPU discrete + iGPU).
-Local inference: llama.cpp is hardware-agnostic; Adreno coverage targets Qualcomm 8-series / Oryon-class devices running Q4_0–Q6_K; the vulkan/webgpu fixes apply to Windows/Linux discrete + AMD/Intel Vulkan paths.
-Source: GitHub — ggml-org/llama.cpp releases b12626–b12631 + PR #32686, https://github.com/ggml-org/llama.cpp/releases/tag/b12629
+**llama.cpp token-aware chat parsing (#29307) — lead item.** The server's chat parsers could only match text, so tokens like `<think>` / `</think>` could be emitted by a model either as real special tokens or as plain text fragments (e.g. `</` `think` `>`), causing incorrect parsing of reasoning boundaries. The PR adds `p.token()` / `p.until(delimiter)` primitives that match real tokens and falls back to literal matching for unregistered templates. Merged 17:36Z. Local-inference relevance: fixes reasoning-block detection in Qwen-family reasoning traces for Hermes/llama.cpp-based local agents.
 
-**vLLM in-window wave** — Nov 22, 2026
-Merged in-window: **Inkling-2-Mini small-M GEMM improvement on RTX 5090 / sm120** (#69168, merged 2026-11-22T00:09:52Z, author gau-nernst) — a perf fix to the small-M GEMM path for the 26B/3.5B Inkling-2-Mini serving stack; Rust-frontend `allowed_tools` tool-choice support (#68408); KV-offload batch: idle FS worker wake-up avoidance (#68451), ARC prefix retention during running-request eviction (#69110), offload `access_mode` read|write|readwrite (#67961), CPU-tier chunk fit for oversized requests (#66719); multimodal fixes: OpenCUA processor kwargs (#68317), torch.Tensor videos (#69052), NumPy/PIL in Muse Spark Open (#69099), offline LLM API error classification (#68667).
-Why it matters: Inkling-2-Mini is the current frontier local-serving target; the 5090 path is the most relevant consumer-GPU target this window. Offload and multimodal fixes harden the stack behind it.
-Local inference: RTX 5090 (sm120) — small-M GEMM perf; KV-offload fixes apply to CPU-tier vLLM serving on RTX 5060 Ti/PRO 6000 class boxes.
-Source: GitHub — vllm-project/vllm commits/PRs #69168, #68408, #68451, #69110, #67961, #66719, https://github.com/vllm-project/vllm/pull/69168
+**vLLM anchor-first DFlash/DFlash2 (#68827) — lead item.** DFlash/DFlash2 can now accept checkpoints whose `dflash_config` sets `sample_from_anchor: true` (anchor-first layout: `K` queries for `K` draft tokens), which previously died at startup with a ValueError — the public `DaoCloud/Qwen3.8-27B-DFlash2-Exp` was one such checkpoint. Fill-in (`1 + K`) layout is unchanged; DSpark inherits the same logic (it already used the anchor-first layout). GSM8K: acceptance 0.920 / avg 6.03 length, B200, 164 GPU unit tests passed. Local-inference relevance: the Qwen3.8-27B DFlash2 drafter is now deployable on B200-class hardware.
 
-## Also noted
-- llama.cpp releases for b12630 do not exist (b12629 → b12631 jump); b12629 is the newest published build at fire time.
-- r/LocalLLaMA lane was unavailable this run (anonymous 404 + 429 throttle with no app-credentials configured) — logged as a coverage limitation, not a negative finding.
-- HN river had no material in-window AI-hardware/local-model item at meaningful points; top in-window stories were unrelated (e.g. a 181-point data-incident piece on inference providers; a 1-point "Inference Stack" Show HN).
-- SGLang: no release in-window; in-window work is internal (sampling pipeline refactoring, speculative-verify rings, Mooncake transport extraction, AMD mxfp8-moe cleanup) — nothing user-visible beyond the Inkling-2-Mini path already covered by vLLM.
-- ComfyUI v0.46.0 (Nov 18), Ollama v0.40.17 (Nov 10), TensorRT-LLM v1.3.0 (Nov 20), vLLM v0.34.0 (Nov 16), SGLang v0.5.23 (Nov 2): all pre-window; no releases in this window.
+**vLLM Kimi-K3.1-Pro B300 presets (#69182, #69264).** The `gb300_agentx_pd` family now serves the released `Inferact/Kimi-K3.1-Pro-DSpark` draft at revision `e4e6e626` — `gb300_agentx_pd` points 1 (1P1D, 7 draft tokens), 20 and 48 (1P3D, 5), 96 (1P3D, 4), 660 (4P5D, 5) with Mooncake store tail cleanup, prefix-match-unit 512 on prefill, BF16 indexer logits, `deep_select` indexer top-k on prefill; `gb300_agentx_pd_hybrid` (256, 448), `gb300_agentx_pd_dep32` (960, 1P1D) and `gb300_agentx_c1` (1, concurrency-1) all serve the released draft. The `gb300_agentx_pd` recipe aligns points to InferenceX#5175 (1P5D marginal-point set) and the DEP/hybrid points to InferenceX#5109. Local-inference relevance: B300-class capacity-first deployments of K3.1-Pro; no direct DGX Spark / RTX-class fit today.
+
+**llama.cpp b12632 / b12633 (14:37Z / 14:53Z).** b12632: HIP fix for double-halving of NVFP4 scales on CDNA3 (#32790). b12633: nonzero-clear for non-UMA devices (WebGPU, #32727). Both are correctness fixes; neither is a feature release.
+
+**Also noted (in-window, low-signal):**
+- llama.cpp #32398 — `/models/sse` on single-model mode (merged 16:52Z).
+- SGLang in-window merges — #52226 (LoRA snapshot fix on offloaded base), #52220 (six more hot Triton wrappers replayed for diffusion), #52074 (zero-token guard in `grouped_gemma_rmsnorm`). Diffusion/kernel polish, no headline demo.
+- llama.cpp #29307 companion — token-aware parser extended by new grammar; covered in the lead item.
+
+## Just missed the window
+
+- None footnoted this run. The open in-window PRs — e.g. vLLM #69147 (SM120 nosync MegaMoE MXFP4 backend, still a draft) and SGLang #52400 (hunyuan_v4_flash length-aware IndexPool decode top-k) — are not merged and were not reported as shipped.
 
 ## Coverage notes
-- Ledger dedupe: Xing4.1-Preview, Hy4-GGUF (Q6_K update), llama.cpp in-window builds and vLLM in-window wave were checked against reported.md — no prior line matches; Hy4 is listed as an update on the Nov 20 ledger entry, not a new item.
-- Reddit/r/LocalLLaMA: lane unavailable (anonymous 404, no credentials) — not searched further.
-- HN alive but low-yield; search backend returned no in-window outlets beyond these.
-- HN Algolia via terminal worked; HF API worked; GitHub API worked; web_extract/search were weak this run.
-- Verified items: 4 (1 new model release + 1 update + 2 inference-software waves). Deliberately thin — five hours, thin news cadence, no padded items.
+
+- Window: 2026-11-22 07:45 ET → 12:45 ET (fire 12:45 EST).
+- Verified in-window items: 4 substantive (llama.cpp token-aware parsing; vLLM anchor-first DFlash/DFlash2; vLLM Kimi-K3.1-Pro B300 recipe updates: #69264/#69182; llama.cpp b12632/b12633). 1 also-noted cluster (SGLang diffusion/kernel batch + llama.cpp #32398). No hardware/silicon/model-release/community-spin items verified in-window — this is a software-heavy window, not a skipped search.
+- Ledger dedupe: 07:45-fire items (Xing4.1-Preview weights, Hy4-GGUF tier updates, llama.cpp b12626–b12631, vLLM #69168) suppressed as already reported; zero in-window events were suppressed as repeats this run.
+- Search-backend instability (DuckDuckGo/DDGS intermittent \"No results\") cost multi-angle search; coverage relied on GitHub release/PR metadata for the in-window PRs and is noted as the limiting factor. No candidates were found beyond the in-window merges listed above.
+- 07:45-reported Xing4.1-Preview and Hy4-GGUF refresh remain on the ledger; no double-listing.
