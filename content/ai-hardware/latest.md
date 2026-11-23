@@ -1,71 +1,63 @@
-# AI Hardware & Local Models Brief — 2026-11-22 12:45 → 17:45 ET
+# AI Hardware & Local Models Brief — Nov 23, 2026 (07:45 ET)
 
-Window: 2026-11-22 12:45 ET (17:45 UTC) → 2026-11-22 17:45 ET (22:45 UTC). Fire: 2026-11-22 17:45 EST.
+Window: 2026-11-22 17:45 ET → 2026-11-23 07:48 ET (~14h).
 
-## TL;DR
-- vLLM merges day-0 support for NVIDIA's Nemotron Shortcut — text, image and video, with SDSA sparse attention, a gated delta-product mixer, and a shortcut MoE (#68198, merged 21:04 UTC).
-- SGLang adds a single-server mode for MiniMax-H3 (`--model-variant fl2va+ref2va`), holding the shared 62.1 GiB text encoder once instead of two servers (#52023, merged 18:39 UTC).
-- llama.cpp fixes an Inkling 2 Mini host-expert-copy corruption (--n-cpu-moe) and enables the official Inkling 2 tokenizer's ignore_merges (#32807, #32799).
-- TensorRT-LLM: Gemma4-E4B multi-token prediction on SM120 via XQA (#22515) and a breaking Qwen-VL mRoPE fix (#22328).
-- Community spins: a from-scratch Metal engine for Inkling 2 Mini on 24GB M2 (HN's day-0 "Gall") plus an Inkling-2-Mini quant stampede (NVFP4/heretic/MLX).
-
-## Inference software and benchmarks
-
-### vLLM adds Nemotron Shortcut day-0 support — NVIDIA
-Author/source: vLLM-project PR #68198 (GitHub, merged 21:04 UTC 2026-11-22). Nemotron Shortcut lands as one self-contained package under `vllm/models/nemotron_shortcut/` (~7,610 lines, ~1,913 test lines), following the per-model layout of `kimi_k3/` and `glm5next/`. The model combines SDSA sparse attention (an indexer selects each query's Top-K keys while an MQA core attends to them), a Gated DeltaProduct (GDP) mixer on FlashInfer's GDP kernels, soft-clamped squared-ReLU MLPs, and a shortcut-MoE (routed experts read the block input, so dispatch can start before the mixer runs). Text, image and video inputs; TP/PP/DP+EP; BF16, MXFP8 and NVFP4 weights; BF16/FP8/NVFP4 (pending FlashInfer bump) KV; MTP draft head. Checkpoint config and image processor are loaded with `--trust-remote-code` — the checkpoint's own, and vLLM adds no config of its own. Validation: 1496 unit tests (1 known failure on main) + 165/1 on the per-model suite with FlashInfer 0.7.4 on one 4x GB300 node.
-Why it matters: NVIDIA's next Nemotron generation is a genuinely new architecture class — sparse attention plus a gated mixer plus an MoE — and day-0 runner support means it will run out of the box on GB300/GB200-class stacks and, with appropriate quantizations, on consumer/edge hardware.
-Local inference: Intended target is datacenter H200/GB300-class serving (BF16/MXFP8/NVFP4); the MoE and sparse-attention design implies it should also fit consumer cards at aggressive quant levels (NVFP4), though no single-GPU benchmarks yet.
-Source: https://github.com/vllm-project/vllm/pull/68198
-
-### SGLang: one MiniMax-H3 server for fl2va + ref2va — MiniMax
-Source: SGLang-project PR #52023 (GitHub, merged 18:39 UTC 2026-11-22). MiniMax-H3 and Pika-H3-Flex split tasks across two checkpoint partitions — `FL2VA/` (t2va and fl2va) and `Ref2VA/` (ref2va). The partitions share everything except the transformer (all 65 non-transformer files and config.json hash identically; text encoder 62.1 GiB, video VAE 9.7 GiB, audio VAE 0.56 GiB, tokenizer/processor; each transformer is 61.73 GiB). New `--model-variant fl2va+ref2va` loads both DiTs in one process, downloads only the partitions actually needed (Ref2VA fetches its transformer on demand), routes reference requests to the Ref2VA DiT and the rest to FL2VA, applies adapters per-partition (`set_lora` with `target="transformer"` / `"transformer_2"`), and admits t2va/fl2va/ref2va from one server. Automatic placement: ≥120 GiB free + the DiT weight (120 + 61.73 = 181.7 GiB) keeps every DiT resident; ≥120 GiB falls back to component offload; otherwise startup fails with explicit instructions. Validated on 2x H200.
-Why it matters: it halves the GPU memory needed to serve all three MiniMax-H3 tasks — one process holds 62.1 GiB of shared text encoder, VAEs and tokenizer once instead of two servers duplicating it, and the two 61.73 GiB DiTs share one VRAM pool instead of loading twice.
-Local inference: Server-class (2x H200-class) diffusion serving; requires ~181.7 GiB of free VRAM per GPU to keep both DiTs resident, otherwise uses component offload.
-Source: https://github.com/sgl-project/sglang/pull/52023
-
-### TensorRT-LLM: Gemma4-E4B MTP on SM120 + Qwen-VL mRoPE fix
-Source: NVIDIA TensorRT-LLM PR #22515 (merged 19:14 UTC) and #22328 (merged 19:27 UTC). #22515 adds Gemma4-E4B multi-token prediction (MTP) using XQA on SM120 — previously, Gemma4 MTP with the shared-KV assistant failed at startup on FlashInfer without trtllm-gen decode ("FlashInfer draft metadata views require the trtllm-gen decode backend"), which also prevented the overlap scheduler; XQA now reads KV lengths on the device so the overlap scheduler works. #22328 is a breaking fix: Qwen2.5-VL and Qwen3-VL image embeddings must now be passed with `{"mm_embeddings": tensor, "image_grid_thw": [1, h, w]}`; a bare image position raises an error.
-Why it matters: Gemma 4 on SM120 (RTX 50-series / GB10-class consumer and workstation silicon) goes from no-MTP to working MTP with overlap scheduling, and Qwen-VL image users will hit the breaking API change on upgrade.
-Local inference: SM120-class consumer/workstation GPUs (~RTX 5080/5090 class) and the GB10 sibling; the fix targets Qwen2.5-VL/Qwen3-VL serving on those parts.
-Source: https://github.com/NVIDIA/TensorRT-LLM/pull/22515 · https://github.com/NVIDIA/TensorRT-LLM/pull/22328
-
-### llama.cpp: Inkling 2 Mini host-expert copy fix + ignore_merges
-Source: ggml-org/llama.cpp PRs #32807 (merged 19:04 UTC), #32799 (merged 18:52 UTC), #32815 (merged 21:04 UTC), #32697 (merged 20:22 UTC). #32807 fixes corruption when host tensors are copied for reuseable expert tensors — minimal reproducer: `inkling2_loop` with `--n-cpu-moe` emits "!" (token 0) forever after a batch of 32+ tokens; `--no-op-offload` masks it. #32799 enables `ignore_merges: true` for the Inkling 2 official tokenizer (337 vocab entries cannot be built by merge rules). #32815 speeds up the shared mtmd audio FFT (iterative radix-2 stages + batched odd-size DFT, FP order preserved). #32697 fixes a qwen3a audio tail bug.
-Why it matters: anyone running Inkling 2 Mini on host/CPU-moe path will have seen silent token corruption; this fixes it on merge.
-Local inference: laptop/consumer-class hardware — Inkling 2 Mini (~18GB-class weights) on 32GB-class Macs and Windows hosts; the fixes directly affect the `--n-cpu-moe` offload path.
-Source: https://github.com/ggml-org/llama.cpp/pull/32807 · https://github.com/ggml-org/llama.cpp/pull/32799
-
-## Community spins and quantizations
-
-### Gall — from-scratch Metal engine for Inkling 2 Mini on a 24GB M2
-Source: Show HN (story_50604195, ~16:00–17:00 UTC 2026-11-22), repo github.com/ltrgoddard/gall (pushed 21:38 UTC). The author needed an Inkling 2 Mini-class local agent setup that fits a 24GB M2 MacBook Air (Thinking Machines gives 32GB as the minimum for Mac; Q3 quant was not workable in llama.cpp even with patches). Gall is a from-scratch Metal inference engine for Inkling 2 Mini with strictly one-model-at-a-time loading, a KV-cache save/unload so RAM stays at ~50MB between calls (fast reload), and a menu-bar app with prefill/generating status. Built with ~a week of Fable allowance plus a sprinkling of Astra. 5 points, 1 comment.
-Why it matters: proof-of-concept that the Inkling-2-Mini class can be run comfortably below the official minimum RAM via a purpose-built on-device engine.
-Local inference: 24GB M2 (12GB-class streaming-class GPU); the author's normal setup is ~2,800-token system prompt + tool list and near-instant responses.
-Source: https://news.ycombinator.com/item?id=50604195
-
-### Inkling-2-Mini quant stampede (day 4+)
-Source: Hugging Face API in-window (2026-11-22 18:50–22:15 UTC). The day-0 wave has moved well past Unsloth/bartowski into community and boutique repos: nathaninline/Inkling-2-Mini-NVFP4-Basalt (3 likes, 19:40 UTC), codegood/Inkling-2-Mini-GGUF (19:52 UTC), Losew/Inkling-2-Mini-Heretic-GGUF (20:56 UTC), rmaaorg/Inkling-2-Mini-NXS (19:42 UTC), robfon19/Inkling-2-Mini (21:59 UTC), netprojects/Inkling-2-Mini-MLX-2bit-mixed (19:27 UTC), Tdamre/Inkling-2-Mini-ML-Knowledge-SWE-GGUF (22:15 UTC), TechnoBaptist/Inkling-2-Mini-heretic (18:53 UTC), moonbox-dev/SeedVR2-3B-GGUF (22:45 UTC).
-Why it matters: shows the quant/recipe ecosystem around the 18GB Inkling 2 Mini weights is still moving daily; the NVFP4/heretic/MLX tiers are the ones that move a model onto 24GB-class Apple Silicon and RTX 50-class cards.
-Local inference: 24GB-class Apple Silicon Macs and 16-32GB consumer GPUs; a Basalt/NVFP4 repack targets the ~24GB unified-memory class.
-Source: https://huggingface.co/nathaninline/Inkling-2-Mini-NVFP4-Basalt
+**TL;DR**
+- z.ai launches GLM-5.4, its first Loop Transformer flagship — 750B-scale, 28 of 78 layers run twice with shared weights, 1M context, vision added; closed (Coding Plan rollout Nov 23), open weights planned after safety hardening.
+- Community quant ladder for Inkling 2 Mini: ji-farthing's ik_llama.cpp-native NVFP4/IQ4/IQ3/IQ2/IQ1 GGUFs (8 files, 6.5–19.0 GB), measured on GB10, created 02:24 ET today.
+- Inference-software wave: llama.cpp b12647–b12651 (inkling parser, WebGPU ROLL, OpenCL xielu, Vulkan-friendly cleanups); vLLM #68685 backs Engram NVLink pool shards with Grace EGM (4x GB200, 188.8 GiB moved off HBM); SGLang ROCm/NPU/Intel-Arc fixes.
+- No new silicon, GPU, or pricing news in the window.
 
 ## AI hardware and silicon
-Nothing in-window. No new GPUs, NPUs, accelerators, memory, or pricing stories were verified between 12:45 and 17:45 ET. The Nov 22 hardware landscape is quiet — the hero banner stays anchored on the day's lead AI-software story.
+Nothing new in this window: no new GPU/accelerator launches, price movements, or silicon announcements beyond the software notes below.
+
+## Model releases
+### GLM-5.4 — z.ai's first Loop Transformer flagship
+- **Event date: November 23, 2026** (released to all GLM Coding Plan users; z.ai blog post Nov 23)
+- GLM-5.4 reuses 28 layers of the GLM-5 base and runs them twice per forward pass with shared weights — ~750B scale, ~36% more effective depth than the 750B non-looped equivalent at zero additional parameters. Intelligence reportedly comparable to 2T–3T parameter models. Z.ai converted a pre-trained base through continued training rather than training a looped model from scratch (scratch-trained loops trail unshared layers at equal pre-training compute), and adds independent per-token gates for stable loop-to-loop updates plus a hybrid KV cache (second pass reuses sparse entries from the first; a local sliding window keeps newly generated entries) plus reuse of the first pass's sparse-attention indices. A 30B controlled run showed ~10% extra training compute for the looped version and ~10–14% shorter average outputs, with the largest gains in math, scientific reasoning, and long-context tasks. Throughput reported up to 200 tok/s off-peak (70–80 at peak), 1M context. Closed model: API access and open weights planned after a safety evaluation — not locally runnable today.
+- **Why it matters:** it is a new inference-architecture trade — looped depth at roughly one-third of the parameter cost — that any future open-weight GLM family will have to budget for on dense/MoE GPUs. It also changes the mental model for hardware sizing: a ~750B model with reused layers is not the same as a ~1.5T dense one, and the KV-cache trick materially cuts long-context deployment cost (Z.ai reports nearly identical results to recomputing indices per pass).
+- **Local inference:** not runnable locally — no open weights, no quants; 750B-class closed API. Any future open-weight GLM-5.4 would plausibly land at GB300-class / multi-GPU scale, not on single RTX 5090-class hardware; a loop-aware runtime is required (standard llama.cpp/vLLM assume a single pass per layer).
+- Sources: z.ai blog (https://z.ai/blog/glm-5.4), unite.ai (https://www.unite.ai/z-ais-glm-5-4-uses-iterative-depth-without-adding-parameters/, 2026-11-23), aiweekly.co (https://aiweekly.co/alerts/zai-ships-glm-54-a-750b-loop-transformer-that-runs-28-of-78-layers-twice, Nov 23 2026), HN story_50609685 (259 pts, 113 comments).
+
+## Community spins and quantizations
+### ji-farthing/Inkling-2-Mini-ik-llama-GGUF — NVFP4/IQ ladder for Inkling 2 Mini
+- **Event date: November 23, 2026** (repo created 07:24 UTC = 02:24 ET)
+- 8 files, all served from ik_llama.cpp (not llama.cpp) @ main 1180df7 or later with Inkling 2 Mini support (#2967), text-only (no vision tower): NVFP4-FP8B128 19.0 GB (5.83 bpw, KLD 0.0024, 97.8% same-top, 8.201 PPL), IQ4_KS 14.3 GB (4.38 bpw, KLD 0.0111), IQ4_KT 13.4 GB (4.12, 0.0179), IQ3_KS 11.7 GB (3.58, 0.0307), IQ3_KT 10.7 GB (3.27, 0.0357), IQ2_KS 8.6 GB (2.65, 0.1047), IQ2_KT 7.8 GB (2.40, 0.1188), IQ1_KT 6.5 GB (1.99, 0.2008, 81.9% same-top). KLD/same-top vs BF16 transformers on wikitext-2, 16×512 tokens, measured on NVIDIA GB10 (`-ngl 99 -fa on`); IQ1_KT gets a custom attention/embedding mix to avoid the KLD 0.357 default.
+- **Why it matters:** an NVFP4-family ladder that reaches a 1.99 bpw point (6.5 GB, 81.9% same-top) — a leaner alternative to the published UD/IQ tiers for Inkling 2 Mini, and fully documented with KLD so the user can pick a tier by quality budget rather than file size.
+- **Local inference:** GB10 (DGX Spark class, 128 GB unified); IQ2_KT at 7.8 GB is squarely in 8–16 GB card territory via CPU offload (`-ot exps=CPU`), Q4_KS at 14.3 GB fits a 16 GB card with headroom.
+- **Source:** Hugging Face (https://huggingface.co/ji-farthing/Inkling-2-Mini-ik-llama-GGUF, indexed 2026-11-23T07:24:52Z).
+
+## Inference software and benchmarks
+### llama.cpp b12647–b12651 (Nov 23)
+- **Event date: November 23, 2026** (b12647 03:18Z → b12651 08:52Z)
+- Eleven in-window commits, headline: chat `inkling` parser/grammar improvement (#32833), WebGPU `ROLL` support (#31887, b12651), OpenCL `xielu` + q4_k coop-k c8 GEMM for spec verify (#32716), LFM2.5-VL template-detection fix (#32843), generic `ggml_backend_tensor_memset` fallback (#32574), cmake KleidiAI vendoring (#32605) and MATH_LIBRARY check fix (#32864), UI cancel-button for model load (#32225), GDN snapshot narrowing, and a Qwen3.6-27B test-snapshot refresh (#32845).
+- **Why it matters:** ROLL support closes a missing-op gap for WebGPU; the q4_k spec-verify GEMM is a quiet throughput win for spec-decode on Adreno/OpenCL-class devices. Incremental, no breakage — a v1.0.0-line maintenance wave.
+- **Local inference:** any platform llama.cpp supports — CPU, CUDA, Metal, Vulkan, Adreno/Hexagon, SYCL.
+- **Source:** GitHub ggml-org/llama.cpp releases/commits.
+
+### vLLM — Engram pool backed by Grace EGM; Inkling 2 Mini recipe move
+- **Event date: November 23, 2026** (#68685 merged 07:55Z, #69296 merged 00:29Z)
+- #68685 backs DeepSeek Engram NVLink pool shards with Grace Extended GPU Memory (EGM): on 4x GB200, DeepSeek-V4.1-Flash's two Engram tables occupy 47.21 GiB of HBM per GPU when sharded — placement exhausted memory while starting two DEP2 prefill engines. Moving 188.83 GiB of table storage from HBM to Grace memory lets one shared copy serve both engines; 4 GiB KV per rank, p50/p95 553/719 ms (vs 563/735 with host copies) at 16K input, concurrency 4/engine; Qwen FP8 PLE can use the same backing over NVLink (#68684, also in window). #69296 moves the Inkling 2 Mini recipe from the dedicated `vllm/vllm-openai:inkling-2-mini` image to the nightly image (matches the Inkling 2 Small pattern). Also in window: #69193 HY4 Flash CUDA platform-checks restore, #69229 private worker-local LoRA tensor loading.
+- **Why it matters:** Grace EGM backing is the first engram-pool tier that frees HBM without host-NUMA copies — a real capacity win for 2×DEP2-scale serving on NVL72-class boxen.
+- **Local inference:** GB200-class NVLink clusters; Qwen FP8 PLE and DeepSeek Engram-style table-offload paths only.
+- **Source:** GitHub vllm-project/vllm, PR #68685, #69296.
+
+### SGLang — ROCm/NPU/Intel-Arc fixes and a determinism launch fix
+- **Event date: November 23, 2026**
+- #52234 ROCm qknorm: fall back from the fused QK-norm kernel when norm weights differ in dtype; #52438 draft megakernels with an unmet spec should decline instead of refusing the server; #50968 NPU DSA-TAIL PD-transfer + decode-retraction; #52069 Arc Pro B70 diffusion perf baseline (CI-picked); #47410 fixed number of Triton decode blocks for large split budgets (deterministic launch).
+- **Why it matters:** each is a small robustness/perf patch for the consumer-side stack — ROCm (AMD), NPU (Ascend), Intel Arc — rather than headline-scale changes.
+- **Local inference:** ROCm/NPU/Intel Arc targets; no CPU/desktop-consumer impact.
+- **Source:** GitHub sgl-project/sglang commits.
 
 ## Also noted
-- vLLM #69163 — Kimi-K3.1-Pro MI355X AgentX recipe aligned with InferenceX (#5119), switching the lane to the `kimi-k31-712d9eb` image and the released DSpark draft (merged 21:11 UTC). Update on the Nov 22 Kimi-K3.1-Pro recipe entries.
-- vLLM #69168 was already reported at the 07:45 fire; the smaller-M GEMM on RTX 5090 (SM120) work is in the same stack.
-- SGLang #52225/#52224/#52216/#51734 — MiniMax-H3 diffusion performance work merged ~18:37 UTC (cuDNN attention kernels built in warm-up, VSA-H3 no request-path recompiles, request-path timing, CUDA partition plan check, config fake platform).
-- llama.cpp #32819 (skills tokenizer flags, merged 17:59 UTC), #32792 (offset pagination for grep_search, merged 18:00 UTC).
-- HN: Localcode (story_50604540) — "Agentic coding. Local models. On your Mac." via one command; repo mjwsolo/localcode pushed 21:12 UTC; 1 point.
-- HN: TSMC acquires 0.03% stake in Anthropic for $500M — financial story, no hardware/local-AI angle; not reported here.
+- llama.cpp #32799 Inkling 2 official tokenizer ignore_merges and #32807 host-expert copy-corruption fix for --n-cpu-moe (Nov 22 18:52Z / 19:04Z, ledger Nov 22 17:45 fire; already listed 2026-11-22).
+- vLLM #69193 / #69229 noted above.
 
 ## Just missed the window
-None verified this run. The most tempting near-miss candidate (HN story_50603845, "A Beginner's Guide to Local AI with Inkling, Qwen, and Unsloth", 73 pts, ~17:00 UTC) is a blog post, not an event — not reported.
+- aci-cpp (Actual Computer's llama.cpp fork): published Nov 18 — aci-cpp answers follow-ups 17–28% faster on DGX Spark (TTFT 0.78s vs 0.97s @64K), 46% faster decode on M3 Ultra over previous client build, 6–25% more total throughput on DGX Spark serving, 8/10 workloads ahead of llama.cpp v1.0.0. Re-surfaced on HN Nov 23 (story 50609848). Footnoted once — not re-listed.
 
 ## Coverage notes
-- Window: 2026-11-22 12:45 → 17:45 ET (5h). Reddit (r/LocalLLaMA) anonymous feed returned HTTP 404 for sub feed and search; the Reddit lane was skipped rather than re-tried, per the two-strike rule. Hugging Face trending page and web_search both returned empty/irrelevant results today; coverage relies on GitHub merged-PR feeds, HN Algolia, and the HF API.
-- Ledger dedupe: zero candidates were suppressed as already-reported this run — the window is tight and every verified item above is new to the ledger.
-- Verified items: 6 substantive (1 vLLM model-support, 1 SGLang diffusion, 1 TRT-LLM batch, 1 llama.cpp fix cluster, 1 community engine, 1 quant wave) + 2 minor (HN Localcode, also-noted cluster).
-- No-hardware-no-item is correct this run: no verified AI-hardware or pricing story landed inside the window.
-- Reddit lane down; everything else the lanes walked was healthy.
+- Verified substantive items: 5 (GLM-5.4; Inkling-2-Mini ik_llama GGUF; llama.cpp b12647–b12651 wave; vLLM #68685/#69296 wave; SGLang cluster).
+- Reddit r/LocalLLaMA lane is UNREACHABLE today (search.rss 404 on this host — not a negative finding, per Reddit lane rules; login-less fallback disabled). HN was used for community-signal instead.
+- Dedupe: ledger suppressed ~3 candidates in-window (aci-cpp HN re-surface Nov 23 → footnote-once; Inkling 2 Mini techzine.eu re-coverage Nov 23 12:33 PST → pre-window Nov 20 event; Qwen4-Max Together AI serverless listing Nov 21 → pre-window Nov 16 event). The 2026-11-22 17:45 ledger already covered 2026-11-22's in-window llama.cpp/vLLM/SGLang/HF uploads — nothing from that ledger repeated here.
+- No fresh GPU/silicon, pricing, or DGX/GB300 hardware news in this window — honestly empty.
