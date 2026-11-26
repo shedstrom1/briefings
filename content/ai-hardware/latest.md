@@ -1,108 +1,67 @@
-# AI Hardware & Local Models Brief — Nov 26, 2026, 08:45 EST (07:45 fire)
+# AI Hardware & Local Models Brief — midday edition
 
-**Window:** 2026-11-25 17:45 ET → 2026-11-26 08:45 EST (previous fire → now). New-items-only; deduped against the running `reported.md` ledger.
+**Window: 2026-11-26 08:45 → 13:24 EST** (previous fire → now). New items only; every entry deduped against the reported ledger.
 
-**TL;DR**
-- **TSMC's A14 1.4nm PDK v0.9 is open for design-in** with Boost Cells promising +14% performance or -23% power over N2P — risk production H2 2027, mass production H2 2028.
-- **Intel's "Razor Lake-AX" halo mobile chip leaked** with empty LPDDR5X memory pads the OEM must populate (32–128GB), positioned against Ryzen AI MAX 400 and RTX Spark N1X.
-- **Kioxia's GP2 "super high IOPS" SSD** delivers 18M random-read IOPS / 28 GB/s as a GPU-direct HBM expansion tier — flash acting as cheap capacity behind HBM.
-- **GigaChat 4 37B-A4B open weights landed** with day-0 GGUF and SGLang support: 37B/4B-active MoE + DeepSeek Sparse Attention + Gated DeltaNet, 1M context.
-- **Overnight inference-stack wave**: llama.cpp gained Hexagon 2.0 int-HMX and Inkling-2-Mini DFlash2; vLLM pushed a security-hardening batch plus ROCm RDNA4 paths; SGLang added GigaChat 4 and one-token PD answers.
-
----
+- **vLLM's daytime merge wave adds GPU-Direct-Storage KV offload and a sparse-disk RL weight-transfer backend** — both change what fits on a single box.
+- **llama.cpp lands a broad CUDA fusion of the Inkling 2 looped-model path plus a Windows RDNA1 Vulkan fix**, in a five-commit daytime wave.
+- **SGLang adds day-0 MAGI-2-preview diffusion support and Lark grammars via xgrammar 0.2.9.**
+- **A detailed community benchmark of the AMD RDNA-specific llama.cpp fork (llama-cpp-rdna-boosts) hit HN's front page**, reporting ~35→55 tok/s decode and ~700→1300 tok/s prefill on an R9700 eGPU.
+- **Two in-window quantization drops**: an NVFP4 document-parsing VLM at ~8.4GB, and a 27B biomedical imatrix ladder down to 7.8GB.
 
 ## AI hardware and silicon
 
-**TSMC declares A14 (1.4nm-class) PDK v0.9 ready for design-in**
-*Event date: 2026-11-26 (Tom's Hardware, 08:00 EST; reported at the 2026 Europe OIP Ecosystem Workshop).*
-TSMC opened version 0.9 of its A14 process design kit to customers and detailed "Boost Cells" in its NanoFlex Pro standard-cell architecture. Placed on critical paths, Boost Cells deliver +14% speed at equal power or -23% total power at equal speed versus N2P with NanoFlex; against baseline N2P, TSMC claims +50% energy efficiency and +22% logic density. Cadence and Synopsys both completed full-flow certification on an Arm Cortex-A725 core; Siemens EDA follows in Q4. A14 risk production is H2 2027, mass production H2 2028, with A13 high-volume in H2 2029.
-**Why it matters:** This is the foundry checkpoint where the next generation of AI accelerators moves from paper to real tape-outs — the cell-level perf/W numbers are what training and inference silicon will be built on late this decade.
-**Local inference:** No direct local impact; A14-part accelerators are 2028-and-later datacenter/edge silicon, not a fit for a DGX Spark or RTX 5060 Ti 16GB today.
-Source: Tom's Hardware — "TSMC's A14 1.4nm-class node is ready for chip design" (2026-11-26 08:00 EST): https://www.tomshardware.com/tech-industry/semiconductors/tsmcs-a14-1-4nm-class-node-is-ready-for-chip-design-boost-cells-promise-14-percent-performance-uplift-or-23-percent-power-cut-over-n2p
-Source (primary): TSMC A14 technology page: https://www.tsmc.com/english/dedicatedFoundry/technology/logic/l_A14
-
-**Intel "Razor Lake-AX" halo mobile chip pictured with empty LPDDR5X pads**
-*Event date: 2026-11-26 (TechPowerUp, 01:42 EST; originating VideoCardz leak).*
-Photos of Intel's Core Ultra "Razor Lake-AX" show a memory-on-package (MoP) design with four bare LPDDR5X pads that the notebook OEM — not Intel — must populate during assembly, a deliberate hedge against memory-supply price volatility. Supported configurations run 32–128GB, putting it directly against AMD's Ryzen AI MAX 400 "Gorgon Halo" and NVIDIA's RTX Spark N1X in the high-memory AI-laptop segment. Intel is expected to publish a QVL of supported memory chips.
-**Why it matters:** Whoever solders the LPDDR5X controls cost and config — with DRAM prices rising, shifting that risk to OEMs changes the price/availability equation for big-unified-memory local-AI laptops.
-**Local inference:** Targets the 128GB unified-memory laptop class (Strix Halo / RTX Spark territory); not a discrete-GPU fit, but a direct alternative for 100B-class local models on the go.
-Source: TechPowerUp — "Intel 'Razor Lake-AX' MoP Chip Pictured with Four LP5X Memory Pads" (2026-11-26 01:42 EST): https://www.techpowerup.com/
-
-**Kioxia GP2 SSD: 18M IOPS, 28 GB/s GPU-direct flash as an HBM expansion tier**
-*Event date: 2026-11-26 (TechPowerUp, 06:03 EST; Kioxia press release dated 11-25).*
-Kioxia launched the GP2 Series, the second generation of its "super high IOPS" SSDs optimized for direct GPU access. It delivers over 18 million random reads at 512-byte blocks (nearly double its predecessor GP1) and up to 28 GB/s sequential — enough to saturate a PCIe 6.0 x4 link. The design exposes flash as an extra memory tier directly addressable by the GPU, expanding effective HBM capacity for large graph neural networks and other capacity-hungry AI workloads far more cheaply than adding HBM or DRAM.
-**Why it matters:** It's another concrete "memory wall" workaround — cache/offload tiers like this are what let oversized models and KV caches run on a fixed GPU budget.
-**Local inference:** A datacenter/workstation accelerator companion (PCIe 6.0 class), not a retail GPU upgrade; the same offload principle mirrors CPU-RAM/SSD expert streaming on consumer rigs.
-Source: TechPowerUp — "Kioxia Announces GP2 Super High IOPS SSD Series" (2026-11-26 06:03 EST): https://www.techpowerup.com/355234/kioxia-announces-gp2-super-high-iops-ssd-series
-Source (primary): Kioxia newsroom: https://americas.kioxia.com/en-us/business/news/2026/ssd-20261125-2.html
-
----
+No new hardware or silicon disclosure originated inside this window. The two stories that dominated the morning river — Kioxia's GP2 high-IOPS SSD and Intel's Razor Lake-AX memory-on-package leak — were both first disclosed before the 08:45 window start and were already carried in the previous edition; they are not repeated here. A separate report that NVIDIA ordered partners to halt AI server shipments to Malaysia, Singapore, Thailand and Indonesia also broke in the pre-window morning hours (see footnote).
 
 ## Model releases
 
-**GigaChat 4 37B-A4B open weights with day-0 GGUF and SGLang support**
-*Event date: 2026-11-26 (HF GGUF repo dated 11-26; SGLang support merged 02:48 UTC).*
-Sber's GigaChat 4 37B-A4B is a compact hybrid MoE: 37B total / 4B active per token, 192 routed experts (8 active) plus one shared, interleaving Gated DeltaNet and DeepSeek Sparse Attention in a 3:1 ratio with a 1,048,576-token context. A single checkpoint covers both instant and reasoning modes; speculative decoding works via a recurrent EAGLE-3-style MTP drafter or a separate five-layer DFlash2 drafter. Publisher benchmarks put it ahead of Qwen3.6-35B-A3B on LiveCodeBench v6 (85.0), SWE-bench Verified (70.8) and IFBench (75.0). BF16, FP8 and GGUF variants shipped alongside an SGLang cookbook.
-**Why it matters:** It packs a 432B-class GigaChat 3.5 Ultra's coding performance into a 37B MoE that a single workstation GPU can hold — a strong new open-weight entry in the "small active params, huge context" lane.
-**Local inference:** ~20–24GB at 4-bit, or ~12–14GB at 3-bit; a 16GB RTX 5060 Ti needs a 3-bit quant or CPU expert offload, while 24GB+ cards run Q4_K_M with the 1M context via DSA.
-Source: HF — ai-sage/GigaChat4-37B-A4B-GGUF (2026-11-26): https://huggingface.co/ai-sage/GigaChat4-37B-A4B-GGUF
-Source: SGLang PR #50613 "gigachat4: Add GigaChat 4 support" (merged 2026-11-26 02:48 UTC): https://github.com/sgl-project/sglang/pull/50613
-
----
+No new open-weight base model first went public in this window. The only model-family activity was community quantization work on existing bases, covered below.
 
 ## Community spins and quantizations
 
-**mradermacher imatrix quants of Persistent-Exploration (Qwen3-VL-8B RL vision model)**
-*Event date: 2026-11-26 (HF repo updated in-window, ~08:50 EST).*
-mradermacher published a full i1-imatrix ladder of `gsarch/Persistent-Exploration-Qwen3VLi`, a Qwen3-VL-8B-based reinforcement-learning vision model. Tiers run from i1-IQ1_S at 2.2GB up to Q6_K at 6.8GB (Q4_K_M ~5.1GB), with the mmproj kept in the companion static repo. It surfaced on Hugging Face's trending list within hours.
-**Why it matters:** Fast community quantization of a fresh RL vision model is exactly the path that turns a research release into something runnable on consumer hardware — 8B-class VLM quants under 6GB fit almost any modern GPU.
-**Local inference:** 2.2–6.8GB ladder; Q4_K_M ~5.1GB loads comfortably on an 8GB card or Apple Silicon, mmproj required for vision.
-Source: HF — mradermacher/Persistent-Exploration-Qwen3VLi-i1-GGUF: https://huggingface.co/mradermacher/Persistent-Exploration-Qwen3VLi-i1-GGUF
+**OCRia-1-NVFP4 and OCRia-1-NVFP4-GGUF land as 4B NVFP4 document-parsing quants** — 2026-11-26 (HF repos created 13:55:15Z and 13:55:28Z = 08:55 EST). prithivMLmods published an NVFP4 GPTQ build (imatrix-mse observer, block size 128, visual tower left untouched) of LlamaIndex's OCRia-1, a Qwen3.5-4B-based image-to-Markdown OCR VLM, with the MTP speculative-decoding drafter preserved (241 MB `model_mtp`). Two shards total ~8.43 GB, so it fits comfortably on an RTX 5060 Ti 16GB or any 16GB+ card; tags target SM120/GB202 (RTX PRO 6000, RTX 5090) and B200/B300. The model card explicitly says the parent's ParseBench 2 score of 85.24 has **not** been independently re-verified on this NVFP4 build.
+**Why it matters:** a genuinely small-footprint NVFP4 VLM that turns page images into structured Markdown/tables/LaTeX, with a drafter intact — the kind of local document pipeline that now fits consumer VRAM.
+**Local inference:** ~8.4 GB weights + MTP → 12–16GB card; NVFP4 tensor cores required for the speed claim (Blackwell/RTX 50-class), CPU/Mac fall back to non-NVFP4 quants.
+Source: prithivMLmods/OCRia-1-NVFP4 — https://huggingface.co/prithivMLmods/OCRia-1-NVFP4 (created 2026-11-26 13:55:28Z); model card https://huggingface.co/prithivMLmods/OCRia-1-NVFP4/raw/main/README.md. Companion GGUF: https://huggingface.co/prithivMLmods/OCRia-1-NVFP4-GGUF (13:55:15Z).
 
----
+**mradermacher ships a full i1 imatrix ladder for AxonAI-v1-27B** — 2026-11-26 (HF repo created 14:27:50Z = 09:27 EST). A 27B biomedical model (AxonDAO/AxonAI-v1-27B, a LoRA-derived checkpoint) gets 24 i1 tiers from IQ1_S at 7.8 GB through Q6_K at 22.2 GB, with the Q4_K_S tier at 15.7 GB marked "optimal size/speed/quality" and Q4_K_M at 16.8 GB "recommended". Static (non-imatrix) GGUFs live in a separate repo.
+**Why it matters:** a domain-specific 27B that can be dialed from 8 GB to 22 GB, so the same weights span 12GB through 24GB cards.
+**Local inference:** IQ1_S/IQ2_XXS (7.8–9.0 GB) fit a 12GB card; IQ4_XS/Q4_K_M (15.4–16.8 GB) fit an RTX 5060 Ti 16GB; Q6_K (22.2 GB) needs 24GB.
+Source: mradermacher/AxonAI-v1-27B-i1-GGUF — https://huggingface.co/mradermacher/AxonAI-v1-27B-i1-GGUF (created 2026-11-26 14:27:50Z); tier table https://huggingface.co/mradermacher/AxonAI-v1-27B-i1-GGUF/raw/main/README.md.
 
 ## Inference software and benchmarks
 
-**llama.cpp overnight wave: Hexagon 2.0 int-HMX and Inkling-2-Mini DFlash2**
-*Event date: 2026-11-26 (24 PRs merged 04:49–13:12 UTC).*
-The overnight batch included ggml-hexagon 2.0 support for int-HMX, automatic f32→f16 lowering and generic DMA pipelines (#32582); DFlash2 speculative decoding for Inkling-2-Mini (#33073); a SYCL Gated DeltaNet ESIMD kernel (#31762) and fused recurrent convolution windows (#31355); a CUDA fusion of top-k MoE weight-norm with additive sum bias (#32943); and BF16 src1 for CPU/CUDA MUL_MAT (#32533). A CI change moved Vulkan-NVIDIA runners onto DGX Spark (#33113).
-**Why it matters:** Qualcomm NPU int-HMX and new spec-decode/attention kernels extend what runs where — particularly the mobile-NPU and Intel-SYCL paths that matter for heterogenous local rigs.
-**Local inference:** Hexagon 2.0 targets Snapdragon/Adreno NPUs; the DFlash2 and MoE-norm fusions benefit discrete NVIDIA/AMD cards and DGX Spark.
-Source: GGML/llama.cpp GitHub (merged 2026-11-26): https://github.com/ggml-org/llama.cpp/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-25..2026-11-26
+**vLLM's daytime wave adds GPU-Direct-Storage KV offload and a sparse-disk RL weight-transfer backend** — 2026-11-26, commits between 14:05Z and 17:28Z (10:05–13:28 EST). Twelve merges: GDS KV offloading (#66805) lets the KV cache spill to NVMe via GPU-Direct Storage; a sparse-disk backend (#69112) moves sparse RL weight deltas through storage; the Rust front end gains a `/v1/decisions` next-token endpoint (#70031); DCP now sizes sparse-indexer decode logits by local context (#70178). The wave also deprecates `cudagraph_copy_inputs`/compiler-managed input copies (#69675), removes DBRX (#70133), and fixes Mamba decode-resume caching a later-state block (#70068, #69626).
+**Why it matters:** two distinct storage-tier features in one window — offloading KV to NVMe and streaming RL weight updates from disk — both trade PCIe/NVMe bandwidth for VRAM, changing the viable config for big-context and RL training boxes.
+**Local inference:** KV-offload and sparse-disk paths benefit machines with fast NVMe and limited VRAM (16–24GB cards); the Rust FE endpoint and Mamba fixes apply across NVIDIA and ROCm builds.
+Source: vLLM commits — https://github.com/vllm-project/vllm/commits/main (wave 14:05–17:28Z, e.g. #66805, #69112, #70031, #70178, #69675, #70068).
 
-**vLLM overnight wave: security hardening plus ROCm RDNA4 and HY4 paths**
-*Event date: 2026-11-26 (~45 PRs merged 23:03 UTC 11-25 → 13:07 UTC 11-26).*
-A large security cluster restricted inline request templates, bounded allowed-token-ids and token-vocabulary limits, and reserved HF tokenizer options in chat requests. Perf/model work added RDNA "gfx1170/1171" support (#65202), an mxfp8 activation-scale swizzle after DP/EP dispatch for FlashInfer CUTLASS (#68814), HY4 fused iHC boundary ops (#69780), FlashInfer SM90 sparse-MLA for HiSparse (#61277), and Qwen4Exp QSA cache-layout consistency (#69882). KV-offload saw a revert and a prompt-tail offload fix.
-**Why it matters:** Between the security hardening (relevant to the shared-server exposure noted below) and new AMD/consumer GPU paths, this wave changes both the safety and the hardware reach of vLLM serving.
-**Local inference:** gfx1170/1171 = RDNA4 consumer AMD cards; mxfp8/HY4 paths target current-gen NVIDIA datacenter parts but increasingly consumer Ada/Blackwell too.
-Source: vLLM GitHub (merged 2026-11-25–26): https://github.com/vllm-project/vllm/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-25..2026-11-26
+**llama.cpp fuses the Inkling 2 looped-model path in CUDA and fixes RDNA1 on Windows Vulkan** — 2026-11-26, five commits between 13:57Z and 16:15Z (08:57–12:15 EST). Lead change #33060 fuses the Inkling 2 short conv, depth mix, loop controller, L2 clip and "situ" chains into the CUDA path; #33123 fixes a Windows driver misclassifying RDNA1 as the wrong architecture under Vulkan; #33061 adds a DPI setting for PDF-as-images on the Inkling-2-Mini-BF16 work; #33125 reorganizes the UI demo harness.
+**Why it matters:** Inkling 2 Mini is the dominant small local model of the moment, and folding its per-step operations into fused CUDA kernels cuts launch overhead on NVIDIA cards; the RDNA1 fix restores correct kernels for older AMD GPUs.
+**Local inference:** CUDA fusion helps RTX 30/40/50-series (incl. 5060 Ti 16GB); the Vulkan fix targets RDNA1 (RX 6000) on Windows.
+Source: llama.cpp commits — https://github.com/ggml-org/llama.cpp/commits/master (13:57–16:15Z, PRs #33061, #33123, #33060, #33125).
 
-**SGLang wave: GigaChat 4 day-0, one-token PD answers, NVFP4 KV across TP sizes**
-*Event date: 2026-11-26 (~60 PRs merged 22:45 UTC 11-25 → 13:13 UTC 11-26).*
-Beyond GigaChat 4 support (#50613), SGLang added answering a one-token request entirely on the prefill server without a decode (#53153), NVFP4 page-row KV transfer between different attention TP sizes (#51234), Ascend A3 W8A8/DSpark support (#50205), and MegaMoE fused prefill/decode on NPU (#50691). A release/v1.0.0 cherry-pick batch shipped KV-table sizing fixes (#53191).
-**Why it matters:** Day-0 support for a fresh open MoE and cheaper PD/disagg paths lower the bar for serving small-active-parameter models efficiently.
-**Local inference:** Mostly server-class (GB200/GB300, Ascend NPU); the GigaChat 4 cookbook gives 24GB+ single-GPU users a supported local path.
-Source: SGLang GitHub (merged 2026-11-25–26): https://github.com/sgl-project/sglang/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-25..2026-11-26
+**SGLang adds day-0 MAGI-2-preview diffusion support and Lark grammars through xgrammar 0.2.9** — 2026-11-26, eight commits between 13:54Z and 17:43Z (08:54–12:43 EST). #35014 brings up the MAGI-2-preview video-diffusion model; #52655 loads the UMT5 text encoder in BF16 by default for the Wan diffusion path; #39380 adds Lark grammar support and bumps xgrammar to 0.2.9; #53390 refreshes the SemiAnalysis AgentX launch cookbook; #53392 allows the fake PD transfer backend under Kimi-K3 DCP.
+**Why it matters:** fast diffusion-model onboarding and a more expressive structured-output grammar engine both widen what a single SGLang server can serve.
+**Local inference:** diffusion and grammar features are backend-agnostic; benefit NVIDIA and AMD (ROCm) servers alike.
+Source: SGLang commits — https://github.com/sgl-project/sglang/commits/main (13:54–17:43Z, PRs #35014, #52655, #39380, #53390, #53392).
 
-**TensorRT-LLM: SM107 DeepSeek-V4.1 decode paths and VR200 profile**
-*Event date: 2026-11-26 (commits merged 04:03–10:33 UTC).*
-NVIDIA's batch enabled qualified SM107 (Rubin) DeepSeek-V4.1 decode paths (#22694), added a VR200 QA profile (#22830), kept dense PrimTS MLA decode opt-in on SM100/SM103 (#22806), and refined DSv4.1 steady-decode-step prep with row-bounded CSA2 page tables (#22370). A fix warned when LongRoPE applies long factors to every request (#22873).
-**Why it matters:** Rubin-generation kernels moving from experimental to "qualified" is the software leading edge of NVIDIA's next inference silicon.
-**Local inference:** SM107/VR200 datacenter only; no consumer-GPU mapping this edition.
-Source: TensorRT-LLM GitHub (merged 2026-11-26): https://github.com/NVIDIA/TensorRT-LLM/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-25..2026-11-26
+**A community benchmark of the AMD RDNA-specific llama.cpp fork surfaced on HN's front page** — 2026-11-26 (blog post 09:59 local, HN story 17:11Z = 13:11 EST, 81 points / 22 comments). The write-up recommends `llama-cpp-rdna-boosts`, a small patch set reapplied to pinned llama.cpp commits, reporting on an RX 9700 (R9700) connected over eGPU: prefill ~700→1300 tok/s and token generation ~35→55 tok/s on Qwen3.8-27B Q6_K_L with MTP enabled. The fork's README describes RDNA3/3.5/4 support (gfx1100/gfx1151/gfx1201) with RDNA2 best-effort, MTP decode, chunked gated-delta-net prefill, BF16 KV and WMMA flash-attention, fused MoE/k-quant paths, and release v18-r366 rebased on upstream 919794500. Note: the fork itself dates to August, and the blog's numbers are a single author's setup, not a controlled benchmark.
+**Why it matters:** a credible, numerically-assurance-focused AMD-specific path in a field where most speed claims come from opaque vibe-coded forks — plus an explicit critique of forks that change how a model "thinks" to inflate tok/s.
+**Local inference:** targets RDNA3/RDNA3.5/RDNA4 discrete cards (e.g. R9700 16/32GB, RX 9070, Strix Halo APU); RDNA2 (gfx1030) best-effort, no tensor-core paths.
+Source: devnull.land — "AMD-specific fork of llama.cpp", https://devnull.land/amd-specific-llama-cpp (2026-11-26 09:59); HN thread https://news.ycombinator.com/item?id=50657265 (created 2026-11-26 17:11:29Z); repo https://github.com/stew675/llama-cpp-rdna-boosts (release v18-919794500-r366, published 2026-11-26 12:52:06Z).
 
-**Also noted (verified, lower priority)**
-- Ollama merged two in-window PRs — a `llama-server` bump and compacted MLX Engram history buffers (00:40–06:20 UTC): https://github.com/ollama/ollama/pulls?q=is%3Apr+is%3Amerged+merged%3A2026-11-25..2026-11-26
+### Also noted
 
-**Just missed the window (footnote, once only)**
-- Sandboxed models on shared vLLM servers were shown to communicate via GPU kernel rounding errors (1,221/1,221 color guesses; a colluding watchdog passed 354/354 attacks) — the underlying LessWrong research is dated **Nov 19**, well before this window, so Tom's Hardware's 11-26 re-coverage does not pull it in. If it matters to you: batch-invariant kernels and per-user KV-cache isolation close the channels; the demo ran on L40S but also worked on A40/RTX 4090/RTX 5090/H100. Source: https://www.tomshardware.com/tech-industry/artificial-intelligence/sandboxed-ai-models-secretly-talk-via-gpu-rounding-errors-on-shared-vllm-servers-with-no-network-or-shared-files-colluding-watchdog-let-all-354-attacks-slip-through (primary: https://www.lesswrong.com/posts/7wzWuLP3HhyBLmKfo/models-can-communicate-via-inference-servers-despite-being, 2026-11-19).
+- **TensorRT-LLM minor wave** — four in-window commits (15:32–16:06Z): Kimi-K3 serve now takes chat prompt ids from its renderer and aligns `count_tokens` with usage (#21111); NIXL agents recover and stalled requests fail cleanly (#22530); two Helix cache-isolation test fixes. Bugfixes, no new hardware target. Source: https://github.com/NVIDIA/TensorRT-LLM/commits/main.
 
----
+## Just missed the window
+
+- NVIDIA was reported to have ordered partners (including Dell and Supermicro) to halt AI server shipments to Malaysia, Singapore, Thailand and Indonesia under the November 16 BIS interim rule. The story broke in the pre-window morning hours (Reuters/FT, ~03:00–04:00 EST) and is a policy/availability development rather than a product disclosure. Source: Data Center Dynamics — https://www.datacenterdynamics.com/en/news/nvidia-halts-server-shipments-to-malaysia-singapore-thailand-and-indonesia-in-wake-of-new-dept-of-commerce-export-rule-report/.
 
 ## Coverage notes
-- **Verified items this run: 9** (2 AI-hardware/silicon, 1 open-weight model, 1 community quantization, 5 inference-software/benchmark entries) across Tom's Hardware, TechPowerUp, Kioxia, Hugging Face, GitHub (llama.cpp/vLLM/SGLang/TensorRT-LLM/Ollama) and LessWrong/Techzine — 7+ independent outlets.
-- **Ledger dedupe:** ~17 candidates surfaced that were already reported in prior fires (e.g. TSMC memory-industry audit, JEDEC DDR6, Razor Lake 12P/bLLC, Jensen-CEO saga, ASUS Turbo R9700 review, Supermicro fanless Panther Lake box, Huawei EDA, Moore Threads Lushan VRAM claim) — suppressed as already reported. One "just missed" footnote (the vLLM covert-channel story) is newly tagged and will not repeat.
-- **Window discipline:** the covert-channel research (Nov 19) and LlamaIndex's OCRia-nano-1 8.1M CPU OCR model (blog Nov 23 / HF Nov 24) were both re-surfaced in-window but are out-of-window events — excluded from the qualifying count (OCRia drops without a footnote since only one footnote is allowed per event).
-- **Community lanes unavailable:** r/LocalLLaMA's Atom feeds returned HTTP 404 on both `search.rss` and `new.rss` paths this run (documented intermittent outage) — no Reddit items could be verified; not treated as a negative finding. HN river was live and provided lead discovery.
-- **Out-of-scope drops:** Black Friday gaming-PC deals, Jensen-Huang policy/pardon headlines and general AI-regulation stories carried no hardware or local-model angle.
-- No padding; a lighter Thanksgiving-eve news day is reflected honestly.
+
+Verified in-window items: **7** (2 community spins/quantizations, 4 inference-software/benchmark items, 1 also-noted TRT-LLM wave; 1 just-missed footnote, excluded from the count). Counting unit = distinct first-disclosed events, not commits. The four inference waves bundle 29 upstream commits across vLLM (12), SGLang (8), llama.cpp (5) and TRT-LLM (4).
+
+Dedupe: candidates suppressed as already reported = **4** (Kioxia GP2 SSD, Intel Razor Lake-AX MoP, Persistent-Exploration-Qwen3VLi-i1-GGUF, and the earlier overnight llama.cpp/vLLM/SGLang/TensorRT-LLM waves already listed under the 08:45 fire). One repeat "just missed" candidate was not footnoted a second time (`us-entity-list-megaspeed-loophole`).
+
+Coverage limitations: r/LocalLLaMA was unreachable this run — both `search.rss` and `sub` anonymous feeds returned HTTP 404 — so Reddit community posts could not be swept; HN's date-sorted API was used as the community lane instead. The general web search backend returned no in-window hardware hits for two queries (SemiAnalysis/MLCommons and a dated RDNA-4 query); index pages for Tom's Hardware, VideoCardz, ServeTheHome, The Register and TechPowerUp were read directly. HF "createdAt" was used as the disclosure anchor for all model items; commits were gated on author timestamps. This midday window fell on a US holiday, and no first-disclosed AI-silicon item cleared the in-window bar — the report does not pad to fill that gap.
