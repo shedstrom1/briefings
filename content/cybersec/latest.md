@@ -1,53 +1,55 @@
-# Cybersecurity News Briefing — Flight Centre and Zodia Custody Breaches (Nov 26, 07:21–13:06 EST)
+# Cybersecurity News Briefing — November 26, 2026 (Afternoon Edition)
 
-**Window:** Thursday, 2026-11-26, 07:21 → 13:06 EST (midday edition; new items only, deduped against the reported ledger). The window is frozen at fire time; later developments are not pulled in.
+**Window:** 2026-11-26 13:06 → 17:22 EST (fired 17:20; previous fire 13:06). New-items-only — the event date, not article freshness, governs inclusion.
 
 **TL;DR**
-- **Flight Centre Travel Group** disclosed a breach of a third-party accommodation-booking system: a "significant number" of customer records may have been accessed, a small fraction including passport details. Flight bookings were unaffected; Mandiant is investigating.
-- **Standard Chartered's crypto custodian Zodia Custody** confirmed a breach exposing client and employee contact data. It took its institutional B2B API offline as a precaution; no private keys, no unauthorized transactions.
-- **No new in-window exploited-vulnerability disclosures.** The CISA 10-CVE KEV batch (Mitel MiCollab, Danfoss, Vates, Juniper) and the Drupal Fail2Install follow-on were already carried in the 07:20 edition and are suppressed as already reported.
-- Ransomware leak sites showed a Nov 26 brand-bait wave from the Inception crew claiming GoDaddy, McDonald's, Mattel, Verisk and Paramount — all unverified self-posted claims.
-
----
+- **Cacti zero-day, no patch:** Researcher "ek0ms savi0r" published 4HTTP2ROOT, an unauthenticated four-request RCE chain against Cacti Core 1.2.31, with a working PoC. No CVE, no vendor fix; disable guest access now.
+- **Binance finishes recovery:** Binance says withdrawal recovery is complete and the suspension imposed after October's record $6.34B heist is fully lifted, 25 days after phased reopenings began. Update on a previously reported event.
+- **Thin afternoon:** BleepingComputer published no new security stories after 12:58 PM, CISA posted no new KEV entries or advisories, and most index coverage was re-reporting of events disclosed earlier in the day.
 
 ## Vulnerabilities and patches
 
-No new vulnerability or patch disclosure first announced inside this window survived the ledger dedupe gate. The items dominating the morning feeds — CISA's addition of 10 flaws to the Known Exploited Vulnerabilities catalog (five Mitel MiCollab issues, three Danfoss AK-SM 800A controller bugs, Vates Xen Orchestra and HPE Juniper Session Smart) and Drupal's second highly critical installer site-takeover flaw (CVE-2026-136716) — were all reported in the 07:20 edition earlier today and are not repeated here. The KEV catalog stood at 1,805 entries with no new in-window additions beyond that batch.
+**Cacti 4HTTP2ROOT: four-request unauthenticated RCE zero-day, PoC public, no fix**
+Event date: 2026-11-26 (PoC published; watchTowr FAQ 15:09 EST, SecurityOnline.info 16:24 EST).
+Severity: Not specified by source — no CVE assigned; watchTowr's tracker shows CVSS 0.0 (v3.1), and no vendor advisory or patch exists yet.
 
-*Severity: not applicable — no in-window vulnerability item qualified.*
+Researcher "ek0ms savi0r" published the 4HTTP2ROOT chain on GitHub on November 26, demonstrating four unauthenticated HTTP requests that end in command execution on a Cacti Core 1.2.31 server. The chain stores a crafted string in the guest-accessible `preview_graphs_per_page` profile setting, which Cacti later concatenates into a SQL LIMIT clause; because the PDO driver accepts stacked queries, an injected UPDATE rewrites a `poller_item` row, and the guest-reachable `graph_realtime.php` endpoint hands that row to `popen()`. No memory corruption or deserialization gadget is involved — the write is a prepared statement, but the consumer is not. In the lab the web tier ran as root and produced a root shell; normal deployments run as `www-data`/`apache`, but a Cacti host holds SNMP strings, device logins and database credentials, making a foothold a pivot into the monitoring layer. No in-the-wild exploitation has been reported.
+
+Why it matters: Cacti sits in the monitoring layer, trusted by network devices everywhere and often unaudited; a shell on it exposes stored credentials and lets an attacker suppress alerts. The requests resemble ordinary guest traffic and leave only a PHP non-numeric-value warning in logs.
+Action: Disable the Cacti guest account to break the chain, restrict the web UI to a trusted network/VPN, audit `settings_user` and `poller_item` for anomalous strings or commands, ensure the web server/poller never runs as root, and watch PHP logs for non-numeric-value warnings on `graph_view.php`.
+Sources:
+- watchTowr, "4HTTP2ROOT FAQ: Cacti Zero-Day Exposure and Fix" (Nov 26, 20:09 UTC) — https://watchtowr.com/intelligence/4http2root-cacti-zero-day-faq/
+- Daily CyberSecurity / SecurityOnline.info, "Cacti Unauthenticated RCE Zero-Day (4HTTP2ROOT): PoC Published" (Nov 26, 21:24 UTC) — https://securityonline.info/cacti-zero-day-rce-4http2root-poc/
+- Researcher's PoC and technical notes — https://github.com/ekomsSavior/Sad-Girls-0day-Club/blob/main/4http2shell/README.md
 
 ## Attacks and campaigns
 
-**Flight Centre Travel Group discloses third-party booking-system breach**
-*Event date: November 26, 2026 (ASX filing and public disclosure).*
-Flight Centre Travel Group told the Australian Securities Exchange that "a significant number of customer records" may have been accessed by unknown persons following a cyberattack on a third-party accommodation-booking platform used by its Flight Centre, Travel Associates and Cruiseabout brands and some independent agents. The company could not yet say how many records were taken; its initial review found most contained only customer names, with a "very small percentage" including dates of birth, email addresses, limited passport details, phone numbers and, in rare cases, health or mobility information. Flight and corporate-travel bookings run on separate systems and were unaffected. Flight Centre has contained the incident, rotated keys and credentials, increased monitoring, and is working with the supplier and Mandiant.
+**Binance fully lifts withdrawal suspension; recovery complete after $6.34B heist (update on previously reported)**
+Event date: 2026-11-26 (in-window coverage: Reuters 2:55 PM ET, crypto.news 2:24 PM ET).
+Severity: Not applicable — a recovery milestone, not a vulnerability.
 
-*Why it matters:* Passport details, names and travel history form a durable identity profile that enables document fraud and highly convincing pre-trip phishing — and a shared supplier platform means one intrusion exposes data across multiple brands at once. *Action (source-stated):* customers should independently verify unexpected messages about their bookings and avoid clicking links or sharing personal or payment details in unsolicited requests. Severity: Not specified by source.
-Source: The Register — "‘Significant number of customer records' pwned in Flight Centre Travel Group breach," published 2026-11-26 15:29 UTC (10:29 EST). https://www.theregister.com/security/2026/11/26/significant-number-of-customer-records-pwned-in-flight-centre-travel-group-breach/5312360
-Source: Security Affairs — "Australia's Flight Centre Data Breach Exposes Customer Records and Passport Details," 2026-11-26. https://securityaffairs.com/204049/data-breach/australias-flight-centre-data-breach-exposes-customer-records-and-passport-details.html
+Binance said its withdrawal recovery work is complete and the suspension imposed after the October security incident has been fully lifted, ending a phased reopening that began November 1 and took 25 days. Withdrawals are open across nearly all networks; a small number remain paused for routine maintenance or planned upgrades, which Binance says affects a very small share of regular traffic. The exchange says it replaced affected assets using more than $6.34B in company funds drawn from its treasury, part of the Secure Asset Fund for Users and part of the futures insurance fund, and published a Proof-of-Reserves snapshot covering 198 tokens taken at 00:00 UTC November 12. Onchain Lens tracked a further $35.52M in ether moves from hack-linked wallets on November 26, with roughly $1.9B still unfrozen; the DOJ's separate civil forfeiture action seeks $1.1B in USDC. Attribution of the original heist to North Korea's TraderTraitor was previously reported.
 
-**Standard Chartered's Zodia Custody confirms breach of client and employee data**
-*Event date: November 26, 2026 (disclosure); intrusion detected November 23–24.*
-Zodia Custody, the digital-asset custodian owned by Standard Chartered, confirmed that an unauthorized party accessed information about some clients and employees, including company details, business contact names and email addresses. CEO Richard Clark said the firm detected probing of its platform on Monday November 23, temporarily took its business-to-business API offline as a precaution, and added security measures before restoring service; by November 24 it had confirmed the data access. Zodia notified affected clients and regulators but did not disclose a victim count or the entry point. No private keys were exposed and the investigation found no unauthorized transactions. The disclosure comes weeks after Standard Chartered raised its stake in Zodia to 100%.
-
-*Why it matters:* Even without fund movement, real employee names and business emails make impersonation and fake-support phishing credible against institutional clients — the same pattern seen in other crypto-adjacent contact-data breaches. *Action (source-stated):* firms using Zodia should verify any unexpected request to reconnect the API, share credentials or approve a transfer through an existing support contact rather than a link or number in the message. Severity: Not specified by source.
-Source: CoinDesk — "Standard Chartered's Zodia Custody suffers data breach, exposing client information," 2026-11-26 07:38 EST. https://www.coindesk.com/tech/2026/11/26/standard-chartered-s-zodia-custody-suffers-data-breach-exposing-client-information
-Source: Cyber Security News — "Standard Chartered's Zodia Custody Hacked, Client and Employee Data Exposed," 2026-11-26. https://cybersecuritynews.com/zodia-custody-data-breach/
-
-**Also noted (leak-site roundup, unverified):** ransomware.live logged a Nov 26 wave of self-posted claims from the Inception crew naming GoDaddy, McDonald's, Mattel, Verisk and Paramount, plus aurora (Arlberger Bergbahnen, AIM Consulting), qilin (Sweet Darling Sales) and rhysida (Jackson District Library, Koch Law Firm). These are unconfirmed actor claims, not verified intrusions; Inception has been linked in reporting to a ShinyHunters-affiliated vishing campaign. Overall site activity was down — 54 victims in 24 hours (−29%). Source: ransomware.live, accessed 2026-11-26. https://ransomware.live/
+Why it matters: It closes the operational aftermath of the largest crypto theft on record, restoring full service after nearly a month of restrictions — but hack-linked wallets remain active.
+Action: Binance advises users to check the network status page per asset/network before withdrawing and to stay alert for withdrawal-themed phishing; the exchange will never ask for passwords, 2FA codes or seed phrases.
+Sources:
+- Reuters, "Binance says it has finished its recovery work and fully lifted its withdrawal suspension" (Nov 26, 2:55 PM ET) — https://www.reuters.com/technology/binance-lifts-withdrawal-suspension-after-63-billion-crypto-heist-2026-11-26/
+- Binance, "Service Recovery Update: Withdrawals Recovery Work Complete" (Nov 26) — https://www.binance.com/en/support/announcement/detail/95c463396a034f1ab3994814225e6d69
+- crypto.news, "Binance lifts withdrawal suspension after $6.34B hack" (Nov 26, 19:24 UTC) — https://crypto.news/binance-lifts-withdrawal-suspension-after-hack/
 
 ## Defensive tools and advisories
 
-No defensive-tool release was first disclosed inside the window and verified from a primary source. A Help Net Security item on Google Workspace agent controls was a re-report of a November 24 Google announcement (below).
+No new defensive-tool release or advisory was first disclosed inside the window. CISA's advisories page showed no additions after the November 25 ten-KEV batch (already reported), and no new CISA alert or ICS advisory appeared during the window.
+
+## Also noted
+
+None in-window.
 
 ## Just missed the window
 
-- **Google Workspace MCP/CLI mandate for AI agents** — Google made its Workspace MCP servers and CLI generally available and set February 1, 2027 as the date agents must reach Workspace through those gateways; announced Nov 24, re-reported Nov 26.
-- **Remus stealer's "Gmail zero-day"** — GenDigital and Invoke RE showed the claimed zero-day is a fake "Google Sheets" Chrome extension; research published Nov 25, BleepingComputer Nov 26 10:23 EST.
-- **GoodGuys phishing campaign** — Push Security's teardown of the paid-interview lure targeting Google/Okta corporate logins was published Nov 20; BleepingComputer Nov 26 12:15 EST.
-- **Keenadu preinstalled Android backdoor** — Kaspersky's finding of 220,000+ infected devices was reported Nov 25; Help Net Security Nov 26.
-- **Iceland's 1984.is hosting outage** — targeted attack began Nov 21 with investigation findings Nov 25; restoration update Nov 26.
+- A Florida man was sentenced to 47 months for using AI to clone the voice of Kick streamer N3on in a ~$260,000 memecoin-investor fraud (DOJ, Nov 24; re-surfaced in the Techmeme river Nov 26, 5:10 PM ET). The sentencing predates the window — footnote only, not counted. Source: https://www.justice.gov/usao-sdfl/pr/port-st-lucie-man-sentenced-47-months-prison-using-ai-impersonate-popular-streamer
 
 ## Coverage notes
-
-Verified and reported: 2 new in-window items (both breaches). Sources fetched: The Register, Security Affairs, CoinDesk, Cyber Security News, BleepingComputer, The Hacker News, Help Net Security, SecurityWeek, CyberInsider, Security Affairs, CISA KEV, ransomware.live, HN river. Community lanes: HN river walked; Reddit r/netsec JSON returned a CAPTCHA wall (blocked). Ledger dedupe suppressed a high volume of candidates as already reported — principally the CISA 10-KEV batch, Drupal CVE-2026-136716, 1Password, FinCEN, FIFA, Rackspace Spot, Peninsula Energy, SYS010, NTLM-signing break, Bithumb 15-day update, and the GoodGuys/Remus/PolinRider/Keenadu/Google-MCP re-covers counted above. No "Just missed" footnote here has appeared before. This is a thin midday window; the brief is not padded. Web search returned intermittent backend errors; index pages were fetched directly as the fallback path.
+- Verified in-window items: 2 (one new disclosure, one update on a previously reported event), plus 1 "just missed the window" footnote. A thin Thanksgiving afternoon — no padding added.
+- Ledger dedupe: roughly two dozen candidates suppressed as already reported, including Drupal CVE-2026-136716, the CISA ten-KEV batch, 1Password, Zodia Custody, Flight Centre, SYS010, Remus, Juniper CVE-2026-103406, FinCEN, FIFA, Google Workspace MCP mandate, Keenadu, GoodGuys phishing, GeoServer, Hex.pm, GT13 Check Point, and the Inception leak-site brand-bait wave.
+- Retrieval notes: Reddit's anonymous Atom lanes returned HTTP 404 for both r/netsec and r/cybersecurity (logged as unavailable, not a negative finding); HN Algolia was reachable but carried no security stories in-window; web_search (DuckDuckGo) failed intermittently; Reuters full text was paywalled (verified via the Techmeme ET river timestamp, Binance's primary notice and crypto.news). CISA advisories and BleepingComputer's feed had no in-window security additions.
