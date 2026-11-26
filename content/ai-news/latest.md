@@ -1,52 +1,73 @@
-# AI News Briefing — Crypto "Bombshells," Nvidia Chip Curbs Bite, GLM-5.5 Slips
+# AI News Briefing — November 26, 2026 (12:00 ET)
 
-**Window:** 2026-11-25 17:00 EST → 2026-11-26 07:00 EST (14-hour overnight sweep, America/New_York). New items only, deduped against the reported ledger.
+**Window:** 2026-11-26 07:00 → 12:29 EST (the 12:00 fire; 5h29m). New-items-only. Event date, not article freshness, governs inclusion.
 
-**TL;DR**
-- **Scott Aaronson says he is "virtually certain" the leading AI labs are sitting on one or more undisclosed cryptography "bombshells"** — with rumors of a polynomial-time factoring algorithm that would break RSA. Rumor-level, unconfirmed, and the week's most consequential claim.
-- **US export controls are now visibly throttling Chinese frontier models:** Z.ai's ~3T-parameter GLM-5.5 has slipped from November to Q1 2027 or later, and Moonshot's Kimi K4 could land around mid-2027.
-- **Nvidia has told Dell, Supermicro and other manufacturing partners to stop shipping AI servers to Malaysia, Singapore, Thailand and Indonesia** — the first concrete enforcement fallout from the November 19 remote-compute rule.
-- **A CBS News investigation found at least two California "preferred" Nvidia partners are controlled by Chinese-owned firms**, one led by a PLA Command College graduate, with B300 servers leased onward into Asia.
-- **42 state attorneys general are intervening in Character.AI's bankruptcy** to block the auction of chat histories from more than 21 million US accounts, 2.1 million of them minors.
+## TL;DR
 
-## AI security and governance
-
-**Aaronson: AI labs likely hold undisclosed cryptography "bombshells"** — event date 2026-11-25 (in-window coverage through 2026-11-26)
-Former OpenAI researcher and UT Austin professor Scott Aaronson wrote that he is "virtually certain, from multiple reliable sources, that the AI labs are now sitting on one or more bombshells" in cryptography, while saying he is far less sure what those breakthroughs actually are. The rumor he names is "Factoring in P" — a polynomial-time integer-factoring algorithm that would undermine RSA; he explicitly declined to say whether Bitcoin's ECDSA is broken. He framed the week — an AI-assisted Generalized Riemann Hypothesis proof, dual VP-versus-VNP proofs, and OpenAI's 722-manuscript "mathocalypse" — as looking and feeling like "the beginning of an AI singularity." **Why it matters:** this is the first credible, named-source signal that frontier labs' math capability may have crossed into cryptanalysis. It is explicitly rumor-level and unconfirmed by any lab — treat the "bombshell" as unverified, but the provenance and the speed of the surrounding proofs are not in doubt.
-Source: "AI Labs Hold Undisclosed Cryptography Breakthroughs," Gate.com, 2026-11-26 01:51 — https://www.gate.com/news/detail/ai-labs-hold-undisclosed-cryptography-breakthroughs-computer-scientist-25870553
-Source: "Aaronson Warns AI Labs Hold Undisclosed Crypto Breakthroughs," The Currency Analytics, 2026-11-26 — https://thecurrencyanalytics.com/technology/aaronson-warns-ai-labs-hold-crypto-breakthroughs-310880
-Source: Shtetl-Optimized (via Techmeme river), 2026-11-26 04:50 ET — https://www.techmeme.com/river
-
-**Update on previously reported — Nvidia halts AI server shipments to four Southeast Asian countries** (ledger: `BIS-remote-access-IFR`, 2026-11-16) — event date 2026-11-26
-The Financial Times reported that Nvidia has instructed manufacturing partners including Dell and Supermicro to stop shipping servers containing its chips to Malaysia, Singapore, Thailand and Indonesia. This is the first concrete industry action following the US Commerce Department remote-access rule that took effect on November 19, which licenses overseas data-center compute above roughly 750 H100 equivalents. Existing covered-service operators have 90 days to obtain licences. **Why it matters:** the rule has moved from paper to a hard stop on hardware flows through the Southeast Asian transshipment route — the same corridor the CBS investigation below describes. Expect delivery delays and further price dislocation in the grey-market GPU channel.
-Source: "Nvidia halts chip shipments to Southeast Asia, FT reports," Reuters, 2026-11-26 — https://www.reuters.com/world/asia-pacific/nvidia-halts-chip-shipments-southeast-asia-ft-reports-2026-11-26/
-Source: "Nvidia tells server makers to halt shipments to four Southeast Asian countries," StockAnalysis, 2026-11-26 — https://stockanalysis.com/news/nvidia-halts-server-shipments-southeast-asia/
-
-**CBS: Chinese-owned California firms are Nvidia "preferred partners" buying advanced chips** — event date 2026-11-25, published 18:10 EST
-A CBS News investigation, using corporate filings and C4ADS analysis, found at least two California-based Nvidia customers controlled by Chinese-owned firms. San Jose-based RiCloud AI sits on Nvidia's US "preferred partners" list; its parent is Shenzhen-listed Yuxing InfoTech, whose co-owner Cong Yu holds a degree from the PLA Command College. RiCloud signed a $120 million deal to lease 300 B300 servers to a Taiwanese whisky importer that had pivoted into data centers; another firm, Aivres, is listed as an "elite" partner. Nvidia changed its sales reporting from billing location to customer headquarters last November, a switch that exposed $7.9 billion more China-billed sales in 2024. No wrongdoing has been alleged against RiCloud or Yuxing. **Why it matters:** it shows how ownership, not just shipping address, can defeat export screening — and it broadens the Megaspeed affair from a single broker into a structural blind spot.
-Source: "2 California companies are buying Nvidia's most advanced chips…," CBS News, Josh Boswell, 2026-11-25 18:10 EST — https://www.cbsnews.com/news/nvidia-china-ai-chips-computing-sales/
-
-**42 state AGs move to block Character.AI's auction of user chats** — event date 2026-11-25
-A bipartisan coalition of 42 state attorneys general intervened in Character.AI's Chapter 11 case to stop the sale of chat histories from more than 21 million US accounts, including over 2.1 million registered to minors, plus IP addresses and other personal data. The only disclosed bidder is Smirks and Pangs Acquisition LLC, formed in Delaware on November 13 and selected as the base bid the next day, with an auction set for December 1; the AGs say buyers would not be bound by Character.AI's privacy policy. Connecticut AG William Tong said the company's "broken business model" drove it into the ground and that it now wants to "abuse the bankruptcy process." **Why it matters:** it tests whether consumer-protection and new state chatbot-safety laws (several take effect January 1, 2027) survive a bankruptcy sale — a direct precedent for what happens to user data when an AI company fails.
-Source: "Character.AI's plan to auction off users' private chats challenged by state AGs," TechCrunch, Sarah Perez, 2026-11-25 18:50 ET — https://techcrunch.com/2026/11/25/state-ags-fight-character-ais-plan-to-auction-off-users-private-chats/
-Source: "Attorney General Tong Challenges Plan to Auction Off Character.AI Private Chats," CT AG, 2026-11-25 — https://portal.ct.gov/ag/press-releases/2026-press-releases/attorney-general-tong-challenges-plan-to-auction-off-character-ai-private-chats
-Source: "Attorney General Weiser challenges auction of millions of private Character.AI conversations," Colorado AG, 2026-11-25 — https://coag.gov/press-releases/weiser-challenges-auction-of-millions-of-private-character-ai-conversations/
+- **No frontier closed-weight launch landed in the window.** The two substantive model disclosures are community/open-weight: a full-duplex speech-to-speech system built *from* Qwen3.5-4B open weights, and an AMD-specific llama.cpp fork that roughly doubled token generation on a consumer eGPU.
+- **Kestrom shipped a byte-verifiable model-editing toolkit** — every weight edit comes with a machine-rebuildable report proving what did and did not change, with tiered guarantees demonstrated on Qwen3.5-9B/0.8B.
+- **OpenAI corrected a GPT-6.2 launch billing error**, so paid users now hit usage limits up to 40% faster on Astra and 25% faster on Sol — a material change to an already-reported model.
+- **AI security/governance was quiet in-window.** The notable Microsoft ARTEX architecture deep-dive is dated November 25 and lands as the single "just missed" footnote.
 
 ## Models and local inference
 
-**Update on previously reported — Z.ai's GLM-5.5 and Moonshot's Kimi K4 slip into 2027** (ledger: `glm-5.5-postraining-rumor`, 2026-10-31; `missed:glm-5.5-jietang-pipeline`, 2026-11-06) — event date 2026-11-26
-Reuters reports that Z.ai's roughly 3-trillion-parameter flagship GLM-5.5 was due this month but has been pushed to Q1 2027 or later, citing two constraints: increasingly effective anti-distillation safeguards from Anthropic and OpenAI, and the November 19 US rule restricting Chinese access to overseas compute. Anthropic has counted nearly 200 million suspected distillation exchanges with Claude attributed to Alibaba, Moonshot and Z.ai. Moonshot now expects its normal six-month release cadence to stretch to a year or more and its Kimi K4 as late as mid-2027; it has started distilling from Google and Meta models instead. Z.ai shipped GLM-5.4, a 750B-parameter Loop Transformer, on Monday. **Why it matters:** the export-control and anti-distillation squeeze is now demonstrably slowing Chinese frontier roadmaps, eroding the "cheap fast follower" advantage. For local inference, it also means fewer timely open-weight flagship drops from these labs. **Local inference note:** GLM-5.4's 750B Loop Transformer design and the delay to 3T-class weights push buyers toward smaller self-hostable models in the interim.
-Source: "US chip curbs, distillation crackdown threaten Chinese AI model development," Reuters, 2026-11-26 06:20 ET — https://www.reuters.com/world/china/us-chip-curbs-distillation-crackdown-threaten-chinese-ai-model-development-2026-11-26/
-Source: "Zhipu AI GLM-5.5 Delayed by US Chip Curbs and Distillation Safeguards," Gate.com, 2026-11-26 11:03 — https://www.gate.com/news/detail/zhipu-ai-glm-55-delayed-by-us-chip-curbs-and-distillation-safeguards-25881360
+### Duo: a full-duplex speech-to-speech model built from an open-weight LLM
+**Event date:** November 26, 2026 (technical report; HN 11:35 EST).
 
-*Also noted:* Moat, a $5/month "wholesale" model gateway billed as an OpenRouter replacement, reached the HN front page; it advertises no five-hour or weekly usage limits and routes full-weight open models including GLM-5.3 Flash, DeepSeek V4.1 Flash, Ling 3.1 and Kimi K3 at steep discounts. Vendor pricing claims are unverified. (Source: https://commandcode.ai/moat, HN 2026-11-26 01:32 ET)
+Duplex IO published a technical report on Duo, a full-duplex speech-to-speech model that starts from the open-weight **Qwen3.5-4B** hybrid (Gated DeltaNet + attention) rather than training a speech model from scratch. It reads and writes six interleaved streams — four text and two audio — on a shared 12.5 Hz / 80 ms clock, using a frozen text model as teacher, a streaming FastConformer encoder for user audio, Mimi-family continuous latents plus a Pocket-TTS-initialized flow-map head for assistant audio, delayed-streams modeling, and an audio sliding window that pins the voice prompt while keeping the KV cache bounded. Tool calls run on text-only rows between audio frames, and text-teacher distillation preserves instruction-following. An **open-weight preview and benchmarks are forthcoming**; no weights are published yet.
 
-## Just missed the window
+**Why it matters:** It is a concrete template for turning a small open-weight LLM into a real-time voice agent without a from-scratch speech stack — squarely relevant to local inference. **Local inference:** the 4B backbone, 32-dimensional continuous audio latents (no codebook depth transformer), and bounded audio KV window are all designed for modest hardware; specifics of the eventual release are not yet given.
 
-- *2026-11-25 (no precise time published) —* JetBrains released **Mellum2.1 Instruct**, an Apache-2.0 12B MoE coding model with 2.5B active parameters, 131K context, a no-chain-of-thought fast path, GGUF files and a multi-token-prediction head; JetBrains reports 40.4% on SWE-bench Verified (up from 20.2%) and up to 1.8x faster generation. (https://blog.jetbrains.com/ai/2026/11/mellum2-1-instruct-is-out-bringing-faster-answers-for-coding-agents/)
+Source: "How we built Duo," Anders Thuesen (Duplex IO), November 26, 2026 — https://duplexio.ai/blog/how-we-built-duo/ ; HN thread (11:35 EST) — https://news.ycombinator.com/item?id=50656359
+
+### AMD-specific llama.cpp fork roughly doubles token generation on a consumer eGPU
+**Event date:** November 26, 2026 (post 09:59 EST; HN 12:11 EST, front page, 42 points).
+
+A hands-on write-up recommends **llama-cpp-rdna-boosts**, a minimal set of AMD-RDNA-specific patches re-applied to pinned llama.cpp commits, distributed as prebuilt `server-rocm-10.1` container images. On an AMD R9700 eGPU running `ukisai/Swift-1.5-Qwen3.8-27B-GGUF` at Q6_K_L with MTP enabled, the author measured token generation rising from ~35 to ~55 tok/s and prefill from ~700 to ~1300 tok/s. The post also usefully contrasts the trend of "vibe-coded" inference forks that optimize by changing *how the model thinks* (e.g., preferring VRAM-resident experts) rather than the hardware path. These are self-reported numbers on one setup.
+
+**Why it matters:** it is the clearest in-window, reproducible-ish local-inference result — a small patch set, not a whole new engine, delivering a ~1.6x decode and ~1.9x prefill gain on AMD silicon.
+
+Source: "AMD-specific fork of llama.cpp," devnull.land, 11/26/2026 9:59:36 AM — https://devnull.land/amd-specific-llama-cpp ; HN thread (12:11 EST) — https://news.ycombinator.com/item?id=50657265
+
+### Update on previously reported — GPT-6.2 Astra/Sol billing correction
+**Event date:** November 26, 2026 (The Decoder, 11/26; Techmeme Newest river, in-window).
+
+OpenAI confirmed a billing error at the GPT-6.2 launch that had over-discounted usage, per Codex engineer Thibault Sottiaux. The fix means paid users now reach limits **40% faster on Astra and 25% faster on Sol** than the prior week (still longer-lasting than GPT-6 Astra / GPT-6.1 Sol); other models were unaffected, no retroactive charges, and all Go/Plus/Pro/Business subscribers get one banked reset, with Business also getting free Fast Mode through year-end. This is a material change to the already-reported `gpt-6.2-astra-sol` launch. Separately, the same report notes OpenAI is testing a merge of Chat and Work modes for select Pro users — already covered (`chatgpt-codex-limits-merge`, `openai-chat-work-merge-confirm`), so not re-listed.
+
+**Why it matters:** effective cost-per-task on the current flagship moved materially for existing subscribers, which changes model-selection economics for heavy agent users.
+
+Source: "GPT-6.2 Astra users now hit limits 40% faster after OpenAI patched a pricing error," The Decoder, Nov 26, 2026 — https://the-decoder.com/gpt-6-2-astra-users-now-hit-limits-40-faster-after-openai-patched-a-pricing-error/ ; TechRadar — https://www.techradar.com/ai-platforms-assistants/chatgpt/weve-fixed-this-now-so-the-same-work-will-use-more-of-your-plans-usage-allowance-openai-admits-it-made-a-mistake-when-launching-gpt-6-2-and-now-paying-chatgpt-users-could-hit-their-usage-limits-up-to-40-percent-faster
+
+### Also noted (models/local inference)
+- **Bare-metal OS claim:** an HN post (12:30 EST) points to a self-published X post claiming Qwen3-0.6B runs 54% faster than llama.cpp on a bare-metal OS. Unverified, single-source — https://news.ycombinator.com/item?id=50656879 .
+Ollama was quiet.
+- **Model trackers:** Ant Group's LingSante 3.1 Air VL appeared in provider catalogs on 11/26 at $0.090/M, but with no primary-source page or independent results — tracked, not reported as a launch.
+
+## Agent tools
+
+### Kestrom: byte-verifiable LLM weight edits with tiered guarantees
+**Event date:** November 26, 2026 (HN 09:02 EST).
+
+CAPHTECH released **Kestrom**, a toolkit for editing a language model "inside a range" and letting anyone verify, byte for byte, what changed. `kestrom-verify` (Apache-2.0) rebuilds a `report.json` that a receiver can reproduce with `cmp`; the editor tools (PolyForm license for larger/commercial use) declare the exact rows written and check determinism (U0), bit-identical logits outside the range (G1), and identical greedy output up to the range (G2). Measured results on Qwen3.5-9B include banning 25,451 Chinese-only output rows (mixing 0.32 → 0.0067 with JMMLU accuracy flat), conditional style switching that left 100 quiet prompts bit-identical, and a decode-time loop guard on Qwen3.5-0.8B that raised correct answers from 4 to 26 of 100 MATH-500 problems. The README is unusually candid that several tools missed their targets.
+
+**Why it matters:** it brings reproducibility and non-interference guarantees to the weight-space-editing workflow that has recurred in this brief — useful for auditing model provenance and for safety-relevant edits where "nothing else changed" must be provable.
+
+Source: CAPHTECH/kestrom GitHub repository — https://github.com/CAPHTECH/kestrom ; HN thread (09:02 EST) — https://news.ycombinator.com/item?id=50654870
+
+### Also noted (agent tools)
+- In-window framework/CLI commits, no versioned releases: OpenClaw saw heavy housekeeping (native-draft restore after paging older messages, Activity-chart DST fixes, Codex late-worker-notice fix); OpenAI Codex added Guardian V3 shadow-review configuration from the root thread (#64187, 12:05 EST) and MCP message-board notification docs/tests (#64179); pydantic-ai added authority-aware `RepoContext`/`Skills` and Coder project-skill loading. No LangChain or MCP-servers releases in-window.
+- A small "behavioral drift detector for AI agents" (HN, 12:15 EST) and a local-first SQLite knowledge graph for coding agents (Dev-Mem, HN, 11:59 EST) were posted as self-published experiments, unverified.
+
+## AI security and governance
+
+No new, in-window AI-specific security or governance event met the verification bar. BleepingComputer's in-window items (the "GoodGuys" fake-interview phishing campaign, 12:15 EST; Remus Gmail-stealing Chrome extension, 10:23 EST) are credential/malware stories without an AI-specific hook and are not listed. The two AI-adjacent stories circulating in-window are out-of-window events being re-covered (see Just missed and Coverage notes).
+
+### Just missed the window
+- **Microsoft published a full ARTEX architecture and defender's guide** — detailing the goals/planner/worker/reporter agent loop, model-pool failover (frontier, open-weight, or abliterated models), and behavioral detections — on the Microsoft Security Blog dated **November 25, 2026**, outside this window; The Decoder re-covered it on 11/26. This is the single permitted "just missed" footnote for this event. Sources: https://www.microsoft.com/en-us/security/blog/2026/11/25/what-defenders-need-to-know-artex-agentic-ai-framework-threat-actors-abuse/ ; https://the-decoder.com/microsoft-details-how-state-backed-hackers-use-the-artex-ai-framework-to-automate-cyberattacks/
 
 ## Coverage notes
 
-- **Verified items this run:** 5 in-window items (2 framed as updates on previously reported events) plus 1 just-missed footnote. Counting unit: distinct underlying events.
-- **Ledger dedupe:** approximately 14 candidate events were suppressed as already reported, including the Italy/Switzerland autonomous-agent attacks, the 1Password GitHub breach, the FinCEN intrusion, Anthropic's Python-to-Rust Messages API migration, the FCC Starmind authorization, the B300 resale glut, the ByteDance/Alibaba/Tencent data-center loan freeze, the EU €50B sovereign-tech fund, Claude "Install as app"/Claude Ship, the prior ARTEX/Megaspeed coverage, and the omega-9-4 / GRH / VP-vs-VNP math wave.
-- **Retrieval limitations:** Reddit's public Atom lanes returned HTTP 404 on both search and subreddit listings (skill-documented intermittent failure) — the community lane could not be walked. Reuters full pages were blocked at the fetcher (wall.auth); in-window Reuters items were verified via Techmeme timestamps plus syndicated full-text copies. Direct HN front-page items (Moat, Bare Metal Qwen, Jev-backbone analysis) were checked but only Moat is a distinct in-window product event; the Jev analysis is dated Nov 24 and excluded by the event-date rule. No padding added.
+- **Verified count:** 4 substantive in-window items (Duo, AMD llama.cpp fork, GPT-6.2 billing update, Kestrom) plus 4 "also noted" lines, from a community/HN lane, vendor technical blogs, Techmeme/The Decoder/TechRadar, and GitHub commit APIs — well over five distinct outlets. Lead stories were read in full; the GPT-6.2 and AMD items carry a second independent outlet where one exists.
+- **Ledger dedupe count:** 14 candidates were suppressed as already reported, including 3 repeat-"Just missed" candidates (Mellum2.1 Instruct, PAN-OS/Fragnesia, SpaceX Starmind FCC) barred by the once-only footnote rule. Top suppressed: GLM-5.5/Kimi K4 delay, Nvidia's SEA server-shipment halt, Aaronson crypto bombshells, CBS Chinese-owned Nvidia partners, Character.AI 42-AG auction objection, Moat gateway, 1Password breach, Italy/Switzerland AI-agent attacks, Anthropic free-will rebuttal, B300 resale glut.
+- **Out-of-window re-reports not listed:** Apple pulling MiniMax Talkie (removal dated Nov 25), Dragos/MiniMax confidential-data access (~Nov 25 evening), Avicena's $100M+ Series C (Nov 24), TÜV/GitHub-agent safety-test story (Nov 3).
+- **Dead ends / lane status:** Reddit anonymous lane was unavailable this run (`.rss` HTTP 404 plus 429 backoff; OAuth credentials not configured) — logged, not treated as a negative finding. Several DuckDuckGo queries returned no results; Reuters direct fetch hit an auth wall, so the Reuters-sourced items were verified via accessible secondary outlets only. No index outage affected the final set.
