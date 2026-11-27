@@ -1,6 +1,6 @@
 {
   "site": "The Perimeter",
-  "updated": "2026-11-27T18:41:57",
+  "updated": "2026-11-27T18:53:33",
   "feeds": [
     {
       "tag": "cybersec",
@@ -1262,7 +1262,7 @@
       "tag": "ai-hardware",
       "title": "AI Hardware & Local Models Brief",
       "latest": "latest.md",
-      "updated": "2026-11-27T14:28:12",
+      "updated": "2026-11-27T18:53:33",
       "archive": [
         {
           "date": "2026-10-19",
@@ -1716,13 +1716,19 @@
         },
         {
           "date": "2026-11-27",
+          "file": "2026-11-27-1853.md",
+          "image": "media/2026-11-27-1853.jpg",
+          "audio": "media/2026-11-27-1853.mp3"
+        },
+        {
+          "date": "2026-11-27",
           "file": "2026-11-27.md",
           "image": "media/2026-11-27.jpg",
           "audio": "media/2026-11-27.mp3"
         }
       ],
-      "image": "media/2026-11-27-1428.jpg",
-      "audio": "media/2026-11-27-1428.mp3"
+      "image": "media/2026-11-27-1853.jpg",
+      "audio": "media/2026-11-27-1853.mp3"
     }
   ]
 }

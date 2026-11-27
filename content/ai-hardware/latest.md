@@ -1,77 +1,68 @@
-# AI Hardware & Local Models Brief — Nov 27, 2026 (12:45 fire)
+# AI Hardware & Local Models Brief — 2026-11-27 17:45 ET
 
-**Window:** 2026-11-27 08:53 EST → 2026-11-27 13:05 EST (prior fire → now). New items only; anything already in the reported ledger is excluded unless it has a material new development.
+**Window: 2026-11-27 12:45 ET → 2026-11-27 17:45 ET (new items only; deduped against the reported ledger).**
 
-- **AI-server PCB supply chain is the new bottleneck:** HSBC/J.P. Morgan say drill bits on dense AI boards wear after <200 holes (vs ~2,000) and Rubin Ultra backplanes could hit 78 layers — China is racing to corner copper foil and micro-drill capacity.
-- **Intel Razor Lake-AX update:** a leaker claims the flagship iGPU (32 Xe3P cores) delivers RTX 5070 Ti-class mobile performance; MoP/MoB lines separate at 96 GB / 192 GB LPDDR5X.
-- **llama.cpp gained NVFP4 "pass-through" for Inkling 2 Mini** — the native NVFP4 expert tensors can now be converted straight to GGUF, keeping the 4-bit format on-device instead of dequantizing.
-- **vLLM added pipeline parallelism + DFly speculative decoding with PD disaggregation for Hy4 Flash**, validated on GB200 with bitwise-equivalent PP output.
-- **SGLang tuned the low-M MoE stack on DGX Spark (GB10):** NVFP4 wins 1.03–1.18× across all batch sizes; MXFP8 is now gated to T=1 on SM121 where it actually helps.
+## TL;DR
+- **SemiAnalysis's Trainium3 deep dive** puts real numbers on AWS's inference chip: 144 GB HBM per chip and 4.9 TB/s at roughly 30% of GB300's cost, yielding a 73.5% modeled profit margin at 135 tok/s/user versus 53% for GB300+SGLang.
+- **A documented 101 tok/s from Inkling 2 Mini on a single GB10** (DGX Spark-class) in vLLM, with full 131K context and Qwen3.8-27B still resident — a reproducible five-step tuning recipe, not a vendor claim.
+- **A 3-bit, 1.48 GiB WebGPU quant** (Pragma-1-4B-Mobile-Q3-WGSL) now runs a 3.78B hybrid model inside mobile Safari/Chrome; a 612B "derisked" Inkling-2-Small GGUF ladder landed the same afternoon.
+- **In-window inference-stack waves**: vLLM added a Qwen4Exp SM100 fused kernel, ROCm 10.1 and a Mooncake EP backend; SGLang fused AMD gfx950 GEMM+all-reduce and added NGRAM PD-drafting; TensorRT-LLM enabled breakable prefill CUDA graphs for multimodal.
 
 ## AI hardware and silicon
 
-**China races to control the AI-server PCB bottleneck as board complexity explodes**
-*Event date: 2026-11-27 (published 12:00 EST, in-window)*
-Tom's Hardware, citing three recent HSBC and J.P. Morgan reports, details how the printed circuit boards underneath AI accelerators are becoming a supply constraint of their own. HSBC says a tungsten-carbide drill bit can wear out after fewer than 200 holes in the denser laminates used for AI boards, versus around 2,000 holes in older materials; it forecasts a backplane in NVIDIA's Rubin Ultra systems could carry 78 layers, against 4–8 for a notebook PCB and 20+ for H100-generation boards. KGI Securities notes hole depth-to-diameter ratios have moved from ~20:1 to 30:1 or 40:1, and HSBC sees a 36% annual rise in holes per board from 2025 to 2028. More than 20 Chinese PCB makers announced expansions in H1 2026, backed by a five-year MIIT/NDRC plan for high-frequency, densely layered boards and low-profile copper foil — but J.P. Morgan's Jerry Tsai warns the learning curve is "measured in years, rather than quarters."
-**Why it matters:** GPU supply gets the headlines, but board materials and drilling capacity are a second, less-visible constraint on AI-server output in 2027 — relevant to anyone tracking when high-VRAM inference cards and systems actually reach the channel.
-**Local inference:** No direct local-model impact; this is a server/manufacturing-layer story, though board-layer complexity ultimately shapes the cost and availability of the workstation and mini-PC inference hardware in this brief.
-Source: Tom's Hardware — "China's AI hardware push is moving beyond GPUs to the PCBs underneath them" (2026-11-27 12:00 EST) — https://www.tomshardware.com/tech-industry/manufacturing/chinas-ai-hardware-push-is-moving-beyond-gpus-to-the-pcbs-underneath-them-beijing-races-to-corner-the-market-on-copper-foil-and-micro-drill-bits-as-board-complexity-explodes
-
-**Update on previously reported — Intel Razor Lake-AX: MoP/MoB split and RTX 5070 Ti-class iGPU claim**
-*Event date: 2026-11-27 (published 12:54 EST, in-window)*
-Following yesterday's leak that Intel's next-next "Razor Lake-AX" chip uses on-package memory, TechPowerUp reports leaker Jaykihn's split into two lines: MoP (memory-on-package, up to 96 GB LPDDR5X, 16- and 28-core configs for laptops/mini-PCs) and MoB (memory-on-board, up to 192 GB, 28-core, with a possible 52-core dual-tile MoB still undefined). Separately, leaker Haze tweeted that the flagship's 32 Xe3P GPU cores deliver "RTX 5070 Ti mobile-like performance" — a single-line claim the outlet flags as grain-of-salt, since LPDDR5X bandwidth will be the limiting factor. MoP is tipped for late 2027. This is a material new development on the razor-lake-ax-mop+mob entry already in the ledger (which had the 96/192 GB split and 16 PCIe5 + 8 PCIe4 + 4 DMI5 lanes but not the iGPU performance tier).
-**Why it matters:** If a 96–192 GB unified-memory APU really lands with RTX 5070 Ti-class graphics, it is a direct competitor to the Ryzen AI Max 395 / DGX Spark class for large local models in laptops and 1-liter boxes. The performance claim is unverified.
-**Local inference:** Targets laptop/mini-PC class with 96 GB (MoP) to 192 GB (MoB) LPDDR5X — enough unified memory for 100B-class weights at 4-bit; availability late 2027, rumor status.
-Source: TechPowerUp — "Intel 'Razor Lake-AX' Split Into MoP and MoB Lines, iGPU Tipped at RTX 5070 Ti Laptop Level" (2026-11-27 12:54 EST) — https://www.techpowerup.com/355272/intel-razor-lake-ax-split-into-mop-and-mob-lines-igpu-tipped-at-rtx-5070-ti-laptop-level
-
-## Model releases
-
-No new first-party open-weight flagship was first disclosed inside this window. Inkling 2 Mini (Thinking Machines) remains the dominant trending model on Hugging Face, but its release and the day-0 quant wave were covered in earlier editions.
-
-## Community spins and quantizations
-
-**Fresh imatrix quant ladder from mradermacher (in-window)**
-*Event dates: 2026-11-27 16:29–16:47 UTC (12:29–12:47 EST), in-window*
-Several new GGUF uploads landed inside the window: `mradermacher/Llama-3.2-3B-Thinking-SFT-i1-GGUF` (a reasoning-distilled Llama 3.2 3B trained on the qwen-glm-kimi-distillation-clean dataset), `mradermacher/DaisyRose-27B-Heretic-v2-MTP-i1-GGUF` (a 27B heretic/abliterated spin that keeps the MTP speculative-decoding head), `mradermacher/gemma-4-31B-it-scotoma-2-heretic-i1-GGUF` and `mradermacher/CIG-27B-IPR-i1-GGUF` (a code-based image-generation model). All are imatrix-tuned i1 ladders with published multi-tier file sets.
-**Why it matters:** The Thinking-SFT quants bring chain-of-thought behavior to a 3B Llama footprint, and the DaisyRose MTP-preserving quant keeps draft-model spec-decode intact — both are small-VRAM-friendly additions to the local menu.
-**Local inference:** The 3B and 27B quants fit consumer cards — roughly 2–4 GB and 16–24 GB at Q4_K_M respectively; 31B tiers need 20+ GB or CPU/RAM offload.
-Source: Hugging Face model API — https://huggingface.co/api/models?author=mradermacher&sort=lastModified&direction=-1&limit=25 ; individual cards e.g. https://huggingface.co/mradermacher/DaisyRose-27B-Heretic-v2-MTP-i1-GGUF
+**SemiAnalysis publishes a first-principles Trainium3 inference microarchitecture deep dive** — Event date: 2026-11-27 (surfaced on HN ~16:02 ET, in window).
+The paid report measures Trainium3 against GB300 using its open UBenchX/InferenceX suite. Each Trainium3 chip has 8 NeuronCore-v4s and 144 GB HBM (half a GB300 GPU's capacity), 2,517 TFLOPS FP4 (17% of Blackwell Ultra's ~15,000) but 4.9 TB/s bandwidth (61% of GB300's 8.0 TB/s) at about 30% of the TCO. At a p90 of 135 tok/s/user, Trainium3+vLLM models a 73.5% profit margin versus 53% for GB300+SGLang at 3-year rental prices. A "Trainium3n" revision using 320-lane Astera Scorpio X gen2 switch trays delivers 2.8× the all-to-all bandwidth of gen1 — directly benefiting MoE expert routing. Descriptor Generation Engines let Trainium hit peak memory-bandwidth utilization at small message sizes, which SemiAnalysis says Nvidia GPUs cannot do.
+**Why it matters:** It is the most detailed independent counter-claim yet that a non-CUDA, memory-bound-optimized accelerator can win on inference economics despite having a fraction of the raw FLOPs — relevant to anyone sizing inference hardware on tokens-per-dollar rather than peak TFLOPS.
+**Local inference:** Datacenter-class (144 GB HBM/chip, 16 chips/node) — not a desktop part; the "Short King" thesis (less HBM, more throughput at target latency) is the transferable idea for 16–32 GB local cards.
+Source: SemiAnalysis, "AWS Challenger: Trainium3 Inference and Microarchitecture Deep Dive," 2026-11-27 — https://newsletter.semianalysis.com/p/trainium3-inferencex (HN discussion surfaced 2026-11-27 21:02Z)
 
 ## Inference software and benchmarks
 
-**llama.cpp adds native NVFP4 pass-through for Inkling 2 Mini (PR #33062)**
-*Event date: merged 2026-11-27 14:44 UTC (09:44 EST), in-window*
-A new llama.cpp path lets the Inkling 2 Mini checkpoint — shipped as NVFP4 + MXFP8 + BF16 with 3-D fused expert tensors — be converted directly to an NVFP4 + Q8_0 GGUF, keeping the native 4-bit expert weights rather than dequantizing them. The workflow uses `convert_hf_to_gguf.py --fp8-as-q8` followed by `llama-quantize --tensor-type ...ffn_*_exps.weight=nvfp4`; conversion is gated behind an environment variable, and the author notes Muse Spark Open needs similar adaptation. Same-day llama.cpp merges also fixed an ADD_ID launch above 65,535 tokens (#33162), hardened Vulkan empty-conv3D handling (#33106), and further optimized the Vulkan coopmat2 Gated Delta Net path (#32860).
-**Why it matters:** Keeping Inkling 2 Mini's experts in NVFP4 cuts its GGUF footprint and lets Blackwell/DGX Spark hardware use the format natively — a real hardware-fit improvement for the week's most popular local model.
-**Local inference:** NVFP4 is a Blackwell-family (SM120/SM121, e.g. RTX 50-series / DGX Spark GB10) format; the Q8_0 non-expert layers keep quality on any backend.
-Source: NVIDIA/ggml-org llama.cpp PR #33062 (merged 2026-11-27 14:44 UTC) — https://github.com/ggml-org/llama.cpp/pull/33062
+**Reproducible 101 tok/s from Inkling 2 Mini on one GB10 in vLLM** — Event date: 2026-11-27 (HN Show HN 18:59Z = 13:59 ET, in window).
+Runtime Notes documents tuning a DGX Spark-class MSI EdgeXpert (single GB10, 128 GB unified) to 101 tok/s for one request, 195.7 tok/s across four, and 9.7 s time-to-first-token on a 32K prompt — while keeping Qwen3.8-27B loaded and Inkling's full 131,072-token context. Five changes are detailed: rounding the expert planner's `max_ctas` to a power of two (compile stalls cut 67–90%); INT8 draft copies of DFlash2's 21 linear layers and output head (+4.3–4.9%); probabilistic drafting (+14–20% on sampled requests); adaptive verify width that marks low-confidence rows as "no expert" padding (+5.2–5.4%); and a prefill GEMM config that cut 32K TTFT from 12.2 s to 9.7 s. Inkling used 36% of device memory; the author's single-request result beats tonyd2wild's published TensorFold port (105.5 on a different bench) and trails knapcio's SGLang recipe (112.0).
+**Why it matters:** It is a fully reproducible, numbers-backed local-inference result on the same GB10/DGX Spark class many readers own, and it shows spec-decode tuning (draft precision, verify width, compile-stall removal) now matters more than raw model swaps on unified-memory boxes.
+**Local inference:** Single GB10 / DGX Spark-class 128 GB unified (Inkling ≈44 GiB allocation, Qwen3.8-27B resident) — directly transferable to RTX 5060 Ti 16 GB-class reasoning about memory headroom.
+Source: Runtime Notes, "Getting 101 tok/s from Inkling 2 Mini in vLLM on one GB10," 2026-11-27 — https://runtimenotes.com/blog/getting-101-tok-s-from-inkling-2-mini-in-vllm-on-one-gb10/
+Source (model support): vLLM Recipes, "thinkingmachines/Inkling-2-Mini" (Blackwell/Hopper/DGX Spark verified) — https://recipes.vllm.ai/thinkingmachines/Inkling-2-Mini
 
-**vLLM ships Hy4 Flash pipeline parallelism and DFly + PD disaggregation (PR #70300)**
-*Event date: merged 2026-11-27 14:20 UTC (09:20 EST), in-window*
-vLLM now serves the closed Tencent Hy4 Flash model with `--pipeline-parallel-size > 1` and with DFly speculative decoding over NixlConnector or MooncakeConnector — both were previously rejected at startup. Validation on GB200 with Hy4-flash-FP8 shows TP2×PP2 output bitwise-equal to PP=1 and accuracy matching TP; AIME25 scores run 0.978–1.000 across TP4/TP2/TP2×PP2 configs, with DFly acceptance around 38%/43%. A companion kernel change (#65427) avoids splitting rows shorter than k in `top_k_per_row_decode`, and #68968 lets out-of-tree platforms register FP8 MoE experts.
-**Why it matters:** PP support lets a long-context 220B-ish model like Hy4 Flash spread across more GPUs without tensor-parallel-only constraints, and DFly + PD disaggregation brings its speculative decoding to split prefill/decode serving.
-**Local inference:** Datacenter-class (GB200/H200, FP8, multi-GPU TP×PP); not a single-consumer-GPU configuration, but the patterns flow down to multi-GPU homelabs over time.
-Source: vLLM PR #70300 (merged 2026-11-27 14:20 UTC) — https://github.com/vllm-project/vllm/pull/70300 ; coverage of same-window wave — https://github.com/vllm-project/vllm/commits/main
+**vLLM in-window merge wave (UI→early evening ET)** — Event date: 2026-11-27.
+Merged this window: #70160, a Qwen4Exp SM100 tcgen05 fused "HC down+inject+SiLU" kernel (22:02Z); #62536, ROCm bumped to 10.1 with MORI v1.2.4 and amd-smi fixes (20:57Z); #58375, a Mooncake EP all-to-all backend (20:42Z); #69666, use of the public Gluon reinterpret API for Inkling 2 (19:17Z); and #70020, corrected `/v1/decisions` score probabilities (18:02Z).
+**Why it matters:** ROCm 10.1 plus a fused Blackwell MoE kernel and a new EP backend change where Qwen4Exp-class MoEs run efficiently (AMD gfx950 and SM100) — hardware-fit shifts, not cosmetic changes.
+**Local inference:** SM100 (B200/GB200/Radeon-side ROCm 10.1) datacenter tiers; the Gluon/Inkling-2 path is the consumer-relevant one (GB10/DGX Spark).
+Source: vLLM GitHub commits, 2026-11-27 17:45–22:45Z — https://github.com/vllm-project/vllm/commits/main/
 
-**SGLang tunes the Inkling 2 low-M MoE stack on DGX Spark (GB10) — PR #53557**
-*Event date: merged 2026-11-27 13:59 UTC (08:59 EST), in-window*
-A follow-up to earlier SM120 low-M kernels (#53368–53370) benchmarks the stack on NVIDIA GB10 (DGX Spark, CC 12.1, 48 SMs): low-M routing wins 1.40–2.65× for all T=1..64, low-M NVFP4 wins 1.03–1.18× across the same range, but the MXFP8 grouped GEMM is 4–5% slower than CUTLASS at T=8..64. The fix gates the MXFP8 path to SM120 or T=1, falling back to the general path on SM121 for larger batches; 24 tests pass bitwise-equal. Same-window SGLang merges also applied Nemotron 3 Nano Omni defaults (#50021), waited for stream-fenced hicache write-backs (#52437), and streamed the GigaChat/magi2 diffusion text encoder layer-by-layer on GPU (#53452).
-**Why it matters:** These are the kernels that decide whether Inkling 2 Mini's 26B/3.5B MoE actually runs fast on a 128 GB DGX Spark or RTX 50-series card — the measurements are device-specific and favor native low-bit paths.
-**Local inference:** Explicitly tuned for NVIDIA GB10 / DGX Spark (SM121, 128 GB unified) and SM120 RTX 50-series; the T=1 decode case is the target.
-Source: SGLang PR #53557 (merged 2026-11-27 13:59 UTC) — https://github.com/sgl-project/sglang/pull/53557
+**SGLang in-window wave: AMD fused MoE + NGRAM PD drafting + Lingbot-MoE** — Event date: 2026-11-27.
+Merged this window: #43480, fusing DSv4.1's `wo_b` GEMM with its all-reduce via `mori cco` on gfx950 (20:56Z); #52551, an NGRAM draft-input builder for PD decode (22:12Z); #47920, Qwen prefill context-parallelism with whole-expert EP and optimized NIXL KV transfers (21:34Z); #32848, decoder-free Lingbot-MoE video diffusion adapters (21:57Z); #52223, pi-H3 2/4-step adapters; and #51728, a `weight_cache` load-diff format.
+**Why it matters:** The gfx950 GEMM+all-reduce fusion and whole-expert-EP prefill lower the communication tax on AMD MI350/MI355-class hardware; NGRAM drafting adds a vendor-free speculative-decode option for disaggregated serving.
+**Local inference:** Primarily MI350X/MI355X (gfx950) and datacenter NIXL deployments; NGRAM drafting is engine-level and consumer-applicable.
+Source: SGLang GitHub commits, 2026-11-27 17:45–22:45Z — https://github.com/sgl-project/sglang/commits/main/
 
-**Also noted (in-window, minor):**
-- TensorRT-LLM merged a batch of fixes/docs: batch attention-DP prompt delivery (#22727), Kimi K3 metadata prep coverage (#22915), and a serve-CLI refactor (#17271).
-- llama.cpp UI: markdown tables now drawn with row rules (#33195); ggml-zdnn exposes zTensor memory for fitting (#31849).
-- SGLang cookbook refresh for diffusion and "Action Models" pages (#53602).
+**TensorRT-LLM and Ollama: multimodal prefill graphs and a server bump** — Event date: 2026-11-27.
+TensorRT-LLM #21333 enabled breakable prefill CUDA graphs for multimodal models for both text and media requests (21:09Z), with #22958 isolating a QSA decode plan-count test (20:03Z). Ollama merged #19953, bumping its bundled llama-server (21:06Z).
+**Why it matters:** Breakable prefill graphs reduce graph-replay waste on mixed text/image batches — a concrete latency win for VLM serving on NVIDIA tiers.
+**Local inference:** TensorRT-LLM targets NVIDIA datacenter/Blackwell; the Ollama llama-server bump propagates llama.cpp speedups to local installs.
+Sources: https://github.com/NVIDIA/TensorRT-LLM/commits/main/ and https://github.com/ollama/ollama/commits/main/ — 2026-11-27 17:45–22:45Z
 
-## Just missed the window
+## Community spins and quantizations
 
-- **TSMC AI Design Kit (ADK)** — Tom's Hardware, published ~08:00–08:28 EST, just before the 08:53 window start. TSMC unveiled the ADK at its 2026 Europe OIP Ecosystem Workshop in Munich: process-specific data and methodologies that let AI agents automate physical chip implementation, complementing traditional PDKs, with A14 design-rule count at 3.6× N5. Not re-footnoted in future editions. — https://www.tomshardware.com/tech-industry/semiconductors/tsmc-gives-a-sneap-peak-at-ai-design-kit-agentic-ai-with-foundry-expertise
+**Pragma-1-4B-Mobile-Q3-WGSL: a 3-bit, 1.48 GiB WebGPU quant for phone browsers** — Event date: 2026-11-27 (HF repo created 22:33Z = 17:33 ET, in window).
+Yours Research packed all 32 hybrid Gated-DeltaNet + GQA layers of Pragma-1-4B (3.78B params, Apache-2.0, Qwen3.5-4B-derived) into a planar Q3_B128 layout at 3.25 bits/weight with 4-bit tied embeddings. Total download is 1.48 GiB; live tracked GPU memory in mobile Safari/Chrome is ~1,583 MiB (1,511 MiB weights + 50 MiB DeltaNet state + 17 MiB Int8 KV), under iOS Jetsam limits, using `shader-f16` with no subgroups requirement and resumable OPFS streaming.
+**Why it matters:** It is a credible, spec'd example of a modern hybrid-attention model fitting entirely in a phone browser's GPU budget — a real local-inference hardware milestone rather than a size-only claim.
+**Local inference:** Apple/Qualcomm mobile GPUs via WebGPU, ~1.6 GiB VRAM; desktop Q4 and BF16 variants also published.
+Source: yours-research/Pragma-1-4B-Mobile-Q3-WGSL, Hugging Face, created 2026-11-27 22:33Z — https://huggingface.co/yours-research/Pragma-1-4B-Mobile-Q3-WGSL
+
+**Inkling-2-Small-Derisked-GGUF: a 612B derisked-MoE GGUF ladder** — Event date: 2026-11-27 (HF repo created 22:07Z = 17:07 ET, in window).
+freakyskittle uploaded static quants of Blackfrost-Research's derisked Inkling-2-Small (612B MoE, 48 layers, 384 experts, top-8): Q8_0 631 GB down through UD-Q4_K_XL ~380 GB (imatrix) to IQ1_M ~135 GB. Files require a llama.cpp build with Inkling-2 architecture support (`#33055`); only the text backbone is converted so far — no vision tower or MTP head — and the repo is explicitly work-in-progress with one-at-a-time smoke tests.
+**Why it matters:** "Derisked" (refusal/alignment-ablation) work on a 600B-class open MoE arriving as community GGUFs the same week the base is fresh shows how fast the quantization pipeline now turns frontier-scale weights into locally loadable tiers.
+**Local inference:** 135 GB+ (IQ1_M) up to 631 GB (Q8_0) — multi-GPU or very large unified-memory machines only; well beyond a 16 GB card.
+Source: freakyskittle/Inkling-2-Small-Derisked-GGUF, Hugging Face, created 2026-11-27 22:07Z — https://huggingface.co/freakyskittle/Inkling-2-Small-Derisked-GGUF
+
+### Also noted
+- **mradermacher/LFM3-1.7B-Looped-GGUF** (HF, created 22:40Z = 17:40 ET): static quants of vaultpls's looped LFM3-1.7B, Q2_K 0.9 GB → f16 4.1 GB; tiny-footprint local tier. https://huggingface.co/mradermacher/LFM3-1.7B-Looped-GGUF
 
 ## Coverage notes
-
-- **Verified items this run:** 10 substantive in-window items (2 hardware, 1 community-quant cluster, 6 inference-software items, 1 update) plus 1 just-missed footnote. Counting unit: distinct underlying events/PRs, not headings.
-- **Dedupe gate:** the reported.md ledger was read in full and applied. Roughly 25+ candidates were suppressed as already reported — chiefly the entire 11-27 08:53 fire set (Razor Lake MoP/MoB base leak, RDNA5 Linux 7.5, Vesper-31B heretic, llama.cpp #28898/#33133, vLLM/SGLang/TensorRT-LLM overnight waves) plus the 11-26 fires (A14 PDK, Kioxia GP2, GigaChat4-37B, R9700 RDNA benchmark write-up, OCRia-1 NVFP4). The 08:53 fire listed no just-missed footnotes, so none were repeat-suppressed this run.
-- **Unavailable lane:** Reddit (r/LocalLLaMA) — both the search `.rss` and the `new.rss` fallback returned HTTP 404 from this host; logged as unavailable, not as a negative finding. HN Algolia river was reachable and swept (llama.cpp / local LLM / GPU AI queries), but its highest-scoring local-AI item (the AMD-specific llama.cpp fork write-up) was already reported in the 11-26 13:24 fire.
-- **Thin hardware press day:** most mainstream hardware coverage in the window was Black Friday deal posts (motherboards, monitors, gaming laptops) or pre-window items (Nvidia $290M crypto-settlement, Kioxia XL-Flash Gen3 3µs flash). No new MLPerf/llama.cpp/vLLM benchmark result was published by a vendor in-window; the benchmark numbers above come from PR descriptions in the projects' own repos.
+- **Verified: 10 items** (2 lead hardware/benchmark, 4 inference-software merge waves, 2 community-spin ladders, 1 also-noted quant, 1 model-support cross-reference) across ~6 independent outlets/rivers: SemiAnalysis, Runtime Notes/HN, vLLM, SGLang, TensorRT-LLM/Ollama GitHub, and Hugging Face (~177 models scanned; 57 created in-window, mostly zero-download noise).
+- **Reddit lane unavailable:** both the anonymous Atom `search.rss` and `r/LocalLLaMA/new.rss` returned 404 this fire — r/LocalLLaMA community posts could not be swept; not a negative finding.
+- **Suppressed as already reported (ledger dedupe):** the Tom's "sandboxed models talk via GPU rounding errors" story (footnoted once, never again), the Razor Lake-AX iGPU/RTX 5070 Ti rumor update, and the China AI-PCB bottleneck item — all re-surfaced in-window but previously listed.
+- **Held / could not pin to window:** Kioxia 3rd-gen XL-Flash (3 µs read latency, 70% higher bit density, samples March 2027) appeared at the top of Tom's November 27 archive but the search index reported it ~23 hours old (Nov 26 evening); with the related GP2 SSD already in the ledger, exact in-window placement could not be verified. No third retrieval attempt.
+- GitHub rivers were healthy (llama.cpp 1, vLLM 10, SGLang 17, TensorRT-LLM 2, Ollama 1, ComfyUI 0 commits in-window); llama.cpp's single commit was a UI-only change, not substantive.
