@@ -1,54 +1,51 @@
-# Cybersecurity News Briefing — Air Force Cloud One breach; SVDB vulnerability database (Nov 27, 12:00 ET)
+# Cybersecurity News Briefing — Friday, November 27, 2026 (Afternoon Edition)
 
-**Window: 2026-11-27 07:21 → 12:57 EST** (12:00 fire, run late; previous fire swept to 07:21). New-items-only — events already carried in earlier editions are excluded. This is a short midday window following a heavy 07:20 edition, so the verified new-item count is low.
+**Window:** 2026-11-27 12:57 EST → 2026-11-27 17:21 EST (new items only; prior fire 12:00, ran 12:57). Times below are ET unless noted.
 
-- **US Air Force Cloud One breach (lead):** Reuters exclusive, broken ~mid-morning ET — hackers reached the control plane of the Air Force's flagship multi-cloud platform during an upgrade; attackers, scope and data loss all unknown. Severity not specified by source (breach disclosure, not a CVE).
-- **Defensive tool:** Positive Security publishes SVDB, an LLM-enriched, structured CVE/GHSA vulnerability database with an open schema and daily updates.
-- No new in-window CISA KEV additions and no new in-window exploited-vulnerability disclosure — most vuln news in this window was a re-report of items already carried (Cacti 4HTTP2ROOT, Drupal, SAP, NFS2ROOT, WSUS 2028).
-- Two substantial disclosures landed just before the window and are footnoted once below (WeaveLotus espionage campaign; DIGIT e-government SQLi CVE-2026-136706).
+## TL;DR
+- **pCloud confirms a cyberattack on its pCloud Pass password manager** — a "small number" of user email addresses were exposed and login attempts made, triggering confusing "unknown device" alerts that bypassed 2FA and pointed at pCloud's own Luxembourg infrastructure.
+- **Boston Scientific discloses a second 2026 breach** — a May voice-phishing attack reached cloud business applications, exposing personal and medical data of roughly 117,789 people (Texas AG portal figure); the company says it is unrelated to August's operational outage.
+- **CISA adds three CVEs to its KEV catalog** — two GeoServer flaws and Drupal's CVE-2026-136716. All three are material updates to events this briefing already covered; federal remediation deadlines fall Nov 27–30.
+- No genuinely new in-window defensive-tool release was verified. Kenya's reported 740GB eCitizen claim and the Japan MEXT procurement breach could not be confirmed inside the window and are logged as limitations.
+
+## Vulnerabilities and patches
+
+**CISA adds GeoServer pair and Drupal site-takeover flaw to KEV (update on previously reported)** — Event date: 2026-11-27, catalog released 18:03 UTC (13:03 ET).
+CISA's KEV catalog version 2026.11.27 (count 1,808) added **CVE-2026-120705** (OSGeo GeoServer XML injection, readable local files / SSRF via WFS GetFeatureById), **CVE-2026-129243** (GeoServer incorrect authorization, service-level role-check bypass), and **CVE-2026-136716** (Drupal Core improper handling of exceptional conditions — the second highly-critical installer site-takeover flaw, a follow-on to Fail2Install CVE-2026-132165). The two GeoServer flaws are part of a five-bug chain to unauthenticated RCE; both were reported here on Nov 25 as probed in the wild, and CVE-2026-136716 was reported Nov 26 as exploited. Severity: **Not specified by source** (the CISA alert assigns no CVSS). BOD 26-04 due dates are Nov 30 for the GeoServer entries and Nov 27 for Drupal.
+**Why it matters:** A KEV listing is CISA's highest-priority exploitation signal — it converts previously "ITW-probed" findings into a mandatory remediation clock for federal civilian agencies and a strong prioritization cue for everyone else. That all three were already on our radar shows how fast advisory status can escalate.
+**Action:** Apply vendor mitigations per BOD 26-04 and CISA's "Forensics Triage Requirements" — check for compromise before patching, since these flaws may already have been used. For Drupal, verify the site is not in an incomplete/unusual install state, which the UI does not reveal.
+Source: CISA, "CISA Adds Three Known Exploited Vulnerabilities to Catalog," Nov 27, 2026 — https://www.cisa.gov/news-events/alerts/2026/11/27/cisa-adds-three-known-exploited-vulnerabilities-catalog
+Source: CISA KEV catalog JSON (v2026.11.27, released 2026-11-27T18:03:12Z) — https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+Source: InfoSecNexus, "Live Cybersecurity Brief," updated Nov 27, 2026 (IST timestamps) — https://infosecnexus.com/live-cybersecurity-brief/
 
 ## Attacks and campaigns
 
-**US Air Force Cloud One platform breached via software flaw; control plane reached**
-*Event date: 2026-11-27 (~09:00–10:00 ET, Reuters exclusive)*
+**pCloud confirms attack on pCloud Pass password manager** — Event date: 2026-11-27 (first mainstream report 14:26 ET).
+Users worldwide received alerts that an unfamiliar device named "pd" had connected to their pCloud Pass accounts from Luxembourg IPs (45.131.244.7 / 45.131.247.10) that resolve to pCloud's own AS51154 — even when 2FA was enabled, and in some cases to people who never used Pass or to an address tied to a storage account deleted a year ago. The "Open settings" link pointed to the QA host passqa1.pcloud.com, and pCloud's MX records briefly went missing Nov 27. pCloud confirmed "a cyberattack targeting pCloud Pass occurred, which was promptly contained," with a small number of user email addresses exposed and login attempts made; it says cloud storage and zero-knowledge-encrypted vault contents were unaffected. Severity: **Not specified by source**. No count, timeline, root-cause analysis, or statement on whether encrypted vault blobs were copied has been published.
+**Why it matters:** It is the third password-manager incident this month (after mSecure and 1Password) and the least transparent. "Client-side encryption protects the plaintext but not a stolen ciphertext backup" — the unanswered question is whether vault blobs left the servers, which would enable offline cracking as in the 2022 LastPass breach.
+**Action:** Don't click links in unexpected security alerts; open the app or type pcloud.com directly. Audit active sessions for "pd," revoke anything unrecognized, rotate any short/reused master password, confirm app-based 2FA, and expect targeted phishing against the exposed email addresses.
+Source: BleepingComputer, "pCloud confirms password manager hack after suspicious login alerts," Nov 27, 2026 2:26 PM ET — https://www.bleepingcomputer.com/news/security/pcloud-confirms-password-manager-hack-after-suspicious-login-alerts/
+Source: WindowsForum, "pCloud Pass Cyberattack Exposes User Emails," Nov 27, 2026 14:40 ET — https://windowsforum.com/news/pcloud-pass-cyberattack-exposes-user-emails-triggers-unusual-login-alerts.454368/
+Source: CyberMonit, "pCloud confirms password manager hack," Nov 27, 2026 — https://cybermonit.com/en/news/pcloud-confirms-password-manager-hack-after-suspicious-login-alerts
 
-Hackers breached Cloud One, the US Air Force's flagship enterprise cloud platform, by exploiting an unidentified software vulnerability, according to a Reuters exclusive carried widely by BleepingComputer, the Guardian, Forbes, The Hill, Bloomberg Law and others. The intrusion is reported to have been discovered within the past month during a platform upgrade; it disrupted application migrations and software updates, and one source said the attackers reached the platform's control plane. Cloud One hosts applications for military operations, personnel management, logistics and maintenance, and feeds the theater-integrated combat munitions system (TICMS), which tracks munitions inventories at more than 200 locations. US Cyber Command was called in to assess impact; the identity of the attackers, the full scope and whether any data was stolen remain unknown. The Air Force declined to comment on the status of the affected systems. It is not known whether this breach is connected to the recent run of federal intrusions (FBI NCIC, CIA/ODNI/NGA OSINT system, FinCEN). It also remains unknown whether ARTEX or another AI-driven attack framework was used.
-
-- **Severity:** Not specified by source (breach disclosure; no CVSS rating published).
-- **Why it matters:** Cloud One is a central hub for Air Force command-and-control and logistics, so control-plane access could in theory expose aircraft operational status or spare-parts movement. It is the latest in a cluster of federal breaches and underscores the exposure of large multi-cloud estates with many credentialed access points.
-- **Action:** No vendor or agency remediation guidance published at time of writing; watch for an Air Force or Cyber Command statement and any indicators of compromise.
-
-Sources:
-- "US Air Force cloud platform reportedly hacked in latest federal breach," BleepingComputer, 2026-11-27 10:09 ET — https://www.bleepingcomputer.com/news/security/us-air-force-cloud-platform-reportedly-hacked-in-latest-federal-breach/
-- "EXCLUSIVE: Hackers breach US Air Force flagship Cloud One computing platform," Reuters, 2026-11-27 — https://www.reuters.com/world/hackers-breach-us-air-force-flagship-cloud-one-computing-platform-2026-11-27/
-- "Hackers reportedly breach US air force's flagship cloud computing platform," The Guardian, 2026-11-27 — https://www.theguardian.com/technology/2026/nov/27/hackers-breach-us-air-force-cloud-computing
+**Boston Scientific discloses second 2026 breach via vishing** — Event date: 2026-11-27 (notification letters going out; first mainstream report 13:57 ET).
+A voice-phishing attack gave attackers access to the medical-device maker's cloud business applications and hosted data between May 7 and 12; the company learned of the unauthorized access May 12 and determined a breach occurred Nov 5. The Texas AG breach portal lists 117,789 affected people; exposed fields include full name, address, SSN, government-issued ID number, medical and health-insurance information, and date of birth. Patient records, remote-monitoring systems, connected devices, and clinical workflow apps were not touched, and there was no operational or product-safety impact. A spokesperson confirmed this is unrelated to the Aug 25 cyberattack that disrupted manufacturing and shipping. Severity: **Not specified by source**. No free credit monitoring is offered.
+**Why it matters:** A second breach in one year at a top-20 medical-device manufacturer shows the sector's exposure is not limited to operational disruption — the vishing-to-cloud path reaches regulated personal and health data directly, with SSNs and government IDs in the haul.
+**Action:** Affected individuals should use free credit reports and consider fraud alerts and credit freezes; treat any "Boston Scientific support" follow-up as hostile.
+Source: BleepingComputer, "New Boston Scientific data breach exposes personal, medical info," Nov 27, 2026 1:57 PM ET — https://www.bleepingcomputer.com/news/security/new-boston-scientific-data-breach-exposes-personal-medical-info/
+Source: WindowsForum, "Boston Scientific Vishing Breach Exposes Personal Data," Nov 27, 2026 — https://windowsforum.com/news/boston-scientific-vishing-breach-exposes-personal-data-in-cloud-business-apps.454370/
+Source: BreachRecord, "Boston Scientific Corporation Data Breach (November 2026)" — https://breachrecord.com/breach/boston-scientific-2026-11/
 
 ## Defensive tools and advisories
 
-**Positive Security releases SVDB — an LLM-enriched, structured vulnerability database**
-*Event date: 2026-11-27 (public by ~08:20 ET)*
-
-Positive Security published SVDB, a structured, LLM-enriched database that layers deterministic, machine-readable data over public CVE and GHSA records. The schema separates "effects" (code execution, data read, DoS, with sub-fields such as credentials and bounds) from nine "attack path" dimensions (vector, privileges, interaction, conditions, code location, exposure, exploitation-in-the-wild, protocol, file type), to help triage large scan reports by real attack surface rather than raw CVSS. The project argues that inflated severities, inaccurate vectors and slow dispute handling make raw CVE data hard to use at scale; it is releasing the data and tooling and promises daily updates. The accompanying analysis reports memory-management vulnerability rates by language and a sharp rise in new CVE publication in 2026.
-
-- **Severity:** Not specified by source (a defensive data/tool release, not a vulnerability).
-- **Why it matters:** Gives defenders a deterministic, openly documented way to reprioritize millions of scan findings — directly relevant where critical-severity volume far exceeds patching capacity.
-- **Action:** The dataset and schema are available at https://svdb.positive.security/ (project blog: https://positive.security/blog/svdb).
-
-Source:
-- "SVDB: A structured database for better vulnerability management," Positive Security, 2026-11-27 — https://positive.security/blog/svdb
+No genuinely new, in-window defensive-tool release, open-source utility, or nontrivial advisory was verified in this short afternoon window. The CISA KEV action above is cross-listed under Vulnerabilities and patches rather than counted twice.
 
 ## Also noted
-
-- Ransomware leak-site activity around midday (operator claims, unverified): Brit Ltd/Brit Insurance (INC Ransom), Friedl Richardson (The Gentlemen), Ferrometalco and a US CNC company (Soul), MedMira (Deadlock), and a cluster from Iah647. RansomNews tallied 29 listings in the 24 hours to 18:37 UTC — down from 34 the prior day. Source: https://ransomnews.com/ransomware-attacks-today/
-
-## Just missed the window
-
-- **WeaveLotus / Operation RedOps (Vietnam-linked espionage):** SOCRadar published its research on Nov 26 (before this window); The Hacker News carried the in-window writeup at 11:36 ET on Nov 27. The campaign compromised five government, military and legislative organizations in Thailand and the Philippines and ran reconnaissance against 30+ Indonesian agencies to collect South China Sea intelligence, exploiting GeoServer CVE-2024-36401 (CVSS 9.8), osTicket CVE-2021-42235 (CVSS 9.8), JasperReports default credentials and Laravel debug mode. Source: https://thehackernews.com/2026/11/suspected-vietnam-linked-hackers-target.html
-- **India DIGIT e-government platform SQLi (CVE-2026-136706, CVSS 9.3 per CERT-IN):** The Register published at 01:19 UTC Nov 27 (20:19 ET Nov 26), pre-window. The unauthenticated SQL injection affects the User and Access Control Service of a platform used by governments serving 2+ billion people; a fixed source release is available. Source: https://www.theregister.com/security/2026/11/27/free-e-government-platform-that-serves-two-billion-people-in-ten-countries-has-critical-sql-injection-bug/5312449
+- **Mid Michigan Medical Billing Service** — a data-breach claim surfaced via a class-action claim-depot notice at ~16:08 ET; scope and primary filing unverified. Treated as a lead, not a confirmed event.
 
 ## Coverage notes
-
-- **2 items verified in-window** (1 breach disclosure + 1 defensive-tool release), plus 1 also-noted leak-site roundup and 2 just-missed footnotes. No padding: this is a short 5.5-hour midday window immediately after a heavy 07:20 edition.
-- **Ledger dedupe: ~20 candidates suppressed as already reported** in prior editions, including Cacti 4HTTP2ROOT, Q-Dir/DesktopOK, Vinci RAT, Switzerland AI attacks, WSUS 2028 removal, Drupal CVE-2026-136716, SAP GitHub incident, the emergency Windows Server hotpatch, NFS2ROOT, FinCEN/CIA-ODNI/FBI-NCIC federal breaches, myColorado, 1Password, Flight Centre, FIFA, the CISA 10-KEV batch, ShinyHunters/Inception, GeoServer and Idunno AntiCsrf.
-- **Negative check:** no new CISA KEV additions in-window (latest batch remains Nov 25); realinfosec logged 0 new KEV-linked exploits on Nov 27. CISA advisory pages did not fetch in this run.
-- **Coverage limitations:** the Reddit lane was unavailable this fire (anonymous Atom feed returned 404/429; no credentials configured) — logged, not retried past one strike. Two Cyber Security News candidates (Slovenia freezer-100°C incident, 3,089 Telegram spy-recruitment posts) failed to fetch (404) and could not be verified; they were dropped rather than cited. Hacker News, multiple news rivers and 5+ independent outlets were swept.
+- **Verified items this run: 3** (2 new events + 1 "Update on previously reported"). Counting unit = distinct underlying event/advisory action; the CISA KEV batch is one update even though it covers three CVEs and overrides two earlier entries.
+- **Outlets swept (12+):** BleepingComputer, The Hacker News, SecurityWeek, The Record, CISA, Daily Security Review, InfoSecNexus, WindowsForum, Ransomnews, The Perimeter Site, Reuters, breachrecord/Bing index. Community lanes: HN Algolia river (queried; only older/duplicate items); Reddit r/netsec not separately surfaced this run.
+- **Dedupe gate:** roughly 24 in-window or near-window candidates were suppressed as already reported in the ledger — including USAF Cloud One, SAP/GitHub source-code theft, NFS2ROOT CVE-2026-99362, WSUS removal in Server 2028, KB5138318 hotpatch, Q-Dir/DesktopOK trojanizing, Swiss AI-attack confirmation, myColorado (~100k), Vinci RAT, WeaveLotus, DIGIT CVE-2026-136706, AFP outage, Japan MEXT, FIFA, Gatwick, Flight Centre, 1Password, Todoist, KEPCO, McDonald's Japan, Nikkei, Microsoft's Chinese phishing-kit seizure, UK DWP outage, and Zodia Custody. The CISA KEV additions are logged as updates to the Nov 25 GeoServer and Nov 26 Drupal entries, not as new items.
+- **Notable dead ends / limitations:** Kenya's reported "740GB eCitizen" breach (Biometric Update) and South Africa's Purple Group/EasyEquities incident could not be confirmed inside the window from a fetchable primary page — Purple Group's JSE SENS notice was dated 16:51 SAST (09:51 ET), before the window, and its "unauthorised access" was found Nov 25. Both were killed under the two-strike rule and not listed. Web_search returned intermittent backend failures; Bing used as fallback. No ransomware leak-site roundup with in-window, independently confirmed victims was produced this run.
+- **CISA negative check:** no additional CISA alerts beyond the three-CVE KEV action were observed in-window.
